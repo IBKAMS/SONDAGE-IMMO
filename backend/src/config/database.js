@@ -5,10 +5,7 @@ const connectDB = async () => {
     // Utilise MONGODB_URI de .env ou l'URI locale par défaut
     const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/sondage-immobilier';
 
-    const conn = await mongoose.connect(mongoURI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    const conn = await mongoose.connect(mongoURI);
 
     console.log(`MongoDB connecté: ${conn.connection.host}`);
 

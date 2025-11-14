@@ -95,7 +95,7 @@ const logementSchema = new mongoose.Schema({
 
 // Index pour les recherches
 logementSchema.index({ type: 1, statut: 1 });
-logementSchema.index({ reference: 1 });
+// Note: L'index sur 'reference' est déjà créé automatiquement par 'unique: true'
 
 // Calcul automatique du prix au m²
 logementSchema.pre('save', function(next) {
