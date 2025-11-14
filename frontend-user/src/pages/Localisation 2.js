@@ -1,0 +1,278 @@
+import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import {
+  FaMapMarkerAlt,
+  FaRoad,
+  FaPlane,
+  FaShoppingCart,
+  FaHospital,
+  FaBus,
+  FaWater
+} from 'react-icons/fa';
+import API_URL from '../config';
+import './Localisation.css';
+
+const Localisation = () => {
+  const [content, setContent] = useState(null);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    fetchContent();
+  }, []);
+
+  const fetchContent = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/localisation-content`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data) {
+          setContent(data.data);
+        }
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement du contenu:', error);
+    }
+  };
+
+  const avantages = [
+    {
+      icon: <FaWater />,
+      titre: "Vue sur la Lagune",
+      description: "Site donnant sur la lagune Ébrié, offrant un cadre de vie exceptionnel"
+    },
+    {
+      icon: <FaPlane />,
+      titre: "Proximité Aéroport",
+      description: "À quelques minutes de l'aéroport international Félix Houphouët-Boigny"
+    },
+    {
+      icon: <FaRoad />,
+      titre: "Accès Rapide",
+      description: "Axes routiers majeurs et voies bitumées directes"
+    },
+    {
+      icon: <FaShoppingCart />,
+      titre: "Commerces",
+      description: "Supermarchés, marchés et centres commerciaux à proximité"
+    },
+    {
+      icon: <FaHospital />,
+      titre: "Santé",
+      description: "Hôpitaux et centres de santé facilement accessibles"
+    },
+    {
+      icon: <FaBus />,
+      titre: "Transport",
+      description: "Réseau de transport public bien desservi"
+    }
+  ];
+
+  return (
+    <div className="localisation-page">
+      {/* Hero Section */}
+      <section className="localisation-hero">
+        <div className="hero-overlay"></div>
+        <div className="container">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="hero-content"
+          >
+            <FaMapMarkerAlt className="hero-icon" />
+            <h1>{content?.hero?.title || "Localisation"}</h1>
+            <p className="hero-subtitle">{content?.hero?.subtitle || "CITÉ KONGO - Abekan Bernard, Port-Bouët"}</p>
+          </motion.div>
+        </div>
+      </section>
+
+      <div className="container">
+        {/* Informations Section */}
+        <motion.section
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="section localisation-info"
+        >
+          <div className="info-card-main">
+            <div className="info-icon-large">
+              <FaMapMarkerAlt />
+            </div>
+            <h2>{content?.infoSection?.title || "Une localisation stratégique"}</h2>
+            <p className="lead">
+              {content?.infoSection?.leadText || "La CITÉ KONGO est idéalement située dans le quartier Abekan Bernard à Port-Bouët, l'une des communes les plus dynamiques d'Abidjan."}
+            </p>
+            <p>
+              {content?.infoSection?.description || "Cette localisation privilégiée vous offre un accès facile à tous les services essentiels tout en bénéficiant du calme d'un quartier résidentiel en développement."}
+            </p>
+          </div>
+        </motion.section>
+
+        {/* Google Map Section */}
+        <motion.section
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="section map-section"
+        >
+          <h2 className="section-title text-center">{content?.mapSection?.title || "Découvrez notre emplacement"}</h2>
+          <p className="section-subtitle text-center">
+            {content?.mapSection?.subtitle || "Abekan Bernard, Port-Bouët - Abidjan, Côte d'Ivoire"}
+          </p>
+
+          <div className="map-container">
+            <div className="map-wrapper">
+              {/* Carte Google Maps avec marqueur sur Abekan Bernard */}
+              <iframe
+                src="https://maps.google.com/maps?q=5.2447,-3.9317+(CITÉ+KONGO+-+Abekan+Bernard)&hl=fr&z=16&output=embed"
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen=""
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title="Localisation CITÉ KONGO - Abekan Bernard, Port-Bouët"
+              ></iframe>
+
+              {/* Indicateur visuel sur la carte */}
+              <div className="map-indicator">
+                <div className="indicator-badge">
+                  <FaMapMarkerAlt className="indicator-icon" />
+                  <span>{content?.mapSection?.indicatorText || "Site du Projet"}</span>
+                </div>
+                <p className="indicator-text">{content?.mapSection?.indicatorLocation || "Abekan Bernard"}</p>
+              </div>
+
+              {/* Lien pour ouvrir dans Google Maps */}
+              <div className="map-search-link">
+                <a
+                  href="https://www.google.com/maps/search/Abekan+Bernard,+Port-Bouet,+Abidjan/@5.2447,-3.9317,16z"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-link"
+                >
+                  📍 {content?.mapSection?.linkText || "Ouvrir dans Google Maps (Vue détaillée)"}
+                </a>
+              </div>
+            </div>
+
+            <div className="map-info-overlay">
+              <div className="map-info-card">
+                <h3>
+                  <FaMapMarkerAlt /> {content?.mapSection?.cardTitle || "CITÉ KONGO"}
+                </h3>
+                <p>{content?.mapSection?.cardLocation1 || "Abekan Bernard"}</p>
+                <p>{content?.mapSection?.cardLocation2 || "Port-Bouët, Abidjan"}</p>
+                <p>{content?.mapSection?.cardLocation3 || "Côte d'Ivoire"}</p>
+                <a
+                  href="https://www.google.com/maps/search/Abekan+Bernard+Port-Bouet+Abidjan"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-primary"
+                >
+                  {content?.mapSection?.cardButtonText || "Ouvrir dans Google Maps"}
+                </a>
+              </div>
+            </div>
+          </div>
+        </motion.section>
+
+        {/* Avantages de la localisation */}
+        <section className="section avantages-section">
+          <h2 className="section-title text-center">
+            {content?.avantages?.[0]?.sectionTitle || "Les avantages de notre localisation"}
+          </h2>
+          <p className="section-subtitle text-center">
+            {content?.avantages?.[0]?.sectionSubtitle || "Un emplacement qui facilite votre quotidien"}
+          </p>
+
+          <div className="avantages-grid">
+            {(content?.avantages || avantages).map((avantage, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                className="avantage-card"
+              >
+                <div className="avantage-icon">{avantage.icon}</div>
+                <h3>{avantage.titre}</h3>
+                <p>{avantage.description}</p>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+
+        {/* Accessibilité Section */}
+        <motion.section
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="section accessibilite-section"
+        >
+          <div className="accessibilite-content">
+            <h2 className="section-title">{content?.accessibilite?.title || "Comment nous rejoindre ?"}</h2>
+
+            <div className="acces-grid">
+              <div className="acces-card">
+                <div className="acces-icon">
+                  <FaBus />
+                </div>
+                <h3>{content?.accessibilite?.acces?.[0]?.titre || "En transport public"}</h3>
+                <p>
+                  {content?.accessibilite?.acces?.[0]?.description || "Lignes de bus régulières desservant Port-Bouët depuis le Plateau et Treichville. Arrêt à proximité du quartier Abekan Bernard."}
+                </p>
+              </div>
+
+              <div className="acces-card">
+                <div className="acces-icon">
+                  <FaRoad />
+                </div>
+                <h3>{content?.accessibilite?.acces?.[1]?.titre || "En voiture"}</h3>
+                <p>
+                  {content?.accessibilite?.acces?.[1]?.description || "Depuis le Plateau : Direction Port-Bouët via le Boulevard VGE (environ 20 min)."}
+                </p>
+              </div>
+
+              <div className="acces-card">
+                <div className="acces-icon">
+                  <FaPlane />
+                </div>
+                <h3>{content?.accessibilite?.acces?.[2]?.titre || "Depuis l'aéroport"}</h3>
+                <p>
+                  {content?.accessibilite?.acces?.[2]?.description || "À seulement 10 minutes en voiture de l'aéroport international Félix Houphouët-Boigny. Accès direct et rapide."}
+                </p>
+              </div>
+            </div>
+          </div>
+        </motion.section>
+
+        {/* CTA Section */}
+        <motion.section
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="section cta-localisation"
+        >
+          <div className="cta-box">
+            <h2>Intéressé par ce projet ?</h2>
+            <p>
+              Découvrez nos différentes options d'achat et les modalités de financement
+              disponibles pour concrétiser votre investissement dans la CITÉ KONGO.
+            </p>
+            <a href="/option-achat" className="btn btn-primary btn-large">
+              Découvrir les options d'achat
+            </a>
+          </div>
+        </motion.section>
+      </div>
+    </div>
+  );
+};
+
+export default Localisation;

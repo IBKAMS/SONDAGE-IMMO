@@ -1,0 +1,631 @@
+.logements-page {
+  min-height: 100vh;
+  background: var(--light-color);
+}
+
+/* Hero Section */
+.logements-hero {
+  position: relative;
+  height: 50vh;
+  min-height: 400px;
+  background: linear-gradient(135deg, #5865F2 0%, #8B5FBD 50%, #C850C0 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--white);
+  overflow: hidden;
+}
+
+.hero-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.logements-hero .hero-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  max-width: 800px;
+  padding: var(--spacing-xl);
+}
+
+.logements-hero h1 {
+  font-size: 3rem;
+  font-weight: 800;
+  margin-bottom: var(--spacing-md);
+  color: var(--white);
+}
+
+.hero-subtitle {
+  font-size: 1.3rem;
+  opacity: 0.95;
+  margin-bottom: var(--spacing-xl);
+}
+
+.hero-stats {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-xl);
+  margin-top: var(--spacing-xl);
+}
+
+.hero-stats .stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.hero-stats .number {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--secondary-color);
+}
+
+.hero-stats .label {
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+/* Filters Section */
+.filters-section {
+  background: var(--white);
+  padding: var(--spacing-xl);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  margin: calc(-1 * var(--spacing-xl)) auto var(--spacing-xl);
+  position: relative;
+  z-index: 10;
+  max-width: 1200px;
+}
+
+.filters-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-lg);
+}
+
+.filters-header h2 {
+  font-size: 1.5rem;
+  color: var(--dark-color);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.btn-toggle-filters {
+  background: var(--primary-color);
+  color: var(--white);
+  border: none;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all var(--transition-fast);
+}
+
+.btn-toggle-filters:hover {
+  background: var(--secondary-color);
+}
+
+.filters-form {
+  overflow: hidden;
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.filter-group label {
+  font-weight: 600;
+  color: var(--dark-color);
+  font-size: 0.95rem;
+}
+
+.filter-group input,
+.filter-group select {
+  padding: var(--spacing-sm);
+  border: 1px solid #ddd;
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  transition: all var(--transition-fast);
+}
+
+.filter-group input:focus,
+.filter-group select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(26, 84, 144, 0.1);
+}
+
+.filters-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid #eee;
+}
+
+.results-count {
+  font-weight: 600;
+  color: var(--primary-color);
+  font-size: 1.1rem;
+}
+
+/* Logements Grid */
+.logements-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: var(--spacing-xl);
+  margin-bottom: var(--spacing-xl);
+}
+
+.logement-card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-normal);
+  display: flex;
+  flex-direction: column;
+  min-height: auto;
+}
+
+.logement-card:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--shadow-lg);
+}
+
+.logement-image {
+  position: relative;
+  height: 250px;
+  overflow: hidden;
+}
+
+.logement-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--transition-slow);
+}
+
+.logement-card:hover .logement-image img {
+  transform: scale(1.1);
+}
+
+.logement-badges {
+  position: absolute;
+  top: var(--spacing-md);
+  left: var(--spacing-md);
+  right: var(--spacing-md);
+  display: flex;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+}
+
+.statut-badge,
+.type-badge {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.type-badge {
+  background: var(--primary-color);
+  color: var(--white);
+}
+
+.statut-disponible {
+  background: var(--accent-color);
+  color: var(--white);
+}
+
+.statut-reserve {
+  background: var(--secondary-color);
+  color: var(--white);
+}
+
+.statut-vendu {
+  background: #95a5a6;
+  color: var(--white);
+}
+
+.logement-content {
+  padding: var(--spacing-lg);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.logement-content h3 {
+  font-size: 1.4rem;
+  color: var(--dark-color);
+  margin-bottom: var(--spacing-xs);
+  font-weight: 700;
+}
+
+.logement-reference {
+  font-size: 0.9rem;
+  color: var(--text-light);
+  margin-bottom: var(--spacing-md);
+}
+
+.logement-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  padding-bottom: var(--spacing-md);
+  border-bottom: 1px solid #eee;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  color: var(--text-color);
+  font-size: 0.95rem;
+}
+
+.detail-item svg {
+  color: var(--primary-color);
+  font-size: 1.1rem;
+}
+
+.logement-description {
+  color: var(--text-color);
+  line-height: 1.6;
+  margin-bottom: var(--spacing-md);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.logement-equipements {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-lg);
+}
+
+.equipement-tag {
+  background: rgba(26, 84, 144, 0.1);
+  color: var(--primary-color);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.equipement-tag svg {
+  font-size: 0.75rem;
+}
+
+.equipement-tag.more {
+  background: var(--secondary-color);
+  color: var(--white);
+  font-weight: 600;
+}
+
+.logement-footer {
+  margin-top: auto;
+  padding: var(--spacing-lg);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: transparent;
+}
+
+.prix-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: var(--spacing-xl);
+  width: 100%;
+  padding: 2.5rem 2rem;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f0f0f0;
+  position: relative;
+  overflow: visible;
+}
+
+.prix-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #4F46E5 0%, #7C3AED 50%, #C850C0 100%);
+  border-radius: 12px 12px 0 0;
+}
+
+.prix-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.prix-label {
+  font-size: 1.1rem;
+  color: #4A148C;
+  font-weight: 600;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.prix {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #1A237E;
+  line-height: 1.2;
+  margin: 0;
+  text-align: center;
+  word-wrap: break-word;
+}
+
+.prix-section .btn-dynamic,
+.logement-footer .btn-dynamic {
+  width: 100% !important;
+  padding: 0.85rem 1.2rem !important;
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0px !important;
+  border-radius: 50px !important;
+  background: linear-gradient(45deg, #4F46E5, #7C3AED) !important;
+  color: #ffffff !important;
+  border: none !important;
+  cursor: pointer !important;
+  position: relative !important;
+  overflow: visible !important;
+  transition: all 0.3s ease !important;
+  animation: pulse-animation 2s infinite ease-out !important;
+  white-space: nowrap !important;
+}
+
+.prix-section .btn-dynamic::before,
+.logement-footer .btn-dynamic::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s ease;
+}
+
+.prix-section .btn-dynamic:hover::before,
+.logement-footer .btn-dynamic:hover::before {
+  left: 100%;
+}
+
+.prix-section .btn-dynamic:hover,
+.logement-footer .btn-dynamic:hover {
+  transform: scale(1.05) !important;
+  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.4) !important;
+  animation: none !important;
+}
+
+.prix-section .btn-dynamic:active,
+.logement-footer .btn-dynamic:active {
+  transform: scale(0.98) !important;
+}
+
+.prix-section .btn-dynamic:disabled,
+.logement-footer .btn-dynamic:disabled {
+  background: #95a5a6 !important;
+  cursor: not-allowed !important;
+  opacity: 0.6 !important;
+  transform: none !important;
+  box-shadow: none !important;
+  animation: none !important;
+}
+
+@keyframes pulse-animation {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.6);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 12px rgba(79, 70, 229, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(79, 70, 229, 0);
+  }
+}
+
+.logement-footer .btn {
+  display: inline-block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  white-space: nowrap;
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 6px rgba(26, 84, 144, 0.3);
+  border: none;
+  min-width: 180px;
+  cursor: pointer;
+  position: relative;
+  z-index: 10;
+}
+
+.logement-footer .btn-primary {
+  background: var(--primary-color) !important;
+  color: var(--white) !important;
+}
+
+.logement-footer .btn-primary:hover {
+  background: #143d6b !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(26, 84, 144, 0.4);
+}
+
+.logement-footer .btn:disabled {
+  background: #95a5a6 !important;
+  cursor: not-allowed !important;
+  opacity: 0.6 !important;
+  transform: none !important;
+}
+
+/* No Results */
+.no-results {
+  text-align: center;
+  padding: var(--spacing-xxl);
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.no-results svg {
+  color: var(--text-light);
+  margin-bottom: var(--spacing-lg);
+}
+
+.no-results h3 {
+  font-size: 1.8rem;
+  color: var(--dark-color);
+  margin-bottom: var(--spacing-sm);
+}
+
+.no-results p {
+  color: var(--text-light);
+  margin-bottom: var(--spacing-lg);
+  font-size: 1.1rem;
+}
+
+/* CTA Section */
+.cta-section {
+  background: linear-gradient(135deg, #5865F2 0%, #8B5FBD 50%, #C850C0 100%);
+  padding: var(--spacing-xxl) 0;
+  margin-top: var(--spacing-xxl);
+}
+
+.cta-content {
+  text-align: center;
+  color: var(--white);
+}
+
+.cta-content h2 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: var(--spacing-md);
+  color: var(--white);
+}
+
+.cta-content p {
+  font-size: 1.2rem;
+  opacity: 0.95;
+  margin-bottom: var(--spacing-xl);
+}
+
+.btn-large {
+  padding: var(--spacing-md) var(--spacing-xxl);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .logements-hero h1 {
+    font-size: 2rem;
+  }
+
+  .hero-subtitle {
+    font-size: 1rem;
+  }
+
+  .hero-stats {
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+
+  .filters-header {
+    flex-direction: column;
+    gap: var(--spacing-md);
+    align-items: stretch;
+  }
+
+  .filters-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filters-actions {
+    flex-direction: column;
+  }
+
+  .logements-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .logement-card {
+    min-height: auto;
+  }
+
+  .logement-footer {
+    padding: var(--spacing-md);
+  }
+
+  .prix-section {
+    padding: 2rem 1.5rem;
+    gap: var(--spacing-lg);
+  }
+
+  .prix-container {
+    gap: 0.5rem;
+  }
+
+  .prix-label {
+    font-size: 0.85rem;
+  }
+
+  .prix {
+    font-size: 1.4rem;
+  }
+
+  .btn-dynamic {
+    padding: 0.85rem 1rem !important;
+    font-size: 0.85rem !important;
+  }
+
+  .cta-content h2 {
+    font-size: 1.8rem;
+  }
+}
