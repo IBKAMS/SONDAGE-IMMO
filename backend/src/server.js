@@ -17,10 +17,23 @@ connectDB();
 app.use(helmet());
 app.use(compression());
 
-// CORS - Configuration ouverte pour déploiement
-// Note: En production, restreignez les origines à vos domaines spécifiques
+// CORS - Configuration stricte avec whitelist
+const allowedOrigins = [
+  'https://sondage-immo-utilisateur.vercel.app',
+  'https://sondage-immo-admin.vercel.app',
+  'http://localhost:3000', // Frontend user en dev
+  'http://localhost:3001'  // Frontend admin en dev
+];
+
 const corsOptions = {
-  origin: '*', // Accepte toutes les origines
+  origin: function (origin, callback) {
+    // Autoriser les requêtes sans origin (ex: Postman, apps mobiles)
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
