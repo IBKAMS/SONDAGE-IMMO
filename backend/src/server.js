@@ -21,6 +21,8 @@ app.use(compression());
 const allowedOrigins = [
   'https://sondage-immo-utilisateur.vercel.app',
   'https://sondage-immo-admin.vercel.app',
+  'https://sondage.simulateur-immo.com',
+  'https://admin-sondage.simulateur-immo.com',
   'http://localhost:3000', // Frontend user en dev
   'http://localhost:3001'  // Frontend admin en dev
 ];
