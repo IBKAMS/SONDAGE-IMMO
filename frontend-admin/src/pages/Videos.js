@@ -208,7 +208,7 @@ const Videos = () => {
           console.log(`Fichier de ${(file.size / (1024 * 1024)).toFixed(2)}MB - Utilisation du chunked upload`);
           setUploadMode(prev => ({ ...prev, [type]: 'chunked' }));
 
-          // CHUNKED UPLOAD pour gros fichiers
+          // CHUNKED UPLOAD pour gros fichiers avec retry et meilleure gestion d'erreurs
           const uploadChunked = async () => {
             const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
             let uploadedBytes = 0;
@@ -217,59 +217,111 @@ const Videos = () => {
             // Créer un identifiant unique pour ce chunked upload
             const uploadId = `${timestamp}_${Math.random().toString(36).substr(2, 9)}`;
 
-            for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
+            // Fonction pour uploader un chunk avec retry
+            const uploadChunkWithRetry = async (chunkIndex, maxRetries = 3) => {
               const start = chunkIndex * CHUNK_SIZE;
               const end = Math.min(start + CHUNK_SIZE, file.size);
               const chunk = file.slice(start, end);
 
-              console.log(`Upload chunk ${chunkIndex + 1}/${totalChunks} (${start}-${end-1}/${file.size})`);
-              setCurrentChunk(prev => ({ ...prev, [type]: `${chunkIndex + 1}/${totalChunks}` }));
+              for (let attempt = 1; attempt <= maxRetries; attempt++) {
+                try {
+                  console.log(`Upload chunk ${chunkIndex + 1}/${totalChunks} (tentative ${attempt}/${maxRetries})`);
+                  setCurrentChunk(prev => ({
+                    ...prev,
+                    [type]: `Chunk ${chunkIndex + 1}/${totalChunks}${attempt > 1 ? ` (tentative ${attempt})` : ''}`
+                  }));
 
-              // Créer le FormData pour ce chunk
-              const chunkFormData = new FormData();
-              chunkFormData.append('file', chunk);
-              chunkFormData.append('api_key', apiKey);
-              chunkFormData.append('timestamp', timestamp);
-              chunkFormData.append('signature', signature);
-              chunkFormData.append('folder', folder);
-              chunkFormData.append('upload_id', uploadId);
+                  // Créer le FormData pour ce chunk
+                  const chunkFormData = new FormData();
+                  chunkFormData.append('file', chunk, file.name);
+                  chunkFormData.append('api_key', apiKey);
+                  chunkFormData.append('timestamp', timestamp);
+                  chunkFormData.append('signature', signature);
+                  chunkFormData.append('folder', folder);
+                  chunkFormData.append('resource_type', 'video'); // Important pour les vidéos
+                  chunkFormData.append('upload_preset', 'ml_default'); // Preset par défaut si nécessaire
 
-              // Upload ce chunk avec XMLHttpRequest
-              const chunkResponse = await new Promise((chunkResolve, chunkReject) => {
-                const xhr = new XMLHttpRequest();
+                  // Upload ce chunk avec XMLHttpRequest
+                  const chunkResponse = await new Promise((chunkResolve, chunkReject) => {
+                    const xhr = new XMLHttpRequest();
+                    let timeoutId;
 
-                xhr.upload.addEventListener('progress', (e) => {
-                  if (e.lengthComputable) {
-                    const chunkProgress = e.loaded;
-                    const totalProgress = uploadedBytes + chunkProgress;
-                    const percentComplete = (totalProgress / file.size) * 100;
-                    setUploadProgress(prev => ({ ...prev, [type]: Math.round(percentComplete) }));
+                    // Timeout après 60 secondes
+                    timeoutId = setTimeout(() => {
+                      xhr.abort();
+                      chunkReject(new Error(`Timeout chunk ${chunkIndex + 1}`));
+                    }, 60000);
+
+                    xhr.upload.addEventListener('progress', (e) => {
+                      if (e.lengthComputable) {
+                        const chunkProgress = e.loaded;
+                        const totalProgress = uploadedBytes + chunkProgress;
+                        const percentComplete = (totalProgress / file.size) * 100;
+                        setUploadProgress(prev => ({ ...prev, [type]: Math.round(percentComplete) }));
+                      }
+                    });
+
+                    xhr.addEventListener('load', () => {
+                      clearTimeout(timeoutId);
+                      try {
+                        const response = JSON.parse(xhr.responseText);
+                        if (xhr.status === 200 || xhr.status === 201) {
+                          chunkResolve(response);
+                        } else {
+                          console.error(`Erreur Cloudinary:`, response);
+                          chunkReject(new Error(response.error?.message || `Erreur chunk ${chunkIndex + 1}: ${xhr.statusText}`));
+                        }
+                      } catch (e) {
+                        chunkReject(new Error(`Erreur parsing réponse chunk ${chunkIndex + 1}`));
+                      }
+                    });
+
+                    xhr.addEventListener('error', () => {
+                      clearTimeout(timeoutId);
+                      chunkReject(new Error(`Erreur réseau chunk ${chunkIndex + 1}`));
+                    });
+
+                    xhr.addEventListener('abort', () => {
+                      clearTimeout(timeoutId);
+                      chunkReject(new Error(`Upload annulé chunk ${chunkIndex + 1}`));
+                    });
+
+                    // Configuration de la requête
+                    xhr.open('POST', `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`);
+                    xhr.setRequestHeader('X-Unique-Upload-Id', uploadId);
+                    xhr.setRequestHeader('Content-Range', `bytes ${start}-${end-1}/${file.size}`);
+                    xhr.send(chunkFormData);
+                  });
+
+                  uploadedBytes = end;
+
+                  // Petit délai entre les chunks pour éviter le rate limiting (500ms)
+                  if (chunkIndex < totalChunks - 1) {
+                    await new Promise(resolve => setTimeout(resolve, 500));
                   }
-                });
 
-                xhr.addEventListener('load', () => {
-                  if (xhr.status === 200 || xhr.status === 201) {
-                    const response = JSON.parse(xhr.responseText);
-                    chunkResolve(response);
-                  } else {
-                    chunkReject(new Error(`Erreur chunk ${chunkIndex + 1}: ${xhr.statusText}`));
+                  return chunkResponse;
+
+                } catch (error) {
+                  console.error(`Erreur chunk ${chunkIndex + 1} tentative ${attempt}:`, error);
+
+                  if (attempt === maxRetries) {
+                    throw error;
                   }
-                });
 
-                xhr.addEventListener('error', () => {
-                  chunkReject(new Error(`Erreur réseau chunk ${chunkIndex + 1}`));
-                });
+                  // Attendre avant de réessayer (backoff exponentiel)
+                  const waitTime = Math.min(1000 * Math.pow(2, attempt - 1), 10000);
+                  console.log(`Attente de ${waitTime}ms avant nouvelle tentative...`);
+                  await new Promise(resolve => setTimeout(resolve, waitTime));
+                }
+              }
+            };
 
-                // Ajouter le Content-Range header pour le chunking
-                xhr.open('POST', `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`);
-                xhr.setRequestHeader('X-Unique-Upload-Id', uploadId);
-                xhr.setRequestHeader('Content-Range', `bytes ${start}-${end-1}/${file.size}`);
-                xhr.send(chunkFormData);
-              });
+            // Uploader tous les chunks
+            for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
+              const chunkResponse = await uploadChunkWithRetry(chunkIndex);
 
-              uploadedBytes = end;
-
-              // Le dernier chunk contient la réponse finale
+              // Le dernier chunk contient la réponse finale avec l'URL
               if (chunkIndex === totalChunks - 1) {
                 cloudinaryResponse = chunkResponse;
               }
@@ -321,6 +373,8 @@ const Videos = () => {
           formData.append('timestamp', timestamp);
           formData.append('signature', signature);
           formData.append('folder', folder);
+          formData.append('resource_type', 'video'); // Important pour les vidéos
+          formData.append('upload_preset', 'ml_default'); // Preset par défaut si nécessaire
 
           const xhr = new XMLHttpRequest();
 
