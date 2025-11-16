@@ -54,7 +54,8 @@ const Promoteur = () => {
         if (response.ok) {
           const data = await response.json();
           if (data && data.url) {
-            setVideoUrl(`${API_URL}${data.url}`);
+            // URL Cloudinary complète, pas besoin d'ajouter API_URL
+            setVideoUrl(data.url);
           }
         }
       } catch (error) {

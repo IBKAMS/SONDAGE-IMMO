@@ -44,7 +44,8 @@ const Videos = () => {
               updatedVideos[type] = {
                 file: null,
                 name: data[type].originalName,
-                url: `${API_URL}${data[type].url}`
+                // URL Cloudinary complète, pas besoin d'ajouter API_URL
+                url: data[type].url
               };
             }
           });
@@ -72,7 +73,8 @@ const Videos = () => {
               updatedImages[type] = {
                 file: null,
                 name: data[type].originalName,
-                url: `${API_URL}${data[type].url}`
+                // URL Cloudinary complète, pas besoin d'ajouter API_URL
+                url: data[type].url
               };
             }
           });
@@ -132,8 +134,9 @@ const Videos = () => {
   };
 
   const removeImage = async (type) => {
-    // Vérifier si l'image provient du serveur (uploadée)
-    const isUploadedImage = images[type].url && images[type].url.startsWith(API_URL);
+    // Vérifier si l'image provient du serveur (uploadée sur Cloudinary)
+    // Les URLs Cloudinary commencent par https://, les prévisualisations locales par blob:
+    const isUploadedImage = images[type].url && images[type].url.startsWith('http');
 
     if (isUploadedImage) {
       // Confirmer la suppression

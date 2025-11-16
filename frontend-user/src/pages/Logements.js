@@ -49,7 +49,8 @@ const Logements = () => {
           const formattedImages = {};
           Object.keys(data).forEach(type => {
             if (data[type] && data[type].url) {
-              formattedImages[type] = `${API_URL}${data[type].url}`;
+              // URL Cloudinary complète, pas besoin d'ajouter API_URL
+              formattedImages[type] = data[type].url;
             }
           });
           setApiImages(formattedImages);

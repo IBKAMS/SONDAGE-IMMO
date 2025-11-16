@@ -19,7 +19,8 @@ const AnalyseEconomique = () => {
           const data = await response.json();
           // Vérifier que data et data.url existent
           if (data && data.url) {
-            setVideoUrl(`${API_URL}${data.url}`);
+            // URL Cloudinary complète, pas besoin d'ajouter API_URL
+            setVideoUrl(data.url);
           }
         }
       } catch (error) {
