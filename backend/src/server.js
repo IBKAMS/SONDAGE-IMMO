@@ -29,10 +29,14 @@ const allowedOrigins = [
 
 const corsOptions = {
   origin: function (origin, callback) {
+    // AJOUTE CETTE LIGNE POUR VOIR L'ORIGINE
+    console.log(">>> Demande CORS reçue de l'origine :", origin);
+
     // Autoriser les requêtes sans origin (ex: Postman, apps mobiles)
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
+      console.error("!!! ERREUR CORS : Origine non autorisée :", origin);
       callback(new Error('Not allowed by CORS'));
     }
   },
