@@ -15,6 +15,7 @@ const Questionnaire = () => {
     prenom: '',
     email: '',
     paysResidence: '',
+    nationalite: '',
     telephone: '',
     age: '',
     situationFamiliale: '',
@@ -144,6 +145,13 @@ const Questionnaire = () => {
         {
           name: 'paysResidence',
           label: 'Pays de résidence',
+          type: 'select',
+          options: Object.keys(paysAvecPrefixes),
+          required: true
+        },
+        {
+          name: 'nationalite',
+          label: 'Nationalité',
           type: 'select',
           options: Object.keys(paysAvecPrefixes),
           required: true
@@ -757,7 +765,8 @@ const Questionnaire = () => {
         activitySector: data.secteurActivite || '',
         monthlyIncome: data.revenuMensuel ? data.revenuMensuel.toString() : '',
         jobStability: data.stabiliteEmploi || '',
-        countryOfResidence: data.paysResidence || ''
+        countryOfResidence: data.paysResidence || '',
+        nationality: data.nationalite || ''
       },
 
       // SITUATION ACTUELLE

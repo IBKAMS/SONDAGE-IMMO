@@ -43,7 +43,8 @@ const questionnaireSchema = new mongoose.Schema({
     activitySector: String,
     monthlyIncome: String,
     jobStability: String,
-    countryOfResidence: String
+    countryOfResidence: String,
+    nationality: String
   },
 
   // SITUATION ACTUELLE (Q11-Q15)
