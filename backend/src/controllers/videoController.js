@@ -139,5 +139,70 @@ exports.deleteVideo = async (req, res) => {
   }
 };
 
+/**
+ * Sauvegarder une vidéo qui a été uploadée directement vers Cloudinary
+ * (Upload direct depuis le frontend, pas de multer)
+ */
+exports.saveDirectUpload = async (req, res) => {
+  try {
+    const { type, cloudinaryUrl, cloudinaryId, originalName, size } = req.body;
+
+    if (!type || !cloudinaryUrl || !cloudinaryId) {
+      return res.status(400).json({
+        message: 'Données manquantes (type, cloudinaryUrl, cloudinaryId requis)'
+      });
+    }
+
+    if (!['visite3d', 'promoteur', 'analyseEconomique', 'architecte'].includes(type)) {
+      return res.status(400).json({ message: 'Type de vidéo invalide' });
+    }
+
+    // Supprimer l'ancienne vidéo du même type si elle existe
+    const existingVideo = await Video.findOne({ type });
+    if (existingVideo && existingVideo.cloudinaryId) {
+      // Supprimer le fichier de Cloudinary
+      try {
+        await cloudinary.uploader.destroy(existingVideo.cloudinaryId, { resource_type: 'video' });
+      } catch (error) {
+        console.error('Erreur lors de la suppression de l\'ancienne vidéo sur Cloudinary:', error);
+      }
+      // Supprimer de la base de données
+      await Video.deleteOne({ type });
+    }
+
+    // Sauvegarder la nouvelle vidéo
+    const video = new Video({
+      type,
+      filename: originalName || 'video',
+      originalName: originalName || 'video',
+      path: cloudinaryUrl,
+      cloudinaryId: cloudinaryId,
+      size: size || 0,
+      mimetype: 'video/mp4'
+    });
+
+    await video.save();
+
+    res.status(201).json({
+      success: true,
+      message: 'Vidéo sauvegardée avec succès',
+      video: {
+        type: video.type,
+        url: cloudinaryUrl,
+        originalName: video.originalName,
+        size: video.size,
+        uploadedAt: video.uploadedAt
+      }
+    });
+  } catch (error) {
+    console.error('Erreur lors de la sauvegarde de la vidéo:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors de la sauvegarde de la vidéo',
+      error: error.message
+    });
+  }
+};
+
 // Exporter le middleware multer Cloudinary
 exports.uploadMiddleware = uploadVideo.single('video');

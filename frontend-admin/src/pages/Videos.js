@@ -17,6 +17,8 @@ const Videos = () => {
     'villa-triplex-6p': { file: null, name: '', url: '' }
   });
   const [loading, setLoading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState({});
+  const [uploadingType, setUploadingType] = useState(null);
 
   const fileInputRefs = {
     visite3d: useRef(null),
@@ -172,41 +174,107 @@ const Videos = () => {
     }));
   };
 
-  const saveVideos = async () => {
-    setLoading(true);
-    const uploadPromises = [];
+  /**
+   * Upload direct vers Cloudinary avec progression
+   * Évite les timeouts sur Render pour les gros fichiers
+   */
+  const uploadToCloudinary = (file, type) => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        setUploadingType(type);
+        setUploadProgress(prev => ({ ...prev, [type]: 0 }));
 
-    // Upload des vidéos
-    for (const [type, video] of Object.entries(videos)) {
-      if (video.file) {
-        const formData = new FormData();
-        formData.append('video', video.file);
-        formData.append('type', type);
-
-        const uploadPromise = fetch(`${API_URL}/api/videos/upload`, {
+        // 1. Obtenir la signature depuis le backend
+        const signatureResponse = await fetch(`${API_URL}/api/upload/signature`, {
           method: 'POST',
-          body: formData,
-        })
-          .then(response => response.json())
-          .then(data => {
-            console.log(`Vidéo ${type} uploadée:`, data);
-            if (data && data.video && data.video.originalName && data.video.url) {
+          headers: { 'Content-Type': 'application/json' }
+        });
+
+        if (!signatureResponse.ok) {
+          throw new Error('Erreur lors de la génération de la signature');
+        }
+
+        const signatureData = await signatureResponse.json();
+        const { signature, timestamp, cloudName, apiKey, folder } = signatureData;
+
+        // 2. Préparer le FormData pour Cloudinary
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('api_key', apiKey);
+        formData.append('timestamp', timestamp);
+        formData.append('signature', signature);
+        formData.append('folder', folder);
+
+        // 3. Upload direct vers Cloudinary avec XMLHttpRequest pour la progression
+        const xhr = new XMLHttpRequest();
+
+        xhr.upload.addEventListener('progress', (e) => {
+          if (e.lengthComputable) {
+            const percentComplete = (e.loaded / e.total) * 100;
+            setUploadProgress(prev => ({ ...prev, [type]: Math.round(percentComplete) }));
+          }
+        });
+
+        xhr.addEventListener('load', async () => {
+          if (xhr.status === 200) {
+            const cloudinaryResponse = JSON.parse(xhr.responseText);
+            console.log(`Vidéo ${type} uploadée sur Cloudinary:`, cloudinaryResponse);
+
+            // 4. Sauvegarder dans MongoDB via le backend
+            const saveResponse = await fetch(`${API_URL}/api/videos/save-direct`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                type: type,
+                cloudinaryUrl: cloudinaryResponse.secure_url,
+                cloudinaryId: cloudinaryResponse.public_id,
+                originalName: file.name,
+                size: file.size
+              })
+            });
+
+            if (saveResponse.ok) {
+              const saveData = await saveResponse.json();
               setVideos(prev => ({
                 ...prev,
                 [type]: {
                   file: null,
-                  name: data.video.originalName,
-                  url: `${API_URL}${data.video.url}`
+                  name: file.name,
+                  url: cloudinaryResponse.secure_url
                 }
               }));
+              setUploadProgress(prev => ({ ...prev, [type]: 100 }));
+              resolve(saveData);
+            } else {
+              throw new Error('Erreur lors de la sauvegarde dans MongoDB');
             }
-          })
-          .catch(error => {
-            console.error(`Erreur upload ${type}:`, error);
-            throw error;
-          });
+          } else {
+            throw new Error(`Erreur Cloudinary: ${xhr.statusText}`);
+          }
+        });
 
-        uploadPromises.push(uploadPromise);
+        xhr.addEventListener('error', () => {
+          reject(new Error('Erreur réseau lors de l\'upload'));
+        });
+
+        xhr.open('POST', `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`);
+        xhr.send(formData);
+      } catch (error) {
+        console.error(`Erreur upload ${type}:`, error);
+        setUploadProgress(prev => ({ ...prev, [type]: -1 })); // -1 indique une erreur
+        reject(error);
+      }
+    });
+  };
+
+  const saveVideos = async () => {
+    setLoading(true);
+    const uploadPromises = [];
+
+    // Upload des vidéos vers Cloudinary directement
+    for (const [type, video] of Object.entries(videos)) {
+      if (video.file) {
+        uploadPromises.push(uploadToCloudinary(video.file, type));
       }
     }
 
@@ -370,13 +438,34 @@ const Videos = () => {
                   </div>
                 </div>
               )}
+
+              {/* Barre de progression pour l'upload */}
+              {uploadProgress[card.type] !== undefined && uploadProgress[card.type] >= 0 && uploadProgress[card.type] < 100 && (
+                <div className="upload-progress-container">
+                  <div className="upload-progress-bar">
+                    <div
+                      className="upload-progress-fill"
+                      style={{ width: `${uploadProgress[card.type]}%` }}
+                    ></div>
+                  </div>
+                  <span className="upload-progress-text">
+                    {uploadProgress[card.type]}% - Upload vers Cloudinary...
+                  </span>
+                </div>
+              )}
+
+              {uploadProgress[card.type] === -1 && (
+                <div className="upload-error">
+                  ❌ Erreur lors de l'upload. Réessayez.
+                </div>
+              )}
             </div>
 
             <div className="video-card-footer">
               <button
                 className="btn-upload-action"
                 onClick={() => triggerFileInput(card.type)}
-                disabled={!videos[card.type].url}
+                disabled={!videos[card.type].url || uploadProgress[card.type] > 0}
               >
                 <FaUpload /> {videos[card.type].url ? 'Remplacer' : 'Charger'}
               </button>

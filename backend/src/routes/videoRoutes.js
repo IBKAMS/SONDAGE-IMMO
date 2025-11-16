@@ -5,11 +5,15 @@ const {
   uploadVideo,
   getAllVideos,
   getVideoByType,
-  deleteVideo
+  deleteVideo,
+  saveDirectUpload
 } = require('../controllers/videoController');
 
-// Upload une vidéo
+// Upload une vidéo (méthode classique via backend - peut causer des timeouts)
 router.post('/upload', uploadMiddleware, uploadVideo);
+
+// Sauvegarder une vidéo uploadée directement vers Cloudinary (recommandé pour gros fichiers)
+router.post('/save-direct', saveDirectUpload);
 
 // Récupérer toutes les vidéos
 router.get('/', getAllVideos);
