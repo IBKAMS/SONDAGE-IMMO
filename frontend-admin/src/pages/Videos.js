@@ -19,6 +19,8 @@ const Videos = () => {
   const [loading, setLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({});
   const [uploadingType, setUploadingType] = useState(null);
+  const [uploadMode, setUploadMode] = useState({}); // 'simple' ou 'chunked'
+  const [currentChunk, setCurrentChunk] = useState({});
 
   const fileInputRefs = {
     visite3d: useRef(null),
@@ -176,7 +178,7 @@ const Videos = () => {
 
   /**
    * Upload direct vers Cloudinary avec progression
-   * Évite les timeouts sur Render pour les gros fichiers
+   * Gère le chunked upload pour les gros fichiers (>100MB)
    */
   const uploadToCloudinary = (file, type) => {
     return new Promise(async (resolve, reject) => {
@@ -197,72 +199,197 @@ const Videos = () => {
         const signatureData = await signatureResponse.json();
         const { signature, timestamp, cloudName, apiKey, folder } = signatureData;
 
-        // 2. Préparer le FormData pour Cloudinary
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('api_key', apiKey);
-        formData.append('timestamp', timestamp);
-        formData.append('signature', signature);
-        formData.append('folder', folder);
+        // Définir les limites
+        const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB
+        const CHUNK_SIZE = 20 * 1024 * 1024; // 20 MB par morceau
 
-        // 3. Upload direct vers Cloudinary avec XMLHttpRequest pour la progression
-        const xhr = new XMLHttpRequest();
+        // Vérifier si on doit utiliser le chunked upload
+        if (file.size > MAX_FILE_SIZE) {
+          console.log(`Fichier de ${(file.size / (1024 * 1024)).toFixed(2)}MB - Utilisation du chunked upload`);
+          setUploadMode(prev => ({ ...prev, [type]: 'chunked' }));
 
-        xhr.upload.addEventListener('progress', (e) => {
-          if (e.lengthComputable) {
-            const percentComplete = (e.loaded / e.total) * 100;
-            setUploadProgress(prev => ({ ...prev, [type]: Math.round(percentComplete) }));
-          }
-        });
+          // CHUNKED UPLOAD pour gros fichiers
+          const uploadChunked = async () => {
+            const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+            let uploadedBytes = 0;
+            let cloudinaryResponse = null;
 
-        xhr.addEventListener('load', async () => {
-          if (xhr.status === 200) {
-            const cloudinaryResponse = JSON.parse(xhr.responseText);
-            console.log(`Vidéo ${type} uploadée sur Cloudinary:`, cloudinaryResponse);
+            // Créer un identifiant unique pour ce chunked upload
+            const uploadId = `${timestamp}_${Math.random().toString(36).substr(2, 9)}`;
 
-            // 4. Sauvegarder dans MongoDB via le backend
-            const saveResponse = await fetch(`${API_URL}/api/videos/save-direct`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                type: type,
-                cloudinaryUrl: cloudinaryResponse.secure_url,
-                cloudinaryId: cloudinaryResponse.public_id,
-                originalName: file.name,
-                size: file.size
-              })
-            });
+            for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
+              const start = chunkIndex * CHUNK_SIZE;
+              const end = Math.min(start + CHUNK_SIZE, file.size);
+              const chunk = file.slice(start, end);
 
-            if (saveResponse.ok) {
-              const saveData = await saveResponse.json();
-              setVideos(prev => ({
-                ...prev,
-                [type]: {
-                  file: null,
-                  name: file.name,
-                  url: cloudinaryResponse.secure_url
-                }
-              }));
-              setUploadProgress(prev => ({ ...prev, [type]: 100 }));
-              resolve(saveData);
-            } else {
-              throw new Error('Erreur lors de la sauvegarde dans MongoDB');
+              console.log(`Upload chunk ${chunkIndex + 1}/${totalChunks} (${start}-${end-1}/${file.size})`);
+              setCurrentChunk(prev => ({ ...prev, [type]: `${chunkIndex + 1}/${totalChunks}` }));
+
+              // Créer le FormData pour ce chunk
+              const chunkFormData = new FormData();
+              chunkFormData.append('file', chunk);
+              chunkFormData.append('api_key', apiKey);
+              chunkFormData.append('timestamp', timestamp);
+              chunkFormData.append('signature', signature);
+              chunkFormData.append('folder', folder);
+              chunkFormData.append('upload_id', uploadId);
+
+              // Upload ce chunk avec XMLHttpRequest
+              const chunkResponse = await new Promise((chunkResolve, chunkReject) => {
+                const xhr = new XMLHttpRequest();
+
+                xhr.upload.addEventListener('progress', (e) => {
+                  if (e.lengthComputable) {
+                    const chunkProgress = e.loaded;
+                    const totalProgress = uploadedBytes + chunkProgress;
+                    const percentComplete = (totalProgress / file.size) * 100;
+                    setUploadProgress(prev => ({ ...prev, [type]: Math.round(percentComplete) }));
+                  }
+                });
+
+                xhr.addEventListener('load', () => {
+                  if (xhr.status === 200 || xhr.status === 201) {
+                    const response = JSON.parse(xhr.responseText);
+                    chunkResolve(response);
+                  } else {
+                    chunkReject(new Error(`Erreur chunk ${chunkIndex + 1}: ${xhr.statusText}`));
+                  }
+                });
+
+                xhr.addEventListener('error', () => {
+                  chunkReject(new Error(`Erreur réseau chunk ${chunkIndex + 1}`));
+                });
+
+                // Ajouter le Content-Range header pour le chunking
+                xhr.open('POST', `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`);
+                xhr.setRequestHeader('X-Unique-Upload-Id', uploadId);
+                xhr.setRequestHeader('Content-Range', `bytes ${start}-${end-1}/${file.size}`);
+                xhr.send(chunkFormData);
+              });
+
+              uploadedBytes = end;
+
+              // Le dernier chunk contient la réponse finale
+              if (chunkIndex === totalChunks - 1) {
+                cloudinaryResponse = chunkResponse;
+              }
             }
+
+            return cloudinaryResponse;
+          };
+
+          const cloudinaryResponse = await uploadChunked();
+          console.log(`Vidéo ${type} uploadée sur Cloudinary (chunked):`, cloudinaryResponse);
+
+          // Sauvegarder dans MongoDB
+          const saveResponse = await fetch(`${API_URL}/api/videos/save-direct`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              type: type,
+              cloudinaryUrl: cloudinaryResponse.secure_url,
+              cloudinaryId: cloudinaryResponse.public_id,
+              originalName: file.name,
+              size: file.size
+            })
+          });
+
+          if (saveResponse.ok) {
+            const saveData = await saveResponse.json();
+            setVideos(prev => ({
+              ...prev,
+              [type]: {
+                file: null,
+                name: file.name,
+                url: cloudinaryResponse.secure_url
+              }
+            }));
+            setUploadProgress(prev => ({ ...prev, [type]: 100 }));
+            resolve(saveData);
           } else {
-            throw new Error(`Erreur Cloudinary: ${xhr.statusText}`);
+            throw new Error('Erreur lors de la sauvegarde dans MongoDB');
           }
-        });
 
-        xhr.addEventListener('error', () => {
-          reject(new Error('Erreur réseau lors de l\'upload'));
-        });
+        } else {
+          console.log(`Fichier de ${(file.size / (1024 * 1024)).toFixed(2)}MB - Upload simple`);
+          setUploadMode(prev => ({ ...prev, [type]: 'simple' }));
 
-        xhr.open('POST', `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`);
-        xhr.send(formData);
+          // UPLOAD SIMPLE pour petits fichiers (<100MB)
+          const formData = new FormData();
+          formData.append('file', file);
+          formData.append('api_key', apiKey);
+          formData.append('timestamp', timestamp);
+          formData.append('signature', signature);
+          formData.append('folder', folder);
+
+          const xhr = new XMLHttpRequest();
+
+          xhr.upload.addEventListener('progress', (e) => {
+            if (e.lengthComputable) {
+              const percentComplete = (e.loaded / e.total) * 100;
+              setUploadProgress(prev => ({ ...prev, [type]: Math.round(percentComplete) }));
+            }
+          });
+
+          xhr.addEventListener('load', async () => {
+            if (xhr.status === 200) {
+              const cloudinaryResponse = JSON.parse(xhr.responseText);
+              console.log(`Vidéo ${type} uploadée sur Cloudinary (simple):`, cloudinaryResponse);
+
+              // Sauvegarder dans MongoDB
+              const saveResponse = await fetch(`${API_URL}/api/videos/save-direct`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  type: type,
+                  cloudinaryUrl: cloudinaryResponse.secure_url,
+                  cloudinaryId: cloudinaryResponse.public_id,
+                  originalName: file.name,
+                  size: file.size
+                })
+              });
+
+              if (saveResponse.ok) {
+                const saveData = await saveResponse.json();
+                setVideos(prev => ({
+                  ...prev,
+                  [type]: {
+                    file: null,
+                    name: file.name,
+                    url: cloudinaryResponse.secure_url
+                  }
+                }));
+                setUploadProgress(prev => ({ ...prev, [type]: 100 }));
+                resolve(saveData);
+              } else {
+                throw new Error('Erreur lors de la sauvegarde dans MongoDB');
+              }
+            } else {
+              throw new Error(`Erreur Cloudinary: ${xhr.statusText}`);
+            }
+          });
+
+          xhr.addEventListener('error', () => {
+            reject(new Error('Erreur réseau lors de l\'upload'));
+          });
+
+          xhr.open('POST', `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`);
+          xhr.send(formData);
+        }
       } catch (error) {
         console.error(`Erreur upload ${type}:`, error);
         setUploadProgress(prev => ({ ...prev, [type]: -1 })); // -1 indique une erreur
+        setUploadMode(prev => ({ ...prev, [type]: undefined }));
+        setCurrentChunk(prev => ({ ...prev, [type]: undefined }));
         reject(error);
+      } finally {
+        // Nettoyer les states après 3 secondes si succès
+        setTimeout(() => {
+          if (uploadProgress[type] === 100) {
+            setUploadMode(prev => ({ ...prev, [type]: undefined }));
+            setCurrentChunk(prev => ({ ...prev, [type]: undefined }));
+          }
+        }, 3000);
       }
     });
   };
@@ -449,7 +576,10 @@ const Videos = () => {
                     ></div>
                   </div>
                   <span className="upload-progress-text">
-                    {uploadProgress[card.type]}% - Upload vers Cloudinary...
+                    {uploadProgress[card.type]}% -
+                    {uploadMode[card.type] === 'chunked'
+                      ? ` Chunked upload (Morceau ${currentChunk[card.type] || '...'})`
+                      : ' Upload vers Cloudinary...'}
                   </span>
                 </div>
               )}
