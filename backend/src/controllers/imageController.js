@@ -1,42 +1,5 @@
 const Image = require('../models/Image');
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
-
-// Configuration du stockage avec multer
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadDir = path.join(__dirname, '../../public/uploads/images');
-    // Créer le dossier s'il n'existe pas
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
-// Filtre pour n'accepter que les images
-const fileFilter = (req, file, cb) => {
-  const allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-  if (allowedMimes.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    cb(new Error('Seuls les fichiers image sont autorisés!'), false);
-  }
-};
-
-// Configuration de multer
-const upload = multer({
-  storage: storage,
-  fileFilter: fileFilter,
-  limits: {
-    fileSize: 10 * 1024 * 1024 // Limite de 10MB
-  }
-});
+const { uploadImage, cloudinary } = require('../config/cloudinary');
 
 // Upload d'une image
 exports.uploadImage = async (req, res) => {
@@ -53,25 +16,28 @@ exports.uploadImage = async (req, res) => {
 
     // Supprimer l'ancienne image du même type si elle existe
     const existingImage = await Image.findOne({ type });
-    if (existingImage) {
-      // Supprimer le fichier physique
-      const oldFilePath = path.join(__dirname, '../../public', existingImage.path);
-      if (fs.existsSync(oldFilePath)) {
-        fs.unlinkSync(oldFilePath);
+    if (existingImage && existingImage.cloudinaryId) {
+      // Supprimer le fichier de Cloudinary
+      try {
+        await cloudinary.uploader.destroy(existingImage.cloudinaryId);
+      } catch (error) {
+        console.error('Erreur lors de la suppression de l\'ancienne image sur Cloudinary:', error);
       }
       // Supprimer de la base de données
       await Image.deleteOne({ type });
     }
 
-    // Créer le chemin relatif pour l'URL
-    const relativePath = `/uploads/images/${req.file.filename}`;
+    // Extraire l'URL sécurisée et l'ID Cloudinary
+    const imageUrl = req.file.path; // URL Cloudinary
+    const cloudinaryId = req.file.filename; // ID public Cloudinary
 
     // Sauvegarder la nouvelle image
     const image = new Image({
       type,
-      filename: req.file.filename,
+      filename: req.file.originalname,
       originalName: req.file.originalname,
-      path: relativePath,
+      path: imageUrl,
+      cloudinaryId: cloudinaryId,
       size: req.file.size,
       mimetype: req.file.mimetype
     });
@@ -82,7 +48,7 @@ exports.uploadImage = async (req, res) => {
       message: 'Image uploadée avec succès',
       image: {
         type: image.type,
-        url: relativePath,
+        url: imageUrl,
         originalName: image.originalName,
         size: image.size,
         uploadedAt: image.uploadedAt
@@ -154,10 +120,13 @@ exports.deleteImage = async (req, res) => {
       return res.status(404).json({ message: 'Image non trouvée' });
     }
 
-    // Supprimer le fichier physique
-    const filePath = path.join(__dirname, '../../public', image.path);
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
+    // Supprimer le fichier de Cloudinary
+    if (image.cloudinaryId) {
+      try {
+        await cloudinary.uploader.destroy(image.cloudinaryId);
+      } catch (error) {
+        console.error('Erreur lors de la suppression de l\'image sur Cloudinary:', error);
+      }
     }
 
     // Supprimer de la base de données
@@ -170,5 +139,5 @@ exports.deleteImage = async (req, res) => {
   }
 };
 
-// Exporter le middleware multer
-exports.uploadMiddleware = upload.single('image');
+// Exporter le middleware multer Cloudinary
+exports.uploadMiddleware = uploadImage.single('image');

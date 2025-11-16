@@ -19,6 +19,9 @@ const imageSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  cloudinaryId: {
+    type: String
+  },
   size: {
     type: Number,
     required: true
