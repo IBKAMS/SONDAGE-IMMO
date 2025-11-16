@@ -239,7 +239,10 @@ const Videos = () => {
                   chunkFormData.append('signature', signature);
                   chunkFormData.append('folder', folder);
                   chunkFormData.append('resource_type', 'video'); // Important pour les vidéos
-                  chunkFormData.append('upload_preset', 'ml_default'); // Preset par défaut si nécessaire
+                  // NE PAS utiliser upload_preset avec une signature (conflit)
+                  // Ajouter l'upload_id dans le FormData pour Cloudinary
+                  chunkFormData.append('unique_filename', 'false');
+                  chunkFormData.append('overwrite', 'false');
 
                   // Upload ce chunk avec XMLHttpRequest
                   const chunkResponse = await new Promise((chunkResolve, chunkReject) => {
@@ -268,11 +271,15 @@ const Videos = () => {
                         if (xhr.status === 200 || xhr.status === 201) {
                           chunkResolve(response);
                         } else {
-                          console.error(`Erreur Cloudinary:`, response);
-                          chunkReject(new Error(response.error?.message || `Erreur chunk ${chunkIndex + 1}: ${xhr.statusText}`));
+                          console.error(`Erreur Cloudinary chunk ${chunkIndex + 1}:`, response);
+                          console.error('Status:', xhr.status, 'StatusText:', xhr.statusText);
+                          console.error('Response complète:', xhr.responseText);
+                          const errorMsg = response.error?.message || response.message || `Erreur chunk ${chunkIndex + 1}: ${xhr.statusText}`;
+                          chunkReject(new Error(errorMsg));
                         }
                       } catch (e) {
-                        chunkReject(new Error(`Erreur parsing réponse chunk ${chunkIndex + 1}`));
+                        console.error(`Erreur parsing réponse chunk ${chunkIndex + 1}:`, xhr.responseText);
+                        chunkReject(new Error(`Erreur parsing réponse chunk ${chunkIndex + 1}: ${e.message}`));
                       }
                     });
 
@@ -288,8 +295,17 @@ const Videos = () => {
 
                     // Configuration de la requête
                     xhr.open('POST', `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`);
+                    // Pour Cloudinary, le header X-Unique-Upload-Id et Content-Range sont importants
                     xhr.setRequestHeader('X-Unique-Upload-Id', uploadId);
                     xhr.setRequestHeader('Content-Range', `bytes ${start}-${end-1}/${file.size}`);
+
+                    // Log pour debug
+                    console.log(`Envoi chunk ${chunkIndex + 1}/${totalChunks}:`, {
+                      range: `bytes ${start}-${end-1}/${file.size}`,
+                      uploadId: uploadId,
+                      chunkSize: chunk.size
+                    });
+
                     xhr.send(chunkFormData);
                   });
 
@@ -374,7 +390,7 @@ const Videos = () => {
           formData.append('signature', signature);
           formData.append('folder', folder);
           formData.append('resource_type', 'video'); // Important pour les vidéos
-          formData.append('upload_preset', 'ml_default'); // Preset par défaut si nécessaire
+          // NE PAS utiliser upload_preset avec une signature (conflit)
 
           const xhr = new XMLHttpRequest();
 
