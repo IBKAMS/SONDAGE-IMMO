@@ -202,9 +202,10 @@ const Videos = () => {
         // Définir les limites
         const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB
         const CHUNK_SIZE = 20 * 1024 * 1024; // 20 MB par morceau
+        const USE_CHUNKED = false; // Désactiver temporairement le chunked upload
 
         // Vérifier si on doit utiliser le chunked upload
-        if (file.size > MAX_FILE_SIZE) {
+        if (USE_CHUNKED && file.size > MAX_FILE_SIZE) {
           console.log(`Fichier de ${(file.size / (1024 * 1024)).toFixed(2)}MB - Utilisation du chunked upload`);
           setUploadMode(prev => ({ ...prev, [type]: 'chunked' }));
 
@@ -379,10 +380,10 @@ const Videos = () => {
           }
 
         } else {
-          console.log(`Fichier de ${(file.size / (1024 * 1024)).toFixed(2)}MB - Upload simple`);
+          console.log(`Fichier de ${(file.size / (1024 * 1024)).toFixed(2)}MB - Upload direct Cloudinary`);
           setUploadMode(prev => ({ ...prev, [type]: 'simple' }));
 
-          // UPLOAD SIMPLE pour petits fichiers (<100MB)
+          // UPLOAD DIRECT pour tous les fichiers (optimisé pour gros fichiers)
           const formData = new FormData();
           formData.append('file', file);
           formData.append('api_key', apiKey);
@@ -394,14 +395,28 @@ const Videos = () => {
 
           const xhr = new XMLHttpRequest();
 
+          // Timeout plus long pour gros fichiers (10 minutes)
+          const timeoutDuration = Math.max(600000, file.size / 1024); // Min 10min ou 1s par KB
+          let timeoutId = setTimeout(() => {
+            xhr.abort();
+            console.error(`Upload timeout après ${timeoutDuration/1000} secondes`);
+          }, timeoutDuration);
+
           xhr.upload.addEventListener('progress', (e) => {
             if (e.lengthComputable) {
               const percentComplete = (e.loaded / e.total) * 100;
               setUploadProgress(prev => ({ ...prev, [type]: Math.round(percentComplete) }));
+
+              // Log de progression pour gros fichiers
+              if (file.size > 50 * 1024 * 1024 && percentComplete % 10 === 0) {
+                console.log(`Upload ${type}: ${percentComplete.toFixed(0)}% (${(e.loaded / (1024*1024)).toFixed(1)}MB / ${(e.total / (1024*1024)).toFixed(1)}MB)`);
+              }
             }
           });
 
           xhr.addEventListener('load', async () => {
+            clearTimeout(timeoutId); // Clear le timeout si succès
+
             if (xhr.status === 200) {
               const cloudinaryResponse = JSON.parse(xhr.responseText);
               console.log(`Vidéo ${type} uploadée sur Cloudinary (simple):`, cloudinaryResponse);
@@ -435,12 +450,21 @@ const Videos = () => {
                 throw new Error('Erreur lors de la sauvegarde dans MongoDB');
               }
             } else {
-              throw new Error(`Erreur Cloudinary: ${xhr.statusText}`);
+              console.error('Erreur upload Cloudinary:', xhr.status, xhr.statusText);
+              console.error('Réponse:', xhr.responseText);
+              throw new Error(`Erreur Cloudinary (${xhr.status}): ${xhr.statusText}`);
             }
           });
 
           xhr.addEventListener('error', () => {
-            reject(new Error('Erreur réseau lors de l\'upload'));
+            clearTimeout(timeoutId);
+            console.error('Erreur réseau lors de l\'upload');
+            reject(new Error('Erreur réseau lors de l\'upload - vérifiez votre connexion'));
+          });
+
+          xhr.addEventListener('abort', () => {
+            clearTimeout(timeoutId);
+            reject(new Error('Upload annulé ou timeout'));
           });
 
           xhr.open('POST', `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`);
