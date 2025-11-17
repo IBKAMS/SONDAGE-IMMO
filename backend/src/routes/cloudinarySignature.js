@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const crypto = require('crypto');
 const { cloudinary } = require('../config/cloudinary');
 
 /**
@@ -12,23 +13,20 @@ router.post('/signature', async (req, res) => {
     // Timestamp actuel (en secondes)
     const timestamp = Math.round(new Date().getTime() / 1000);
 
-    // Paramètres de l'upload qui seront signés
-    // IMPORTANT: Les paramètres doivent être EXACTEMENT les mêmes que ceux envoyés au frontend
-    // et dans l'ordre alphabétique pour la signature
-    const params = {
-      folder: 'sondage-immo/videos', // Dossier pour les vidéos
-      timestamp: timestamp
-      // NE PAS inclure resource_type dans la signature si on ne l'envoie pas dans le FormData signé
-    };
+    // Paramètres pour l'upload - DOIVENT correspondre exactement à ce qui est envoyé
+    const folder = 'sondage-immo/videos';
 
-    // Générer la signature avec le secret API
-    const signature = cloudinary.utils.api_sign_request(
-      params,
-      process.env.CLOUDINARY_API_SECRET
-    );
+    // Créer la chaîne à signer (ordre alphabétique des paramètres)
+    const stringToSign = `folder=${folder}&timestamp=${timestamp}`;
 
-    console.log('Signature générée pour params:', params);
-    console.log('Signature:', signature);
+    // Générer la signature SHA1
+    const signature = crypto
+      .createHash('sha1')
+      .update(stringToSign + process.env.CLOUDINARY_API_SECRET)
+      .digest('hex');
+
+    console.log('String to sign:', stringToSign);
+    console.log('Signature générée:', signature);
 
     // Retourner la signature et les paramètres nécessaires au frontend
     res.json({
@@ -55,17 +53,19 @@ router.post('/signature', async (req, res) => {
 router.post('/signature-image', async (req, res) => {
   try {
     const timestamp = Math.round(new Date().getTime() / 1000);
+    const folder = 'sondage-immo/images';
 
-    const params = {
-      timestamp: timestamp,
-      folder: 'sondage-immo/images',
-      resource_type: 'image'
-    };
+    // Créer la chaîne à signer (ordre alphabétique des paramètres)
+    const stringToSign = `folder=${folder}&timestamp=${timestamp}`;
 
-    const signature = cloudinary.utils.api_sign_request(
-      params,
-      process.env.CLOUDINARY_API_SECRET
-    );
+    // Générer la signature SHA1
+    const signature = crypto
+      .createHash('sha1')
+      .update(stringToSign + process.env.CLOUDINARY_API_SECRET)
+      .digest('hex');
+
+    console.log('String to sign (image):', stringToSign);
+    console.log('Signature générée (image):', signature);
 
     res.json({
       success: true,
