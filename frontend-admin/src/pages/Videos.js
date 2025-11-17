@@ -112,11 +112,11 @@ const Videos = () => {
 
   const triggerFileInput = (type) => {
     // Utiliser le widget Cloudinary pour éviter les problèmes CORS avec les gros fichiers
-    // Option : décommenter la ligne ci-dessous pour forcer l'utilisation du widget
-    // return handleWidgetUpload(type);
+    // ACTIVÉ : Widget Cloudinary pour tous les uploads (recommandé pour gros fichiers)
+    return handleWidgetUpload(type);
 
-    // Par défaut, utiliser l'input file standard
-    fileInputRefs[type].current.click();
+    // Désactivé : input file standard (décommenter pour réactiver)
+    // fileInputRefs[type].current.click();
   };
 
   // Fonction pour utiliser le widget Cloudinary (pour gros fichiers ou si CORS)
