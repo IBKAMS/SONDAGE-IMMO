@@ -145,32 +145,58 @@ exports.deleteVideo = async (req, res) => {
  */
 exports.saveDirectUpload = async (req, res) => {
   try {
+    console.log('=== SAVE DIRECT UPLOAD ===');
+    console.log('Body reçu:', JSON.stringify(req.body, null, 2));
+
     const { type, cloudinaryUrl, cloudinaryId, originalName, size } = req.body;
 
     if (!type || !cloudinaryUrl || !cloudinaryId) {
+      console.error('Données manquantes:', { type, cloudinaryUrl, cloudinaryId });
       return res.status(400).json({
-        message: 'Données manquantes (type, cloudinaryUrl, cloudinaryId requis)'
+        success: false,
+        message: 'Données manquantes (type, cloudinaryUrl, cloudinaryId requis)',
+        received: { type: !!type, cloudinaryUrl: !!cloudinaryUrl, cloudinaryId: !!cloudinaryId }
       });
     }
 
     if (!['visite3d', 'promoteur', 'analyseEconomique', 'architecte'].includes(type)) {
-      return res.status(400).json({ message: 'Type de vidéo invalide' });
+      console.error('Type invalide:', type);
+      return res.status(400).json({
+        success: false,
+        message: 'Type de vidéo invalide',
+        receivedType: type
+      });
     }
 
+    console.log('Recherche de vidéo existante du type:', type);
     // Supprimer l'ancienne vidéo du même type si elle existe
     const existingVideo = await Video.findOne({ type });
-    if (existingVideo && existingVideo.cloudinaryId) {
-      // Supprimer le fichier de Cloudinary
-      try {
-        await cloudinary.uploader.destroy(existingVideo.cloudinaryId, { resource_type: 'video' });
-      } catch (error) {
-        console.error('Erreur lors de la suppression de l\'ancienne vidéo sur Cloudinary:', error);
+    if (existingVideo) {
+      console.log('Vidéo existante trouvée:', existingVideo._id);
+      if (existingVideo.cloudinaryId) {
+        // Supprimer le fichier de Cloudinary
+        try {
+          console.log('Suppression Cloudinary ID:', existingVideo.cloudinaryId);
+          await cloudinary.uploader.destroy(existingVideo.cloudinaryId, { resource_type: 'video' });
+          console.log('Vidéo supprimée de Cloudinary');
+        } catch (error) {
+          console.error('Erreur lors de la suppression de l\'ancienne vidéo sur Cloudinary:', error);
+        }
       }
       // Supprimer de la base de données
       await Video.deleteOne({ type });
+      console.log('Vidéo supprimée de MongoDB');
     }
 
     // Sauvegarder la nouvelle vidéo
+    console.log('Création de la nouvelle vidéo avec:', {
+      type,
+      filename: originalName || 'video',
+      path: cloudinaryUrl,
+      cloudinaryId,
+      size: size || 0
+    });
+
     const video = new Video({
       type,
       filename: originalName || 'video',
@@ -182,6 +208,7 @@ exports.saveDirectUpload = async (req, res) => {
     });
 
     await video.save();
+    console.log('Vidéo sauvegardée avec succès dans MongoDB:', video._id);
 
     res.status(201).json({
       success: true,
@@ -195,11 +222,17 @@ exports.saveDirectUpload = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Erreur lors de la sauvegarde de la vidéo:', error);
+    console.error('ERREUR DÉTAILLÉE lors de la sauvegarde de la vidéo:');
+    console.error('Message:', error.message);
+    console.error('Stack:', error.stack);
+    console.error('Nom:', error.name);
+    if (error.code) console.error('Code:', error.code);
+
     res.status(500).json({
       success: false,
       message: 'Erreur lors de la sauvegarde de la vidéo',
-      error: error.message
+      error: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 };
