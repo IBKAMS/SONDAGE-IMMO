@@ -27,13 +27,33 @@ const allowedOrigins = [
   'http://localhost:3001'  // Frontend admin en dev
 ];
 
+// Patterns pour les URLs de prévisualisation Vercel
+const allowedPatterns = [
+  /^https:\/\/sondage-immo-utilisateur-.*\.vercel\.app$/,
+  /^https:\/\/sondage-immo-admin-.*\.vercel\.app$/
+];
+
 const corsOptions = {
   origin: function (origin, callback) {
     // AJOUTE CETTE LIGNE POUR VOIR L'ORIGINE
     console.log(">>> Demande CORS reçue de l'origine :", origin);
 
     // Autoriser les requêtes sans origin (ex: Postman, apps mobiles)
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+    if (!origin) {
+      callback(null, true);
+      return;
+    }
+
+    // Vérifier la whitelist exacte
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+      return;
+    }
+
+    // Vérifier les patterns (URLs de prévisualisation Vercel)
+    const isAllowedPattern = allowedPatterns.some(pattern => pattern.test(origin));
+    if (isAllowedPattern) {
+      console.log(">>> URL de prévisualisation Vercel autorisée :", origin);
       callback(null, true);
     } else {
       console.error("!!! ERREUR CORS : Origine non autorisée :", origin);
