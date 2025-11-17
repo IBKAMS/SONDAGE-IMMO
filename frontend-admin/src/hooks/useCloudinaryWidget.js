@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { getFileSizeInfo, getCompressionSuggestions } from '../utils/videoCompressor';
+// import { getFileSizeInfo, getCompressionSuggestions } from '../utils/videoCompressor';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
 
@@ -202,5 +202,3 @@ export const useCloudinaryWidget = () => {
 
   return { openWidget };
 };
-
-export default useCloudinaryWidget;

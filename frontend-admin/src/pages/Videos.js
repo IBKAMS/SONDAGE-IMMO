@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FaUpload, FaCheckCircle, FaVideo, FaPlay, FaTimes, FaDraftingCompass, FaImage, FaHome } from 'react-icons/fa';
 import API_URL from '../config';
-import useCloudinaryWidget from '../hooks/useCloudinaryWidget';
+import { useCloudinaryWidget } from '../hooks/useCloudinaryWidget';
 import './Videos.css';
 
 const Videos = () => {
