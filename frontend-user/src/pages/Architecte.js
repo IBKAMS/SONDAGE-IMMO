@@ -29,7 +29,12 @@ const Architecte = () => {
         if (videoResponse.ok) {
           const videoData = await videoResponse.json();
           if (videoData && videoData.url) {
-            setVideoUrl(`${API_URL}${videoData.url}`);
+            // Si l'URL commence par http/https, c'est une URL complète (Cloudinary)
+            // Sinon, c'est une URL relative et on ajoute API_URL
+            const url = videoData.url.startsWith('http')
+              ? videoData.url
+              : `${API_URL}${videoData.url}`;
+            setVideoUrl(url);
           }
         }
       } catch (error) {
