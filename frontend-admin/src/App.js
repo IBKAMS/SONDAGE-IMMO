@@ -18,7 +18,7 @@ import LocalisationAdmin from './pages/Localisation';
 import AnalyseEconomiqueAdmin from './pages/AnalyseEconomique';
 import OptionAchatAdmin from './pages/OptionAchatAdmin';
 import TestCloudinary from './pages/TestCloudinary';
-import TestCompression from './pages/TestCompression';
+import TestCompressionSimple from './pages/TestCompressionSimple';
 import './App.css';
 
 function App() {
@@ -53,7 +53,7 @@ function App() {
                       <Route path="/analyse-economique" element={<AnalyseEconomiqueAdmin />} />
                       <Route path="/option-achat" element={<OptionAchatAdmin />} />
                       <Route path="/test-cloudinary" element={<TestCloudinary />} />
-                      <Route path="/test-compression" element={<TestCompression />} />
+                      <Route path="/test-compression" element={<TestCompressionSimple />} />
                     </Routes>
                   </main>
                 </div>
