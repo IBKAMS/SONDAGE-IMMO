@@ -32,7 +32,7 @@ export const useCloudinaryWidget = () => {
           resourceType: 'video',
           sources: ['local', 'url', 'camera'],
           multiple: false,
-          maxFileSize: 1000000000, // 1GB max
+          maxFileSize: 2000000000, // 2GB max
           clientAllowedFormats: ['video', 'image'],
           maxChunkSize: 20000000, // 20MB chunks
           showPoweredBy: false,
