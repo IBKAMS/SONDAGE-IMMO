@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
-import VideoUploadWithCompression from '../components/VideoUploadWithCompression';
+import React, { useState, lazy, Suspense } from 'react';
 import './TestCompression.css';
+
+// Lazy loading du composant pour éviter les erreurs de build
+const VideoUploadWithCompression = lazy(() => import('../components/VideoUploadWithCompression'));
 
 const TestCompression = () => {
   const [uploadedVideos, setUploadedVideos] = useState([]);
@@ -73,10 +75,12 @@ const TestCompression = () => {
             <li>🎯 Compression optimisée : H.264, 720p, CRF adaptatif</li>
           </ul>
         </div>
-        <VideoUploadWithCompression
-          type="presentation"
-          onUploadSuccess={handleUploadSuccess}
-        />
+        <Suspense fallback={<div>Chargement du module de compression...</div>}>
+          <VideoUploadWithCompression
+            type="presentation"
+            onUploadSuccess={handleUploadSuccess}
+          />
+        </Suspense>
       </div>
 
       {/* Liste des vidéos uploadées */}

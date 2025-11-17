@@ -3,8 +3,10 @@
  * Compresse automatiquement les vidéos > 100MB pour respecter la limite Cloudinary gratuite
  */
 
-import { FFmpeg } from '@ffmpeg/ffmpeg';
-import { fetchFile, toBlobURL } from '@ffmpeg/util';
+// Lazy loading pour éviter les erreurs de build sur Vercel
+let FFmpeg = null;
+let fetchFile = null;
+let toBlobURL = null;
 
 // Instance FFmpeg singleton
 let ffmpegInstance = null;
@@ -19,6 +21,15 @@ const initFFmpeg = async () => {
   }
 
   try {
+    // Chargement dynamique des modules FFmpeg
+    if (!FFmpeg) {
+      const ffmpegModule = await import('@ffmpeg/ffmpeg');
+      const utilModule = await import('@ffmpeg/util');
+      FFmpeg = ffmpegModule.FFmpeg;
+      fetchFile = utilModule.fetchFile;
+      toBlobURL = utilModule.toBlobURL;
+    }
+
     ffmpegInstance = new FFmpeg();
 
     // Configuration pour éviter les problèmes CORS

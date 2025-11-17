@@ -1,7 +1,10 @@
 import React, { useState, useRef } from 'react';
-import { compressVideoWithFFmpeg, CompressionProgress } from '../utils/ffmpegCompressor';
 import { useCloudinaryWidget } from '../hooks/useCloudinaryWidget';
 import './VideoUploadWithCompression.css';
+
+// Import dynamique pour éviter les erreurs de build
+let compressVideoWithFFmpeg = null;
+let CompressionProgress = null;
 
 const VideoUploadWithCompression = ({ type, onUploadSuccess }) => {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -41,6 +44,13 @@ const VideoUploadWithCompression = ({ type, onUploadSuccess }) => {
 
     try {
       console.log('Démarrage de la compression...');
+
+      // Charger le module de compression si pas déjà fait
+      if (!compressVideoWithFFmpeg) {
+        const ffmpegModule = await import('../utils/ffmpegCompressor');
+        compressVideoWithFFmpeg = ffmpegModule.compressVideoWithFFmpeg;
+        CompressionProgress = ffmpegModule.CompressionProgress;
+      }
 
       const compressedFile = await compressVideoWithFFmpeg(
         selectedFile,
@@ -200,10 +210,20 @@ const VideoUploadWithCompression = ({ type, onUploadSuccess }) => {
 
       {/* Barre de progression de compression */}
       {isCompressing && (
-        <CompressionProgress
-          progress={compressionProgress}
-          message={compressionMessage}
-        />
+        CompressionProgress ? (
+          <CompressionProgress
+            progress={compressionProgress}
+            message={compressionMessage}
+          />
+        ) : (
+          <div className="compression-progress-fallback">
+            <h3>Compression en cours...</h3>
+            <div className="progress-bar">
+              <div className="progress-fill" style={{ width: `${compressionProgress}%` }} />
+            </div>
+            <p>{compressionMessage}</p>
+          </div>
+        )
       )}
     </div>
   );
