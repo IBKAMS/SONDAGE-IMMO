@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { getFileSizeInfo, getCompressionSuggestions } from '../utils/videoCompressor';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
 
@@ -32,7 +33,7 @@ export const useCloudinaryWidget = () => {
           resourceType: 'video',
           sources: ['local', 'url', 'camera'],
           multiple: false,
-          maxFileSize: 2000000000, // 2GB max
+          maxFileSize: 104857600, // 100MB - Limite du plan gratuit Cloudinary
           clientAllowedFormats: ['video', 'image'],
           maxChunkSize: 20000000, // 20MB chunks
           showPoweredBy: false,
@@ -94,7 +95,7 @@ export const useCloudinaryWidget = () => {
                   t: '{{size}} To'
                 },
                 errors: {
-                  file_too_large: 'La taille du fichier ({{size}}) dépasse le maximum autorisé ({{allowed}})',
+                  file_too_large: 'La taille du fichier ({{size}}) dépasse la limite du plan gratuit Cloudinary (100 MB). Veuillez compresser votre vidéo ou passer au plan Plus.',
                   max_dimensions_validation: 'Les dimensions de l\'image ({{width}}x{{height}}) dépassent le maximum autorisé',
                   min_dimensions_validation: 'Les dimensions de l\'image ({{width}}x{{height}}) sont inférieures au minimum requis',
                   unavailable: 'NA',
