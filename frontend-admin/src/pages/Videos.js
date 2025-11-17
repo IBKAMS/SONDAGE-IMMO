@@ -239,11 +239,8 @@ const Videos = () => {
                   chunkFormData.append('timestamp', timestamp);
                   chunkFormData.append('signature', signature);
                   chunkFormData.append('folder', folder);
-                  chunkFormData.append('resource_type', 'video'); // Important pour les vidéos
-                  // NE PAS utiliser upload_preset avec une signature (conflit)
-                  // Ajouter l'upload_id dans le FormData pour Cloudinary
-                  chunkFormData.append('unique_filename', 'false');
-                  chunkFormData.append('overwrite', 'false');
+                  // NE PAS inclure resource_type dans FormData car il n'est pas dans la signature
+                  // Le type est déterminé par l'URL (/video/upload)
 
                   // Upload ce chunk avec XMLHttpRequest
                   const chunkResponse = await new Promise((chunkResolve, chunkReject) => {
@@ -390,8 +387,8 @@ const Videos = () => {
           formData.append('timestamp', timestamp);
           formData.append('signature', signature);
           formData.append('folder', folder);
-          formData.append('resource_type', 'video'); // Important pour les vidéos
-          // NE PAS utiliser upload_preset avec une signature (conflit)
+          // NE PAS inclure resource_type dans FormData car il n'est pas dans la signature
+          // Le type est déterminé par l'URL (/video/upload)
 
           const xhr = new XMLHttpRequest();
 

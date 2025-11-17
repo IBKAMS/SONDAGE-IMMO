@@ -13,10 +13,12 @@ router.post('/signature', async (req, res) => {
     const timestamp = Math.round(new Date().getTime() / 1000);
 
     // Paramètres de l'upload qui seront signés
+    // IMPORTANT: Les paramètres doivent être EXACTEMENT les mêmes que ceux envoyés au frontend
+    // et dans l'ordre alphabétique pour la signature
     const params = {
-      timestamp: timestamp,
       folder: 'sondage-immo/videos', // Dossier pour les vidéos
-      resource_type: 'video'
+      timestamp: timestamp
+      // NE PAS inclure resource_type dans la signature si on ne l'envoie pas dans le FormData signé
     };
 
     // Générer la signature avec le secret API
@@ -24,6 +26,9 @@ router.post('/signature', async (req, res) => {
       params,
       process.env.CLOUDINARY_API_SECRET
     );
+
+    console.log('Signature générée pour params:', params);
+    console.log('Signature:', signature);
 
     // Retourner la signature et les paramètres nécessaires au frontend
     res.json({
