@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FaUpload, FaCheckCircle, FaVideo, FaPlay, FaTimes, FaDraftingCompass, FaImage, FaHome } from 'react-icons/fa';
 import API_URL from '../config';
+import useCloudinaryWidget from '../hooks/useCloudinaryWidget';
 import './Videos.css';
 
 const Videos = () => {
@@ -21,6 +22,9 @@ const Videos = () => {
   const [uploadingType, setUploadingType] = useState(null);
   const [uploadMode, setUploadMode] = useState({}); // 'simple' ou 'chunked'
   const [currentChunk, setCurrentChunk] = useState({});
+
+  // Hook pour le widget Cloudinary
+  const { openWidget } = useCloudinaryWidget();
 
   const fileInputRefs = {
     visite3d: useRef(null),
@@ -107,7 +111,37 @@ const Videos = () => {
   };
 
   const triggerFileInput = (type) => {
+    // Utiliser le widget Cloudinary pour éviter les problèmes CORS avec les gros fichiers
+    // Option : décommenter la ligne ci-dessous pour forcer l'utilisation du widget
+    // return handleWidgetUpload(type);
+
+    // Par défaut, utiliser l'input file standard
     fileInputRefs[type].current.click();
+  };
+
+  // Fonction pour utiliser le widget Cloudinary (pour gros fichiers ou si CORS)
+  const handleWidgetUpload = (type) => {
+    openWidget(
+      type,
+      (result) => {
+        // Succès : mettre à jour l'état avec l'URL Cloudinary
+        setVideos(prev => ({
+          ...prev,
+          [type]: {
+            file: null,
+            name: result.name,
+            url: result.url
+          }
+        }));
+        setUploadProgress(prev => ({ ...prev, [type]: 100 }));
+        console.log(`Vidéo ${type} uploadée via widget:`, result);
+      },
+      (error) => {
+        // Erreur
+        console.error(`Erreur upload ${type} via widget:`, error);
+        alert(`Erreur lors de l'upload : ${error.message}`);
+      }
+    );
   };
 
   const removeVideo = (type) => {
