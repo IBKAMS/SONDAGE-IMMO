@@ -19,7 +19,7 @@ export const useCloudinaryWidget = () => {
     })
     .then(res => res.json())
     .then(signatureData => {
-      const { signature, timestamp, apiKey, folder } = signatureData;
+      const { signature, timestamp, apiKey, folder, source } = signatureData;
 
       // Configuration du widget
       const widget = window.cloudinary.createUploadWidget(

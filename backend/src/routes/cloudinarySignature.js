@@ -15,9 +15,10 @@ router.post('/signature', async (req, res) => {
 
     // Paramètres pour l'upload - DOIVENT correspondre exactement à ce qui est envoyé
     const folder = 'sondage-immo/videos';
+    const source = 'uw'; // Upload Widget
 
     // Créer la chaîne à signer (ordre alphabétique des paramètres)
-    const stringToSign = `folder=${folder}&timestamp=${timestamp}`;
+    const stringToSign = `folder=${folder}&source=${source}&timestamp=${timestamp}`;
 
     // Générer la signature SHA1
     const signature = crypto
@@ -35,7 +36,8 @@ router.post('/signature', async (req, res) => {
       timestamp: timestamp,
       cloudName: process.env.CLOUDINARY_CLOUD_NAME,
       apiKey: process.env.CLOUDINARY_API_KEY,
-      folder: 'sondage-immo/videos'
+      folder: 'sondage-immo/videos',
+      source: 'uw'
     });
   } catch (error) {
     console.error('Erreur lors de la génération de la signature Cloudinary:', error);
@@ -54,9 +56,10 @@ router.post('/signature-image', async (req, res) => {
   try {
     const timestamp = Math.round(new Date().getTime() / 1000);
     const folder = 'sondage-immo/images';
+    const source = 'uw'; // Upload Widget
 
     // Créer la chaîne à signer (ordre alphabétique des paramètres)
-    const stringToSign = `folder=${folder}&timestamp=${timestamp}`;
+    const stringToSign = `folder=${folder}&source=${source}&timestamp=${timestamp}`;
 
     // Générer la signature SHA1
     const signature = crypto
@@ -73,7 +76,8 @@ router.post('/signature-image', async (req, res) => {
       timestamp: timestamp,
       cloudName: process.env.CLOUDINARY_CLOUD_NAME,
       apiKey: process.env.CLOUDINARY_API_KEY,
-      folder: 'sondage-immo/images'
+      folder: 'sondage-immo/images',
+      source: 'uw'
     });
   } catch (error) {
     console.error('Erreur lors de la génération de la signature Cloudinary:', error);
