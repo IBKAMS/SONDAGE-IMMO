@@ -266,9 +266,6 @@ const useVideoCompression = () => {
   };
 };
 
-// Export all functions individually
-export {
-  compressVideoWithFFmpeg as default,
-  CompressionProgress,
-  useVideoCompression
-};
+// Exports
+export { CompressionProgress, useVideoCompression };
+export default compressVideoWithFFmpeg;
