@@ -85,7 +85,7 @@ const calculateCompressionParams = (originalSizeMB, targetSizeMB = 95) => {
 /**
  * Compresse une vidéo en utilisant FFmpeg.wasm
  */
-export const compressVideoWithFFmpeg = async (file, onProgress = null) => {
+const compressVideoWithFFmpeg = async (file, onProgress = null) => {
   const startTime = Date.now();
   const originalSizeMB = file.size / (1024 * 1024);
 
@@ -184,7 +184,7 @@ export const compressVideoWithFFmpeg = async (file, onProgress = null) => {
 /**
  * Composant React pour afficher la progression de la compression
  */
-export const CompressionProgress = ({ progress, message }) => {
+const CompressionProgress = ({ progress, message }) => {
   return (
     <div style={{
       padding: '20px',
@@ -226,7 +226,7 @@ export const CompressionProgress = ({ progress, message }) => {
 /**
  * Hook React pour gérer la compression
  */
-export const useVideoCompression = () => {
+const useVideoCompression = () => {
   const [isCompressing, setIsCompressing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [message, setMessage] = useState('');
