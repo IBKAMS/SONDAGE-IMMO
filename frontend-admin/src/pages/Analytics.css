@@ -162,6 +162,21 @@
 .stat-description {
   font-size: 0.9rem;
   color: var(--text-light);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.info-tooltip {
+  cursor: help;
+  font-size: 0.85rem;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+  display: inline-block;
+}
+
+.info-tooltip:hover {
+  opacity: 1;
 }
 
 /* Charts */

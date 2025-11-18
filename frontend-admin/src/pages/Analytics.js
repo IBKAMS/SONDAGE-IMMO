@@ -8,7 +8,9 @@ import {
 import API_URL from '../config';
 import {
   BarChart, Bar, PieChart, Pie, Cell, LineChart, Line,
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
+  Treemap
 } from 'recharts';
 import './Analytics.css';
 
@@ -239,35 +241,82 @@ const Analytics = () => {
     value
   }));
 
-  const COLORS = ['#4F46E5', '#7C3AED', '#C850C0', '#27AE60', '#F39C12', '#E74C3C', '#3498DB', '#9B59B6'];
+  // Données pour le graphique radar - Profil Client
+  const radarData = [
+    {
+      subject: 'Budget',
+      value: Math.min((avgBudget / 250000000) * 100, 100), // Normalise sur 250M max
+      fullMark: 100
+    },
+    {
+      subject: 'Engagement',
+      value: avgInterest,
+      fullMark: 100
+    },
+    {
+      subject: 'Cash',
+      value: ((responses.filter(r => r.budget?.willingToPayCashWithDiscount === 'Oui').length / Math.max(totalResponses, 1)) * 100),
+      fullMark: 100
+    },
+    {
+      subject: 'Réservation',
+      value: parseFloat(avgReservationPercentage) || 0,
+      fullMark: 100
+    },
+    {
+      subject: 'Urgence',
+      value: ((responses.filter(r => r.motivations?.timeline === 'Immédiat' || r.motivations?.timeline === 'Dans 3 mois').length / Math.max(totalResponses, 1)) * 100),
+      fullMark: 100
+    },
+    {
+      subject: 'Stabilité',
+      value: ((responses.filter(r => r.demographics?.jobStability === 'Très stable').length / Math.max(totalResponses, 1)) * 100),
+      fullMark: 100
+    }
+  ];
+
+  // Palette de couleurs modernes et harmonieuses
+  const COLORS = [
+    '#10B981', // Vert émeraude
+    '#3B82F6', // Bleu vif
+    '#8B5CF6', // Violet doux
+    '#F59E0B', // Orange ambré
+    '#EF4444', // Rouge corail
+    '#06B6D4', // Cyan
+    '#EC4899', // Rose
+    '#6366F1', // Indigo
+    '#14B8A6', // Teal
+    '#F97316'  // Orange vif
+  ];
 
   const stats = [
     {
       icon: <FaUsers />,
       title: 'Total Réponses',
       value: totalResponses,
-      color: '#4F46E5',
+      color: '#10B981',
       description: 'Questionnaires soumis'
     },
     {
       icon: <FaMoneyBillWave />,
       title: 'Budget Moyen',
       value: `${(avgBudget / 1000000).toFixed(1)}M`,
-      color: '#7C3AED',
+      color: '#3B82F6',
       description: 'FCFA'
     },
     {
       icon: <FaChartLine />,
       title: 'Intérêt Moyen',
-      value: `${avgInterest.toFixed(1)}/10`,
-      color: '#C850C0',
-      description: 'Niveau d\'engagement'
+      value: `${avgInterest.toFixed(0)}/100`,
+      color: '#8B5CF6',
+      description: 'Score d\'engagement calculé',
+      tooltip: 'Score calculé sur 100 points basé sur: budget (30pts), paiement cash (20pts), réservation (15pts), timeline (15pts), visite (10pts), opinion (10pts), consentements (5pts), stabilité emploi (5pts)'
     },
     {
       icon: <FaHome />,
       title: 'Type Populaire',
       value: chartTypeLogement[0]?.name?.split(' ')[1] || 'N/A',
-      color: '#27AE60',
+      color: '#F59E0B',
       description: 'Plus demandé'
     }
   ];
@@ -361,12 +410,18 @@ const Analytics = () => {
             transition={{ duration: 0.5, delay: index * 0.1 }}
             className="stat-card"
             style={{ '--stat-color': stat.color }}
+            title={stat.tooltip || ''}
           >
             <div className="stat-icon">{stat.icon}</div>
             <div className="stat-content">
               <h3>{stat.title}</h3>
               <p className="stat-value">{stat.value}</p>
-              <span className="stat-description">{stat.description}</span>
+              <span className="stat-description">
+                {stat.description}
+                {stat.tooltip && (
+                  <span className="info-tooltip" title={stat.tooltip}> ℹ️</span>
+                )}
+              </span>
             </div>
           </motion.div>
         ))}
@@ -591,6 +646,85 @@ const Analytics = () => {
             </p>
           </div>
         </motion.div>
+
+        {/* Radar Chart - Profil Client */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.5 }}
+          className="chart-card"
+        >
+          <div className="chart-header">
+            <h3>Profil Client Moyen</h3>
+            <p>Vue d'ensemble des caractéristiques client</p>
+          </div>
+          <div className="chart-body">
+            <ResponsiveContainer width="100%" height={400}>
+              <RadarChart data={radarData}>
+                <PolarGrid stroke="#e0e0e0" />
+                <PolarAngleAxis dataKey="subject" tick={{ fill: '#666' }} />
+                <PolarRadiusAxis angle={90} domain={[0, 100]} tick={{ fill: '#666' }} />
+                <Radar
+                  name="Score Moyen"
+                  dataKey="value"
+                  stroke="#8B5CF6"
+                  fill="#8B5CF6"
+                  fillOpacity={0.6}
+                />
+                <Tooltip formatter={(value) => `${value.toFixed(0)}%`} />
+                <Legend />
+              </RadarChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="chart-interpretation">
+            <h4>Interprétation:</h4>
+            <p>
+              Le profil moyen montre {avgInterest > 70 ? 'un fort engagement' : avgInterest > 50 ? 'un engagement modéré' : 'un engagement à renforcer'}
+              avec un score de {avgInterest.toFixed(0)}/100. Les points forts incluent
+              {radarData.filter(d => d.value > 60).length > 0 ?
+                ` ${radarData.filter(d => d.value > 60).map(d => d.subject.toLowerCase()).join(', ')}.` :
+                ' des aspects à développer.'
+              }
+            </p>
+          </div>
+        </motion.div>
+
+        {/* Treemap - Répartition Professions */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.6 }}
+          className="chart-card"
+        >
+          <div className="chart-header">
+            <h3>Répartition des Professions</h3>
+            <p>Vue hiérarchique des secteurs d'activité</p>
+          </div>
+          <div className="chart-body">
+            <ResponsiveContainer width="100%" height={400}>
+              <Treemap
+                data={topProfessions}
+                dataKey="value"
+                aspectRatio={4 / 3}
+                stroke="#fff"
+                fill="#10B981"
+              >
+                <Tooltip
+                  formatter={(value) => `${value} répondant(s)`}
+                  contentStyle={{ background: 'rgba(255,255,255,0.95)', borderRadius: '8px' }}
+                />
+              </Treemap>
+            </ResponsiveContainer>
+          </div>
+          <div className="chart-interpretation">
+            <h4>Interprétation:</h4>
+            <p>
+              Le secteur dominant est "{topProfessions[0]?.name}" avec {((topProfessions[0]?.value / totalResponses) * 100).toFixed(0)}%
+              des répondants. Cette diversité professionnelle indique une clientèle
+              {topProfessions.length > 5 ? ' très variée' : ' relativement homogène'}.
+            </p>
+          </div>
+        </motion.div>
       </div>
 
       {/* Insights Section */}
@@ -606,14 +740,19 @@ const Analytics = () => {
             <div className="insight-icon">💰</div>
             <h3>Budget & Financement</h3>
             <ul>
-              <li>Budget moyen: {(avgBudget / 1000000).toFixed(1)}M FCFA</li>
-              <li>Forte demande pour les tranches 100-150M FCFA</li>
-              <li>Réservation: {reservationResponseCount} personne{reservationResponseCount > 1 ? 's' : ''} ({avgReservationPercentage}% moyen)</li>
-              <li>Besoin d'accompagnement bancaire important</li>
+              <li>Budget moyen: <strong>{(avgBudget / 1000000).toFixed(1)}M FCFA</strong></li>
+              <li>Répartition des budgets:</li>
+              {chartBudget.map((range, idx) => (
+                <li key={`budget-${idx}`} style={{marginLeft: '20px'}}>
+                  {range.name}: <strong>{range.value}</strong> ({((range.value / totalResponses) * 100).toFixed(1)}%)
+                </li>
+              )).filter(r => r.value > 0)}
+              <li>Réservation: <strong>{reservationResponseCount}</strong> personne{reservationResponseCount > 1 ? 's' : ''} ({avgReservationPercentage}% moyen)</li>
+              <li>Paiement cash accepté: <strong>{responses.filter(r => r.budget?.willingToPayCashWithDiscount === 'Oui').length}</strong> ({((responses.filter(r => r.budget?.willingToPayCashWithDiscount === 'Oui').length / totalResponses) * 100).toFixed(1)}%)</li>
             </ul>
             <p className="insight-recommendation">
-              <strong>Recommandation:</strong> Établir des partenariats avec des banques
-              pour faciliter l'accès au financement.
+              <strong>Recommandation:</strong> Établir des partenariats bancaires et proposer
+              des réductions attractives pour paiement comptant.
             </p>
           </div>
 
@@ -621,13 +760,17 @@ const Analytics = () => {
             <div className="insight-icon">🏠</div>
             <h3>Préférences Logement</h3>
             <ul>
-              <li>Type préféré: {chartTypeLogement[0]?.name}</li>
-              <li>Forte demande pour les grands espaces</li>
-              <li>Intérêt élevé pour la qualité de construction</li>
+              <li>Type préféré: <strong>{chartTypeLogement[0]?.name || 'N/A'}</strong></li>
+              {chartTypeLogement.map((type, idx) => (
+                <li key={idx}>
+                  {type.name}: <strong>{type.value}</strong> ({((type.value / totalResponses) * 100).toFixed(1)}%)
+                </li>
+              )).slice(0, 5)}
             </ul>
             <p className="insight-recommendation">
               <strong>Recommandation:</strong> Prioriser le développement de
-              {' ' + chartTypeLogement[0]?.name?.toLowerCase()} de qualité supérieure.
+              {' ' + (chartTypeLogement[0]?.name?.toLowerCase() || 'logements')} de qualité supérieure
+              avec {Math.round((chartTypeLogement[0]?.value / totalResponses) * 100)}% de la demande.
             </p>
           </div>
 
@@ -636,7 +779,7 @@ const Analytics = () => {
             <h3>Profil Client</h3>
             <ul>
               <li>Professions stables (cadres, fonctionnaires)</li>
-              <li>Niveau d'intérêt moyen: {avgInterest.toFixed(1)}/10</li>
+              <li>Niveau d'intérêt moyen: {avgInterest.toFixed(0)}/100</li>
               <li>Forte engagement sur le long terme</li>
             </ul>
             <p className="insight-recommendation">
@@ -840,6 +983,47 @@ const Analytics = () => {
                   </div>
                   <div className="detail-item">
                     <strong>Premier achat:</strong> {selectedResponse.motivations?.isFirstPurchase ? 'Oui' : 'Non'}
+                  </div>
+                  {selectedResponse.prioritesPrincipales && (
+                    <div className="detail-item" style={{gridColumn: 'span 2'}}>
+                      <strong>Priorités principales (classement):</strong>
+                      <ol style={{marginTop: '5px', paddingLeft: '20px'}}>
+                        {Object.entries(selectedResponse.prioritesPrincipales)
+                          .filter(([key, value]) => value && value !== '')
+                          .sort((a, b) => {
+                            const order = {'Premier': 1, 'Second': 2, 'Troisième': 3};
+                            return (order[a[0]] || 999) - (order[b[0]] || 999);
+                          })
+                          .map(([rank, priority]) => (
+                            <li key={rank}>
+                              <strong>{rank}:</strong> {priority}
+                            </li>
+                          ))
+                        }
+                      </ol>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Engagements */}
+              <div className="detail-section">
+                <h3>Engagements et Consentements</h3>
+                <div className="detail-grid">
+                  <div className="detail-item">
+                    <strong>Visite programmée:</strong> {selectedResponse.engagements?.scheduledVisit || 'N/A'}
+                  </div>
+                  <div className="detail-item">
+                    <strong>Opinion sur le projet:</strong> {selectedResponse.engagements?.projectOpinion || 'N/A'}
+                  </div>
+                  <div className="detail-item">
+                    <strong>Consent contact commercial:</strong> {selectedResponse.consents?.marketingContact ? 'Oui' : 'Non'}
+                  </div>
+                  <div className="detail-item">
+                    <strong>Consent partage données:</strong> {selectedResponse.consents?.dataSharing ? 'Oui' : 'Non'}
+                  </div>
+                  <div className="detail-item">
+                    <strong>Consent newsletter:</strong> {selectedResponse.consents?.newsletter ? 'Oui' : 'Non'}
                   </div>
                 </div>
               </div>
