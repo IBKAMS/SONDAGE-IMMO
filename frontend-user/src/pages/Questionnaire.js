@@ -239,7 +239,8 @@ const Questionnaire = () => {
           name: 'stabiliteEmploi',
           label: 'Stabilité de l\'emploi',
           type: 'radio',
-          options: ['CDI', 'CDD', 'Temporaire', 'Entrepreneur']
+          options: ['CDI', 'CDD', 'Temporaire', 'Entrepreneur'],
+          required: true
         },
         { name: 'employeur', label: 'Employeur', type: 'text' },
         {
@@ -372,7 +373,8 @@ const Questionnaire = () => {
           label: 'Avec une réduction de 5%, seriez-vous prêt à payer comptant (cash) ?',
           type: 'radio',
           options: ['Oui', 'Non', 'À étudier'],
-          tooltip: 'Nous proposons une réduction de 5% sur le prix total pour tout paiement comptant. Cette offre vous intéresse-t-elle ?'
+          tooltip: 'Nous proposons une réduction de 5% sur le prix total pour tout paiement comptant. Cette offre vous intéresse-t-elle ?',
+          required: true
         },
         {
           name: 'delaiObtentionPret',
@@ -621,6 +623,22 @@ const Questionnaire = () => {
           step: 1
         },
         {
+          name: 'souhaitVisite',
+          label: 'Souhaitez-vous visiter le projet ?',
+          type: 'radio',
+          options: ['Oui', 'Non', 'Peut-être plus tard'],
+          required: true,
+          tooltip: 'Voulez-vous programmer une visite pour découvrir notre projet immobilier ?'
+        },
+        {
+          name: 'avisSurProjet',
+          label: 'Votre opinion sur notre projet',
+          type: 'select',
+          options: ['Très intéressé', 'Intéressé', 'Moyennement intéressé', 'Peu intéressé', 'Pas encore décidé'],
+          required: true,
+          tooltip: 'Quel est votre niveau d\'intérêt pour le projet Cité KONGO ?'
+        },
+        {
           name: 'disponibiliteVisite',
           label: 'Disponibilité pour visite',
           type: 'checkbox',
@@ -647,7 +665,17 @@ const Questionnaire = () => {
           name: 'newsletter',
           label: 'Inscription à la newsletter',
           type: 'radio',
-          options: ['Oui', 'Non']
+          options: ['Oui', 'Non'],
+          required: true,
+          tooltip: 'Souhaitez-vous recevoir nos actualités et offres spéciales ?'
+        },
+        {
+          name: 'consentementDonnees',
+          label: 'J\'accepte que mes données soient utilisées pour le traitement de ma demande',
+          type: 'radio',
+          options: ['Oui', 'Non'],
+          required: true,
+          tooltip: 'Vos données seront utilisées uniquement dans le cadre de votre projet immobilier et ne seront pas partagées avec des tiers.'
         }
       ]
     }
@@ -811,7 +839,7 @@ const Questionnaire = () => {
       projectKnowledge: {
         howKnown: data.commentConnu || '',
         projectOpinion: data.avisSurProjet || '',
-        wantVisit: data.souhaitVisite === 'oui',
+        wantVisit: data.souhaitVisite === 'Oui',
         visitAvailability: Array.isArray(data.disponibiliteVisite) ?
                           data.disponibiliteVisite.join(', ') : '',
         specificQuestions: data.questionsPrecises || '',
@@ -831,8 +859,8 @@ const Questionnaire = () => {
         confirmEmail: data.email,
         preferredContactMethod: data.modeContactPrefere || '',
         bestContactTime: data.meilleureHeure || '',
-        newsletterConsent: data.newsletter === 'oui' || data.newsletter === true,
-        dataUsageConsent: data.autoriseContact === 'oui' || data.autoriseContact === true
+        newsletterConsent: data.newsletter === 'Oui',
+        dataUsageConsent: data.consentementDonnees === 'Oui'
       }
     };
   };
