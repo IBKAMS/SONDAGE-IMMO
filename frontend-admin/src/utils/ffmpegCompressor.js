@@ -1,3 +1,4 @@
+/* eslint-disable import/first */
 /**
  * Module de compression vidéo utilisant FFmpeg.wasm
  * Compresse automatiquement les vidéos > 100MB pour respecter la limite Cloudinary gratuite
@@ -266,7 +267,5 @@ const useVideoCompression = () => {
   };
 };
 
-/* eslint-disable import/first */
 export { CompressionProgress, useVideoCompression, compressVideoWithFFmpeg };
 export default compressVideoWithFFmpeg;
-/* eslint-enable import/first */
