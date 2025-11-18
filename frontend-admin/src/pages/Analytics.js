@@ -1202,7 +1202,7 @@ const Analytics = () => {
                       <span className="qualification-percent">{qualificationStats.tiede.percentage}%</span>
                     </div>
                     <div className="qualification-item froid">
-                      <span className="qualification-label">❄️ FROID (<40pts)</span>
+                      <span className="qualification-label">❄️ FROID (&lt;40pts)</span>
                       <span className="qualification-value">{qualificationStats.froid.count}</span>
                       <span className="qualification-percent">{qualificationStats.froid.percentage}%</span>
                     </div>
