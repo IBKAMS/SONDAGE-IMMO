@@ -575,43 +575,25 @@ const Questionnaire = () => {
           required: true
         },
         {
-          name: 'prioritePrincipale',
-          label: 'Priorité principale',
-          type: 'radio',
-          options: ['Prix', 'Localisation', 'Superficie', 'Qualité', 'Délai'],
-          required: true
-        },
-        {
-          name: 'critereDecisif',
-          label: 'Critère décisif pour l\'achat',
-          type: 'select',
+          name: 'prioritesPrincipales',
+          label: 'Classez vos 3 priorités principales (Premier, Second, Troisième)',
+          type: 'ranking',
           options: [
             'Prix abordable',
-            'Emplacement stratégique',
+            'Localisation stratégique',
+            'Superficie adaptée',
             'Qualité de construction',
-            'Superficie généreuse',
             'Design moderne',
             'Sécurité du quartier',
-            'Proximité services (écoles, hôpitaux)',
+            'Proximité services',
             'Facilités de financement',
-            'Délai de livraison court',
-            'Réputation du promoteur',
-            'Potentiel de plus-value',
-            'Équipements modernes',
-            'Espaces verts',
-            'Parking disponible',
-            'Calme et tranquillité',
-            'Accessibilité transport',
-            'Autre'
+            'Délai de livraison',
+            'Budget maîtrisé',
+            'Potentiel de revente',
+            'Équipements modernes'
           ],
-          required: true
-        },
-        {
-          name: 'preoccupationsPrincipales',
-          label: 'Préoccupations principales',
-          type: 'checkbox',
-          options: ['Budget', 'Financement', 'Qualité construction', 'Délai livraison', 'Revente future', 'Sécurité'],
-          required: true
+          required: true,
+          maxSelections: 3
         },
         {
           name: 'informationsSup',
@@ -1092,6 +1074,50 @@ const Questionnaire = () => {
                             <span className="checkbox-custom"></span>
                             <span className="checkbox-text">{option}</span>
                           </label>
+                        ))}
+                      </div>
+                    )}
+
+                    {question.type === 'ranking' && (
+                      <div className="ranking-group">
+                        {['Premier', 'Second', 'Troisième'].map((rang, index) => (
+                          <div key={rang} className="ranking-item">
+                            <label>{rang} choix :</label>
+                            <select
+                              value={(formData[question.name] || [])[index] || ''}
+                              onChange={(e) => {
+                                const currentRankings = formData[question.name] || [];
+                                const newRankings = [...currentRankings];
+                                newRankings[index] = e.target.value;
+                                // Vérifier qu'il n'y a pas de doublons
+                                const filtered = newRankings.filter((item, idx) =>
+                                  !item || idx === index || item !== e.target.value
+                                );
+                                if (filtered.length === newRankings.length) {
+                                  handleChange(question.name, newRankings);
+                                } else {
+                                  alert('Cette priorité a déjà été sélectionnée');
+                                }
+                              }}
+                              required={question.required && index === 0}
+                            >
+                              <option value="">Sélectionnez une priorité</option>
+                              {question.options.map(option => {
+                                const isDisabled = formData[question.name] &&
+                                  formData[question.name].includes(option) &&
+                                  formData[question.name][index] !== option;
+                                return (
+                                  <option
+                                    key={option}
+                                    value={option}
+                                    disabled={isDisabled}
+                                  >
+                                    {option}
+                                  </option>
+                                );
+                              })}
+                            </select>
+                          </div>
                         ))}
                       </div>
                     )}
