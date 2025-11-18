@@ -3,6 +3,8 @@
  * Compresse automatiquement les vidéos > 100MB pour respecter la limite Cloudinary gratuite
  */
 
+import { useState } from 'react';
+
 // Lazy loading pour éviter les erreurs de build sur Vercel
 let FFmpeg = null;
 let fetchFile = null;
@@ -263,9 +265,6 @@ export const useVideoCompression = () => {
     error
   };
 };
-
-// Pour React
-import { useState } from 'react';
 
 export default {
   compressVideoWithFFmpeg,
