@@ -266,5 +266,7 @@ const useVideoCompression = () => {
   };
 };
 
+/* eslint-disable import/first */
 export { CompressionProgress, useVideoCompression, compressVideoWithFFmpeg };
 export default compressVideoWithFFmpeg;
+/* eslint-enable import/first */
