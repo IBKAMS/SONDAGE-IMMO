@@ -370,6 +370,270 @@ const Analytics = () => {
     '#F97316'  // Orange vif
   ];
 
+  // Fonctions de génération de commentaires automatiques
+  const generateTypeLogementComment = () => {
+    if (chartTypeLogement.length === 0 || totalResponses === 0) {
+      return "Aucune donnée disponible pour l'analyse des types de logements.";
+    }
+    const topType = chartTypeLogement[0];
+    const topPercent = ((topType.value / totalResponses) * 100).toFixed(1);
+    const secondType = chartTypeLogement[1];
+
+    let comment = `Le type "${topType.name}" domine avec ${topPercent}% des demandes (${topType.value} réponse${topType.value > 1 ? 's' : ''}).`;
+
+    if (secondType) {
+      const secondPercent = ((secondType.value / totalResponses) * 100).toFixed(1);
+      comment += ` Suivi de "${secondType.name}" à ${secondPercent}%.`;
+    }
+
+    if (parseFloat(topPercent) > 50) {
+      comment += " Cette forte concentration suggère une demande très ciblée - priorisez ce type de bien.";
+    } else if (chartTypeLogement.length > 3) {
+      comment += " La diversité des préférences indique un marché hétérogène - maintenez une offre variée.";
+    }
+
+    return comment;
+  };
+
+  const generateBudgetComment = () => {
+    if (totalResponses === 0) {
+      return "Aucune donnée budgétaire disponible.";
+    }
+    const maxRange = budgetRanges.reduce((max, r) => r.count > max.count ? r : max);
+    const avgBudgetM = (avgBudget / 1000000).toFixed(1);
+    const maxRangePercent = ((maxRange.count / totalResponses) * 100).toFixed(1);
+
+    let comment = `Budget moyen: ${avgBudgetM}M FCFA. La tranche ${maxRange.range} est la plus représentée (${maxRangePercent}%, ${maxRange.count} client${maxRange.count > 1 ? 's' : ''}).`;
+
+    if (avgBudget >= 200000000) {
+      comment += " Clientèle à fort pouvoir d'achat - proposez des biens premium avec finitions haut de gamme.";
+    } else if (avgBudget >= 150000000) {
+      comment += " Segment moyen-haut - équilibrez qualité et prix pour maximiser les conversions.";
+    } else {
+      comment += " Segment accessible - optimisez les coûts tout en maintenant la qualité.";
+    }
+
+    return comment;
+  };
+
+  const generateProfessionComment = () => {
+    if (topProfessions.length === 0 || totalResponses === 0) {
+      return "Aucune donnée professionnelle disponible.";
+    }
+    const top3 = topProfessions.slice(0, 3);
+    const top3Percent = ((top3.reduce((sum, p) => sum + p.value, 0) / totalResponses) * 100).toFixed(1);
+
+    let comment = `Top 3: ${top3.map(p => p.name).join(', ')} représentent ${top3Percent}% des répondants.`;
+
+    const hasStableJobs = top3.some(p =>
+      p.name.toLowerCase().includes('fonctionnaire') ||
+      p.name.toLowerCase().includes('cadre') ||
+      p.name.toLowerCase().includes('ingénieur')
+    );
+
+    if (hasStableJobs) {
+      comment += " Profils stables avec revenus réguliers - potentiel élevé pour financement bancaire.";
+    } else {
+      comment += " Adaptez vos modalités de paiement à la diversité des profils professionnels.";
+    }
+
+    return comment;
+  };
+
+  const generateDelaiComment = () => {
+    if (chartDelai.length === 0 || totalResponses === 0) {
+      return "Aucune donnée sur les délais disponible.";
+    }
+    const urgent = chartDelai.filter(d =>
+      d.name.toLowerCase().includes('immédiat') ||
+      d.name.toLowerCase().includes('3 mois') ||
+      d.name.toLowerCase().includes('urgent')
+    );
+    const urgentCount = urgent.reduce((sum, d) => sum + d.value, 0);
+    const urgentPercent = ((urgentCount / totalResponses) * 100).toFixed(1);
+
+    let comment = `${urgentPercent}% des clients souhaitent acheter à court terme (immédiat à 3 mois).`;
+
+    if (parseFloat(urgentPercent) > 50) {
+      comment += " Forte urgence détectée - assurez la disponibilité immédiate des biens.";
+    } else if (parseFloat(urgentPercent) > 30) {
+      comment += " Demande modérée à court terme - planifiez un stock tampon.";
+    } else {
+      comment += " Majorité en phase de réflexion - nourrissez ces prospects avec du contenu régulier.";
+    }
+
+    return comment;
+  };
+
+  const generatePrioriteComment = () => {
+    if (chartPriorite.length === 0 || totalResponses === 0) {
+      return "Aucune donnée sur les priorités disponible.";
+    }
+    const topPriorite = chartPriorite[0];
+    const topPercent = ((topPriorite.value / totalResponses) * 100).toFixed(1);
+
+    let comment = `Priorité n°1: "${topPriorite.name}" pour ${topPercent}% des clients.`;
+
+    if (topPriorite.name.toLowerCase().includes('prix') || topPriorite.name.toLowerCase().includes('budget')) {
+      comment += " Le prix reste le critère décisif - travaillez vos arguments de valeur.";
+    } else if (topPriorite.name.toLowerCase().includes('qualité') || topPriorite.name.toLowerCase().includes('finition')) {
+      comment += " La qualité prime - investissez dans les finitions et matériaux.";
+    } else if (topPriorite.name.toLowerCase().includes('localisation') || topPriorite.name.toLowerCase().includes('emplacement')) {
+      comment += " L'emplacement est clé - valorisez les atouts géographiques du projet.";
+    }
+
+    return comment;
+  };
+
+  const generateFinancementComment = () => {
+    if (chartFinancement.length === 0 || totalResponses === 0) {
+      return "Aucune donnée de financement disponible.";
+    }
+    const needFinancing = chartFinancement.filter(f =>
+      f.name.toLowerCase().includes('oui') ||
+      f.name.toLowerCase().includes('crédit') ||
+      f.name.toLowerCase().includes('bancaire')
+    );
+    const noFinancing = chartFinancement.filter(f =>
+      f.name.toLowerCase().includes('non') ||
+      f.name.toLowerCase().includes('comptant')
+    );
+
+    const needCount = needFinancing.reduce((sum, f) => sum + f.value, 0);
+    const noCount = noFinancing.reduce((sum, f) => sum + f.value, 0);
+    const cashPercent = ((noCount / totalResponses) * 100).toFixed(1);
+
+    let comment = `${cashPercent}% des clients prévoient un paiement comptant.`;
+
+    if (parseFloat(cashPercent) > 40) {
+      comment += " Fort potentiel cash - proposez des remises attractives pour paiement immédiat.";
+    } else {
+      comment += ` ${((needCount / totalResponses) * 100).toFixed(1)}% nécessitent un financement - renforcez vos partenariats bancaires.`;
+    }
+
+    return comment;
+  };
+
+  const generateRadarComment = () => {
+    if (totalResponses === 0) {
+      return "Aucune donnée disponible pour l'analyse du profil client.";
+    }
+    const strongPoints = radarData.filter(d => d.value > 60);
+    const weakPoints = radarData.filter(d => d.value < 40);
+
+    let comment = `Score d'engagement moyen: ${avgInterest.toFixed(0)}/100.`;
+
+    if (strongPoints.length > 0) {
+      comment += ` Points forts: ${strongPoints.map(s => s.subject).join(', ')}.`;
+    }
+    if (weakPoints.length > 0) {
+      comment += ` Axes d'amélioration: ${weakPoints.map(w => w.subject).join(', ')}.`;
+    }
+
+    if (avgInterest >= 70) {
+      comment += " Profil client très engagé - convertissez rapidement ces prospects chauds.";
+    } else if (avgInterest >= 50) {
+      comment += " Engagement modéré - renforcez la relation avec des relances ciblées.";
+    } else {
+      comment += " Engagement faible - qualifiez mieux les prospects en amont.";
+    }
+
+    return comment;
+  };
+
+  // Données pour le radar des motivations d'achat
+  const motivationsRadarData = [
+    {
+      subject: 'Investissement',
+      value: ((responses.filter(r =>
+        r.motivations?.purchaseReason?.toLowerCase().includes('investissement') ||
+        r.motivations?.purchaseReason?.toLowerCase().includes('locatif')
+      ).length / Math.max(totalResponses, 1)) * 100),
+      fullMark: 100
+    },
+    {
+      subject: 'Résidence principale',
+      value: ((responses.filter(r =>
+        r.motivations?.purchaseReason?.toLowerCase().includes('résidence') ||
+        r.motivations?.purchaseReason?.toLowerCase().includes('habiter')
+      ).length / Math.max(totalResponses, 1)) * 100),
+      fullMark: 100
+    },
+    {
+      subject: 'Premier achat',
+      value: ((responses.filter(r => r.motivations?.isFirstPurchase === true).length / Math.max(totalResponses, 1)) * 100),
+      fullMark: 100
+    },
+    {
+      subject: 'Retraite',
+      value: ((responses.filter(r =>
+        r.motivations?.purchaseReason?.toLowerCase().includes('retraite')
+      ).length / Math.max(totalResponses, 1)) * 100),
+      fullMark: 100
+    },
+    {
+      subject: 'Famille',
+      value: ((responses.filter(r =>
+        r.demographics?.familyStatus?.toLowerCase().includes('marié') ||
+        r.demographics?.familyStatus?.toLowerCase().includes('enfant')
+      ).length / Math.max(totalResponses, 1)) * 100),
+      fullMark: 100
+    }
+  ];
+
+  // Données pour le radar de capacité financière
+  const financialRadarData = [
+    {
+      subject: 'Budget élevé',
+      value: ((responses.filter(r => (r.budget?.globalBudget || 0) >= 200000000).length / Math.max(totalResponses, 1)) * 100),
+      fullMark: 100
+    },
+    {
+      subject: 'Apport conséquent',
+      value: ((responses.filter(r => (r.budget?.downPaymentAvailable || 0) >= 50000000).length / Math.max(totalResponses, 1)) * 100),
+      fullMark: 100
+    },
+    {
+      subject: 'Paiement cash',
+      value: ((responses.filter(r => r.budget?.willingToPayCashWithDiscount === 'Oui').length / Math.max(totalResponses, 1)) * 100),
+      fullMark: 100
+    },
+    {
+      subject: 'Réservation 30%+',
+      value: ((responses.filter(r => {
+        const pct = parseInt(String(r.budget?.reservationPercentage || '0').replace('%', ''));
+        return pct >= 30;
+      }).length / Math.max(totalResponses, 1)) * 100),
+      fullMark: 100
+    },
+    {
+      subject: 'Capacité mensuelle',
+      value: ((responses.filter(r => (r.budget?.monthlyCapacity || 0) >= 500000).length / Math.max(totalResponses, 1)) * 100),
+      fullMark: 100
+    }
+  ];
+
+  // Données pour l'évolution temporelle des réponses
+  const getTimelineData = () => {
+    const last30Days = [];
+    for (let i = 29; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0];
+      const count = responses.filter(r => {
+        const responseDate = new Date(r.date_soumission || r.createdAt);
+        return responseDate.toISOString().split('T')[0] === dateStr;
+      }).length;
+      last30Days.push({
+        date: date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }),
+        count
+      });
+    }
+    return last30Days;
+  };
+
+  const timelineData = getTimelineData();
+
   const stats = [
     {
       icon: <FaUsers />,
@@ -399,7 +663,7 @@ const Analytics = () => {
     {
       icon: <FaHome />,
       title: 'Type Populaire',
-      value: chartTypeLogement[0]?.name?.split(' ')[1] || 'N/A',
+      value: chartTypeLogement[0]?.name || 'N/A',
       color: '#F59E0B',
       description: 'Plus demandé',
       onClick: () => setShowPropertyTypeModal(true)
@@ -551,11 +815,8 @@ const Analytics = () => {
             </ResponsiveContainer>
           </div>
           <div className="chart-interpretation">
-            <h4>Interprétation:</h4>
-            <p>
-              La majorité des clients s'intéressent aux {chartTypeLogement[0]?.name || 'logements'}.
-              Cette tendance indique que le promoteur devrait prioriser ce type de bien dans son offre.
-            </p>
+            <h4>Analyse automatique:</h4>
+            <p>{generateTypeLogementComment()}</p>
           </div>
         </motion.div>
 
@@ -582,11 +843,8 @@ const Analytics = () => {
             </ResponsiveContainer>
           </div>
           <div className="chart-interpretation">
-            <h4>Interprétation:</h4>
-            <p>
-              La tranche de budget la plus représentée est {budgetRanges.reduce((max, r) => r.count > max.count ? r : max).range} FCFA.
-              Cela permet d'ajuster l'offre de logements aux capacités financières du marché cible.
-            </p>
+            <h4>Analyse automatique:</h4>
+            <p>{generateBudgetComment()}</p>
           </div>
         </motion.div>
 
@@ -613,12 +871,8 @@ const Analytics = () => {
             </ResponsiveContainer>
           </div>
           <div className="chart-interpretation">
-            <h4>Interprétation:</h4>
-            <p>
-              Les professions les plus représentées sont {topProfessions[0]?.name} ({topProfessions[0]?.value} réponses)
-              et {topProfessions[1]?.name} ({topProfessions[1]?.value} réponses).
-              Ces profils indiquent une clientèle stable avec un pouvoir d'achat intéressant.
-            </p>
+            <h4>Analyse automatique:</h4>
+            <p>{generateProfessionComment()}</p>
           </div>
         </motion.div>
 
@@ -655,11 +909,8 @@ const Analytics = () => {
             </ResponsiveContainer>
           </div>
           <div className="chart-interpretation">
-            <h4>Interprétation:</h4>
-            <p>
-              La plupart des clients souhaitent acheter dans un délai de {chartDelai[0]?.name || 'court terme'}.
-              Cela suggère un marché actif nécessitant une disponibilité rapide des biens.
-            </p>
+            <h4>Analyse automatique:</h4>
+            <p>{generateDelaiComment()}</p>
           </div>
         </motion.div>
 
@@ -686,11 +937,8 @@ const Analytics = () => {
             </ResponsiveContainer>
           </div>
           <div className="chart-interpretation">
-            <h4>Interprétation:</h4>
-            <p>
-              Le critère prioritaire pour les clients est "{chartPriorite[0]?.name}".
-              Cette information est cruciale pour adapter la stratégie commerciale et marketing.
-            </p>
+            <h4>Analyse automatique:</h4>
+            <p>{generatePrioriteComment()}</p>
           </div>
         </motion.div>
 
@@ -727,12 +975,8 @@ const Analytics = () => {
             </ResponsiveContainer>
           </div>
           <div className="chart-interpretation">
-            <h4>Interprétation:</h4>
-            <p>
-              {((chartFinancement.find(c => c.name.includes('Non'))?.value || 0) / totalResponses * 100).toFixed(0)}%
-              des clients prévoient un paiement comptant. Le reste nécessite un accompagnement
-              pour le financement bancaire.
-            </p>
+            <h4>Analyse automatique:</h4>
+            <p>{generateFinancementComment()}</p>
           </div>
         </motion.div>
 
@@ -766,15 +1010,8 @@ const Analytics = () => {
             </ResponsiveContainer>
           </div>
           <div className="chart-interpretation">
-            <h4>Interprétation:</h4>
-            <p>
-              Le profil moyen montre {avgInterest > 70 ? 'un fort engagement' : avgInterest > 50 ? 'un engagement modéré' : 'un engagement à renforcer'}
-              avec un score de {avgInterest.toFixed(0)}/100. Les points forts incluent
-              {radarData.filter(d => d.value > 60).length > 0 ?
-                ` ${radarData.filter(d => d.value > 60).map(d => d.subject.toLowerCase()).join(', ')}.` :
-                ' des aspects à développer.'
-              }
-            </p>
+            <h4>Analyse automatique:</h4>
+            <p>{generateRadarComment()}</p>
           </div>
         </motion.div>
 
@@ -806,11 +1043,157 @@ const Analytics = () => {
             </ResponsiveContainer>
           </div>
           <div className="chart-interpretation">
-            <h4>Interprétation:</h4>
+            <h4>Analyse automatique:</h4>
             <p>
-              Le secteur dominant est "{topProfessions[0]?.name}" avec {((topProfessions[0]?.value / totalResponses) * 100).toFixed(0)}%
-              des répondants. Cette diversité professionnelle indique une clientèle
-              {topProfessions.length > 5 ? ' très variée' : ' relativement homogène'}.
+              Le secteur dominant est "{topProfessions[0]?.name || 'N/A'}" avec {topProfessions[0] ? ((topProfessions[0].value / totalResponses) * 100).toFixed(0) : 0}%
+              des répondants. {topProfessions.length > 5 ? 'Grande diversité professionnelle - adaptez votre communication à chaque segment.' : 'Clientèle homogène - concentrez vos efforts marketing sur ce profil type.'}
+            </p>
+          </div>
+        </motion.div>
+
+        {/* Radar Chart - Motivations d'Achat */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.7 }}
+          className="chart-card"
+        >
+          <div className="chart-header">
+            <h3>Motivations d'Achat</h3>
+            <p>Raisons principales de l'acquisition immobilière</p>
+          </div>
+          <div className="chart-body">
+            <ResponsiveContainer width="100%" height={400}>
+              <RadarChart data={motivationsRadarData}>
+                <PolarGrid stroke="#e0e0e0" />
+                <PolarAngleAxis dataKey="subject" tick={{ fill: '#666', fontSize: 12 }} />
+                <PolarRadiusAxis angle={90} domain={[0, 100]} tick={{ fill: '#666' }} />
+                <Radar
+                  name="Motivations"
+                  dataKey="value"
+                  stroke="#10B981"
+                  fill="#10B981"
+                  fillOpacity={0.6}
+                />
+                <Tooltip formatter={(value) => `${value.toFixed(0)}%`} />
+                <Legend />
+              </RadarChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="chart-interpretation">
+            <h4>Analyse automatique:</h4>
+            <p>
+              {(() => {
+                const maxMotiv = motivationsRadarData.reduce((max, m) => m.value > max.value ? m : max);
+                const comment = `Motivation principale: "${maxMotiv.subject}" (${maxMotiv.value.toFixed(0)}% des répondants).`;
+                if (maxMotiv.subject === 'Investissement') {
+                  return comment + " Clientèle d'investisseurs - mettez en avant le rendement locatif et la plus-value potentielle.";
+                } else if (maxMotiv.subject === 'Résidence principale') {
+                  return comment + " Acheteurs pour habiter - valorisez le cadre de vie et les finitions.";
+                } else if (maxMotiv.subject === 'Premier achat') {
+                  return comment + " Primo-accédants - proposez des facilités de paiement et un accompagnement personnalisé.";
+                }
+                return comment;
+              })()}
+            </p>
+          </div>
+        </motion.div>
+
+        {/* Radar Chart - Capacité Financière */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.8 }}
+          className="chart-card"
+        >
+          <div className="chart-header">
+            <h3>Capacité Financière</h3>
+            <p>Indicateurs de solvabilité des prospects</p>
+          </div>
+          <div className="chart-body">
+            <ResponsiveContainer width="100%" height={400}>
+              <RadarChart data={financialRadarData}>
+                <PolarGrid stroke="#e0e0e0" />
+                <PolarAngleAxis dataKey="subject" tick={{ fill: '#666', fontSize: 11 }} />
+                <PolarRadiusAxis angle={90} domain={[0, 100]} tick={{ fill: '#666' }} />
+                <Radar
+                  name="Capacité"
+                  dataKey="value"
+                  stroke="#3B82F6"
+                  fill="#3B82F6"
+                  fillOpacity={0.6}
+                />
+                <Tooltip formatter={(value) => `${value.toFixed(0)}%`} />
+                <Legend />
+              </RadarChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="chart-interpretation">
+            <h4>Analyse automatique:</h4>
+            <p>
+              {(() => {
+                const strongFinancial = financialRadarData.filter(f => f.value > 40);
+                const avgFinancial = financialRadarData.reduce((sum, f) => sum + f.value, 0) / financialRadarData.length;
+                if (avgFinancial > 50) {
+                  return `Excellente capacité financière globale (${avgFinancial.toFixed(0)}% moyen). Points forts: ${strongFinancial.map(f => f.subject).join(', ')}. Clientèle solvable - accélérez le processus de vente.`;
+                } else if (avgFinancial > 30) {
+                  return `Capacité financière modérée (${avgFinancial.toFixed(0)}% moyen). Proposez des solutions de financement adaptées et des échéanciers flexibles.`;
+                }
+                return `Capacité financière à renforcer (${avgFinancial.toFixed(0)}% moyen). Orientez ces prospects vers des partenaires bancaires et des programmes d'aide à l'accession.`;
+              })()}
+            </p>
+          </div>
+        </motion.div>
+
+        {/* Evolution Temporelle des Réponses */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.9 }}
+          className="chart-card chart-card-wide"
+        >
+          <div className="chart-header">
+            <h3>Évolution des Réponses (30 derniers jours)</h3>
+            <p>Tendance de participation au questionnaire</p>
+          </div>
+          <div className="chart-body">
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={timelineData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" tick={{ fontSize: 10 }} />
+                <YAxis allowDecimals={false} />
+                <Tooltip />
+                <Legend />
+                <Line
+                  type="monotone"
+                  dataKey="count"
+                  name="Réponses"
+                  stroke="#8B5CF6"
+                  strokeWidth={2}
+                  dot={{ fill: '#8B5CF6', strokeWidth: 2 }}
+                  activeDot={{ r: 8 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="chart-interpretation">
+            <h4>Analyse automatique:</h4>
+            <p>
+              {(() => {
+                const last7Days = timelineData.slice(-7);
+                const prev7Days = timelineData.slice(-14, -7);
+                const recent = last7Days.reduce((sum, d) => sum + d.count, 0);
+                const previous = prev7Days.reduce((sum, d) => sum + d.count, 0);
+                const trend = recent > previous ? 'hausse' : recent < previous ? 'baisse' : 'stable';
+                const change = previous > 0 ? (((recent - previous) / previous) * 100).toFixed(0) : 0;
+
+                if (trend === 'hausse') {
+                  return `Tendance à la hausse (+${change}% cette semaine vs semaine précédente). ${recent} réponses sur 7 jours. Campagne marketing efficace - maintenez la dynamique.`;
+                } else if (trend === 'baisse') {
+                  return `Tendance à la baisse (${change}% cette semaine). ${recent} réponses sur 7 jours. Relancez vos actions de communication.`;
+                }
+                return `Tendance stable. ${recent} réponses cette semaine. Intensifiez vos efforts pour augmenter la visibilité.`;
+              })()}
             </p>
           </div>
         </motion.div>
