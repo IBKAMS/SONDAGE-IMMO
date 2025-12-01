@@ -1,0 +1,45 @@
+.presentation-page {
+  min-height: 100vh;
+}
+
+.presentation-hero {
+  position: relative;
+  height: 50vh;
+  min-height: 400px;
+  background: linear-gradient(135deg, #5865F2 0%, #8B5FBD 50%, #C850C0 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--white);
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.presentation-hero .hero-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  padding: var(--spacing-xl);
+}
+
+.presentation-hero h1 {
+  font-size: 3.5rem;
+  font-weight: 800;
+  margin-bottom: var(--spacing-md);
+}
+
+.content-section {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.lead {
+  font-size: 1.3rem;
+  color: var(--text-color);
+  margin-bottom: var(--spacing-lg);
+  line-height: 1.8;
+}

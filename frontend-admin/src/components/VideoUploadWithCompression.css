@@ -1,0 +1,199 @@
+.video-upload-compression {
+  margin: 20px 0;
+}
+
+.upload-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.upload-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Options de compression */
+.compression-options {
+  background: white;
+  border: 2px solid #f0f0f0;
+  border-radius: 12px;
+  padding: 20px;
+  max-width: 600px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.file-info {
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.file-info h3 {
+  color: #ff9800;
+  margin: 0 0 10px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.file-info p {
+  margin: 5px 0;
+  color: #333;
+}
+
+.file-info .warning {
+  color: #f44336;
+  font-size: 14px;
+  margin-top: 10px;
+  padding: 8px;
+  background: #ffebee;
+  border-radius: 4px;
+}
+
+/* Actions de compression */
+.compression-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.compression-actions button {
+  padding: 12px 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+}
+
+.compression-actions button small {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.btn-compress {
+  background: linear-gradient(135deg, #4CAF50, #45a049);
+  color: white;
+}
+
+.btn-compress:hover {
+  background: linear-gradient(135deg, #45a049, #3d8b40);
+  transform: scale(1.02);
+}
+
+.btn-direct {
+  background: linear-gradient(135deg, #ff9800, #f57c00);
+  color: white;
+}
+
+.btn-direct:hover {
+  background: linear-gradient(135deg, #f57c00, #e65100);
+  transform: scale(1.02);
+}
+
+.btn-cancel {
+  background: #f5f5f5;
+  color: #666;
+  border: 1px solid #ddd;
+}
+
+.btn-cancel:hover {
+  background: #e0e0e0;
+}
+
+/* Tips de compression */
+.compression-tips {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 15px;
+}
+
+.compression-tips h4 {
+  margin: 0 0 10px 0;
+  color: #333;
+  font-size: 14px;
+}
+
+.compression-tips ul {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 13px;
+  color: #666;
+}
+
+.compression-tips li {
+  margin: 5px 0;
+}
+
+/* Progress bar styles (override) */
+.compression-progress-container {
+  background: white;
+  border: 2px solid #4CAF50;
+  border-radius: 12px;
+  padding: 20px;
+  margin: 20px 0;
+  box-shadow: 0 2px 10px rgba(76, 175, 80, 0.2);
+}
+
+.compression-progress-container h3 {
+  color: #4CAF50;
+  margin: 0 0 10px 0;
+}
+
+.compression-progress-container p {
+  color: #666;
+  margin: 5px 0;
+}
+
+/* Animation de chargement */
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.video-upload-compression.compressing .compression-progress-container {
+  animation: pulse 2s infinite;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .compression-options {
+    max-width: 100%;
+    padding: 15px;
+  }
+
+  .compression-actions {
+    gap: 8px;
+  }
+
+  .compression-actions button {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .compression-actions button small {
+    font-size: 11px;
+  }
+}
