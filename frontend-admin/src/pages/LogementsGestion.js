@@ -898,7 +898,7 @@ const LogementsGestion = () => {
 
               <div className="form-row">
                 <div className="form-group">
-                  <label>Salles de bain</label>
+                  <label>Salles d'eau</label>
                   <input
                     type="number"
                     value={formData.nombreSallesBain}

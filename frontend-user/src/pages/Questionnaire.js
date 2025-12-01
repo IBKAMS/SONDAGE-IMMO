@@ -304,7 +304,7 @@ const Questionnaire = () => {
         },
         {
           name: 'nombreSallesBain',
-          label: 'Nombre de salles de bain',
+          label: 'Nombre de salles d\'eau',
           type: 'range',
           min: 1,
           max: 8,

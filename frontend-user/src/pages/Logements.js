@@ -379,7 +379,7 @@ const Logements = () => {
                   </div>
                   <div className="detail-item">
                     <FaBath />
-                    <span>{logement.nombreSallesBain} sdb</span>
+                    <span>{logement.nombreSallesBain} sde</span>
                   </div>
                   {logement.parking.inclus && (
                     <div className="detail-item">
