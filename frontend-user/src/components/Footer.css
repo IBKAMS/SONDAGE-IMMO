@@ -25,7 +25,7 @@
 }
 
 .footer-section p {
-  color: var(--text-light);
+  color: rgba(255, 255, 255, 0.85);
   line-height: 1.6;
   margin-bottom: var(--spacing-md);
 }
@@ -40,7 +40,7 @@
 }
 
 .footer-section ul li a {
-  color: var(--text-light);
+  color: rgba(255, 255, 255, 0.85);
   text-decoration: none;
   transition: color var(--transition-fast);
 }
@@ -53,7 +53,7 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-  color: var(--text-light);
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .contact-info svg {
@@ -86,10 +86,10 @@
 }
 
 .footer-bottom {
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
   padding-top: var(--spacing-md);
   text-align: center;
-  color: var(--text-light);
+  color: rgba(255, 255, 255, 0.75);
 }
 
 @media (max-width: 768px) {
