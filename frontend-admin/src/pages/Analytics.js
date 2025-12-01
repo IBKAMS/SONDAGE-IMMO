@@ -16,6 +16,7 @@ import './Analytics.css';
 
 const Analytics = () => {
   const [responses, setResponses] = useState([]);
+  const [logements, setLogements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [dateRange, setDateRange] = useState('all');
@@ -32,10 +33,12 @@ const Analytics = () => {
   useEffect(() => {
     // Charger les données immédiatement
     fetchResponses();
+    fetchLogements();
 
     // Configurer le rafraîchissement automatique toutes les 30 secondes
     const interval = setInterval(() => {
       fetchResponses();
+      fetchLogements();
     }, 30000); // 30 secondes
 
     // Nettoyer l'intervalle lors du démontage du composant
@@ -58,6 +61,21 @@ const Analytics = () => {
       setResponses([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchLogements = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/logements`);
+      if (response.ok) {
+        const result = await response.json();
+        setLogements(Array.isArray(result.data) ? result.data : []);
+      } else {
+        setLogements([]);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des logements:', error);
+      setLogements([]);
     }
   };
 
@@ -307,6 +325,32 @@ const Analytics = () => {
     qualificationStats.tiede.percentage = ((qualificationStats.tiede.count / totalResponses) * 100).toFixed(1);
     qualificationStats.froid.percentage = ((qualificationStats.froid.count / totalResponses) * 100).toFixed(1);
   }
+
+  // Calculs basés sur les logements réels (Gestion des logements)
+  const logementsStats = {
+    total: logements.length,
+    disponibles: logements.filter(l => l.statut === 'disponible').length,
+    reserves: logements.filter(l => l.statut === 'réservé').length,
+    vendus: logements.filter(l => l.statut === 'vendu').length,
+    prixMin: logements.length > 0 ? Math.min(...logements.map(l => l.prix || 0)) : 0,
+    prixMax: logements.length > 0 ? Math.max(...logements.map(l => l.prix || 0)) : 0,
+    prixMoyen: logements.length > 0 ? logements.reduce((sum, l) => sum + (l.prix || 0), 0) / logements.length : 0,
+    superficieMin: logements.length > 0 ? Math.min(...logements.map(l => l.superficie || 0)) : 0,
+    superficieMax: logements.length > 0 ? Math.max(...logements.map(l => l.superficie || 0)) : 0,
+    superficieMoyenne: logements.length > 0 ? logements.reduce((sum, l) => sum + (l.superficie || 0), 0) / logements.length : 0
+  };
+
+  // Répartition par type de logement (données réelles)
+  const typesLogementsReels = logements.reduce((acc, l) => {
+    const type = l.type || 'Non spécifié';
+    acc[type] = (acc[type] || 0) + 1;
+    return acc;
+  }, {});
+
+  const chartTypesReels = Object.entries(typesLogementsReels).map(([name, value]) => ({
+    name,
+    value
+  }));
 
   // Palette de couleurs modernes et harmonieuses
   const COLORS = [
@@ -767,6 +811,152 @@ const Analytics = () => {
           </div>
         </motion.div>
       </div>
+
+      {/* Section Offre Disponible - Données réelles des logements */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.7 }}
+        className="offre-disponible-section"
+      >
+        <h2>Offre Disponible (Gestion Logements)</h2>
+        <p className="section-subtitle">Données réelles issues de la gestion des logements</p>
+
+        <div className="offre-stats-grid">
+          <div className="offre-stat-card">
+            <div className="offre-stat-icon">🏘️</div>
+            <div className="offre-stat-content">
+              <h3>Total Logements</h3>
+              <p className="offre-stat-value">{logementsStats.total}</p>
+              <span className="offre-stat-detail">
+                {logementsStats.disponibles} disponibles | {logementsStats.reserves} réservés | {logementsStats.vendus} vendus
+              </span>
+            </div>
+          </div>
+
+          <div className="offre-stat-card">
+            <div className="offre-stat-icon">💰</div>
+            <div className="offre-stat-content">
+              <h3>Gamme de Prix</h3>
+              <p className="offre-stat-value">{(logementsStats.prixMin / 1000000).toFixed(0)}M - {(logementsStats.prixMax / 1000000).toFixed(0)}M FCFA</p>
+              <span className="offre-stat-detail">
+                Prix moyen: {(logementsStats.prixMoyen / 1000000).toFixed(0)}M FCFA
+              </span>
+            </div>
+          </div>
+
+          <div className="offre-stat-card">
+            <div className="offre-stat-icon">📐</div>
+            <div className="offre-stat-content">
+              <h3>Superficies</h3>
+              <p className="offre-stat-value">{logementsStats.superficieMin} - {logementsStats.superficieMax} m²</p>
+              <span className="offre-stat-detail">
+                Moyenne: {logementsStats.superficieMoyenne.toFixed(0)} m²
+              </span>
+            </div>
+          </div>
+
+          <div className="offre-stat-card">
+            <div className="offre-stat-icon">🏠</div>
+            <div className="offre-stat-content">
+              <h3>Types de Villas</h3>
+              <p className="offre-stat-value">{chartTypesReels.length} types</p>
+              <span className="offre-stat-detail">
+                {chartTypesReels.map(t => `${t.name}: ${t.value}`).join(' | ')}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Liste détaillée des logements */}
+        <div className="logements-detail-grid">
+          <h3>Détail des Logements</h3>
+          <div className="logements-cards">
+            {logements.map((logement, idx) => (
+              <div key={logement._id || idx} className={`logement-detail-card statut-${logement.statut}`}>
+                <div className="logement-header">
+                  <span className="logement-nom">{logement.nom}</span>
+                  <span className={`statut-badge ${logement.statut}`}>{logement.statut}</span>
+                </div>
+                <div className="logement-info">
+                  <div className="info-row">
+                    <span className="label">Type:</span>
+                    <span className="value">{logement.type}</span>
+                  </div>
+                  <div className="info-row">
+                    <span className="label">Superficie:</span>
+                    <span className="value">{logement.superficie} m²</span>
+                  </div>
+                  <div className="info-row">
+                    <span className="label">Prix:</span>
+                    <span className="value prix">{(logement.prix / 1000000).toFixed(0)}M FCFA</span>
+                  </div>
+                  <div className="info-row">
+                    <span className="label">Chambres:</span>
+                    <span className="value">{logement.nombreChambres}</span>
+                  </div>
+                  <div className="info-row">
+                    <span className="label">Salles d'eau:</span>
+                    <span className="value">{logement.nombreSallesBain}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Comparaison Offre vs Demande */}
+        <div className="offre-demande-comparison">
+          <h3>Comparaison Offre vs Demande</h3>
+          <div className="comparison-grid">
+            <div className="comparison-card">
+              <h4>Types de Logements</h4>
+              <div className="comparison-table">
+                <div className="comparison-header">
+                  <span>Type</span>
+                  <span>Offre</span>
+                  <span>Demande</span>
+                </div>
+                {chartTypesReels.map((type, idx) => {
+                  const demande = chartTypeLogement.find(t =>
+                    t.name.toLowerCase().includes(type.name.toLowerCase()) ||
+                    type.name.toLowerCase().includes(t.name.toLowerCase().split(' ')[0])
+                  );
+                  return (
+                    <div key={idx} className="comparison-row">
+                      <span className="type-name">{type.name}</span>
+                      <span className="offre-value">{type.value}</span>
+                      <span className="demande-value">{demande?.value || 0}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="comparison-card">
+              <h4>Analyse Budget</h4>
+              <div className="budget-analysis">
+                <div className="analysis-item">
+                  <span className="analysis-label">Budget moyen demandé:</span>
+                  <span className="analysis-value">{(avgBudget / 1000000).toFixed(0)}M FCFA</span>
+                </div>
+                <div className="analysis-item">
+                  <span className="analysis-label">Prix moyen offre:</span>
+                  <span className="analysis-value">{(logementsStats.prixMoyen / 1000000).toFixed(0)}M FCFA</span>
+                </div>
+                <div className="analysis-item">
+                  <span className={`analysis-label ${avgBudget >= logementsStats.prixMoyen ? 'positive' : 'negative'}`}>
+                    Écart:
+                  </span>
+                  <span className={`analysis-value ${avgBudget >= logementsStats.prixMoyen ? 'positive' : 'negative'}`}>
+                    {avgBudget >= logementsStats.prixMoyen ? '+' : ''}{((avgBudget - logementsStats.prixMoyen) / 1000000).toFixed(0)}M FCFA
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </motion.div>
 
       {/* Insights Section */}
       <motion.div

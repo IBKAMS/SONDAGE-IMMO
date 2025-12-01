@@ -1436,3 +1436,329 @@
     gap: var(--spacing-xs);
   }
 }
+
+/* Section Offre Disponible */
+.offre-disponible-section {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-xl);
+  margin-bottom: var(--spacing-xxl);
+  box-shadow: var(--shadow-md);
+}
+
+.offre-disponible-section h2 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: var(--spacing-xs);
+}
+
+.offre-disponible-section .section-subtitle {
+  color: #64748b;
+  font-size: 1rem;
+  margin-bottom: var(--spacing-xl);
+}
+
+.offre-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
+}
+
+.offre-stat-card {
+  background: var(--white);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-lg);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-md);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-normal);
+  border-left: 4px solid #10B981;
+}
+
+.offre-stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+.offre-stat-card:nth-child(2) {
+  border-left-color: #3B82F6;
+}
+
+.offre-stat-card:nth-child(3) {
+  border-left-color: #8B5CF6;
+}
+
+.offre-stat-card:nth-child(4) {
+  border-left-color: #F59E0B;
+}
+
+.offre-stat-icon {
+  font-size: 2.5rem;
+}
+
+.offre-stat-content h3 {
+  font-size: 0.9rem;
+  color: #64748b;
+  font-weight: 600;
+  margin-bottom: var(--spacing-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.offre-stat-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: var(--spacing-xs);
+}
+
+.offre-stat-detail {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+/* Liste détaillée des logements */
+.logements-detail-grid {
+  background: var(--white);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
+}
+
+.logements-detail-grid h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: var(--spacing-lg);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.logements-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.logement-detail-card {
+  background: #f8fafc;
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  border: 1px solid #e2e8f0;
+  transition: all var(--transition-normal);
+}
+
+.logement-detail-card:hover {
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-2px);
+}
+
+.logement-detail-card.statut-disponible {
+  border-left: 4px solid #10B981;
+}
+
+.logement-detail-card.statut-réservé {
+  border-left: 4px solid #F59E0B;
+}
+
+.logement-detail-card.statut-vendu {
+  border-left: 4px solid #EF4444;
+}
+
+.logement-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-sm);
+}
+
+.logement-nom {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #1e293b;
+}
+
+.statut-badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.statut-badge.disponible {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.statut-badge.réservé {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.statut-badge.vendu {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.logement-info .info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--spacing-xs) 0;
+  border-bottom: 1px dashed #e2e8f0;
+}
+
+.logement-info .info-row:last-child {
+  border-bottom: none;
+}
+
+.logement-info .label {
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+.logement-info .value {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 0.9rem;
+}
+
+.logement-info .value.prix {
+  color: #10B981;
+  font-weight: 700;
+}
+
+/* Comparaison Offre vs Demande */
+.offre-demande-comparison {
+  background: var(--white);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-lg);
+}
+
+.offre-demande-comparison h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: var(--spacing-lg);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.comparison-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--spacing-lg);
+}
+
+.comparison-card {
+  background: #f8fafc;
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+}
+
+.comparison-card h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: var(--spacing-md);
+}
+
+.comparison-table {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.comparison-header,
+.comparison-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
+}
+
+.comparison-header {
+  background: #e2e8f0;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+.comparison-row {
+  background: var(--white);
+  border-radius: var(--radius-sm);
+}
+
+.comparison-row .type-name {
+  font-weight: 500;
+  color: #1e293b;
+}
+
+.comparison-row .offre-value {
+  color: #10B981;
+  font-weight: 600;
+  text-align: center;
+}
+
+.comparison-row .demande-value {
+  color: #3B82F6;
+  font-weight: 600;
+  text-align: center;
+}
+
+.budget-analysis {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.analysis-item {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--spacing-sm);
+  background: var(--white);
+  border-radius: var(--radius-sm);
+}
+
+.analysis-label {
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.analysis-value {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.analysis-label.positive,
+.analysis-value.positive {
+  color: #10B981;
+}
+
+.analysis-label.negative,
+.analysis-value.negative {
+  color: #EF4444;
+}
+
+/* Responsive pour Offre Disponible */
+@media (max-width: 768px) {
+  .offre-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .logements-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .comparison-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .offre-disponible-section {
+    padding: var(--spacing-md);
+  }
+}
