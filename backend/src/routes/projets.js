@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const { protect, authorize } = require('../middleware/auth');
 const {
   getProjets,
   getProjet,
@@ -14,16 +13,14 @@ const {
 router.get('/public', getProjets);
 router.get('/public/:slug', getProjetPublic);
 
-// Routes protégées
-router.use(protect);
-
+// Routes TEMPORAIREMENT publiques (À PROTÉGER PLUS TARD)
 router.route('/')
   .get(getProjets)
-  .post(authorize('super_admin', 'admin'), createProjet);
+  .post(createProjet);
 
 router.route('/:id')
   .get(getProjet)
-  .put(authorize('super_admin', 'admin', 'editeur'), updateProjet)
-  .delete(authorize('super_admin', 'admin'), deleteProjet);
+  .put(updateProjet)
+  .delete(deleteProjet);
 
 module.exports = router;

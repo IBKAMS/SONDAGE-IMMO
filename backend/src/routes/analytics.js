@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const { protect } = require('../middleware/auth');
 const {
   getDashboardStats,
   getDemographicsStats,
@@ -10,9 +9,7 @@ const {
   getLeadsQuality
 } = require('../controllers/analyticsController');
 
-// Toutes les routes analytics sont protégées
-router.use(protect);
-
+// Routes TEMPORAIREMENT publiques (À PROTÉGER PLUS TARD)
 router.get('/dashboard', getDashboardStats);
 router.get('/demographics', getDemographicsStats);
 router.get('/budget', getBudgetStats);

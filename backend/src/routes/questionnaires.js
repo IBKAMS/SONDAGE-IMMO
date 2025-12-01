@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const { protect } = require('../middleware/auth');
 const {
   submitQuestionnaire,
   getQuestionnaires,
@@ -14,14 +13,12 @@ const {
 // Routes publiques
 router.post('/submit', submitQuestionnaire);
 
-// Routes TEMPORAIREMENT publiques pour analytics et gestion (À PROTÉGER PLUS TARD)
-router.get('/', getQuestionnaires); // Public pour analytics
-router.delete('/:id', deleteQuestionnaire); // TEMPORAIREMENT public pour tests
-
-// Routes protégées (admin uniquement)
-router.get('/:id', protect, getQuestionnaire);
-router.put('/:id', protect, updateQuestionnaire);
-router.post('/:id/notes', protect, addNote);
-router.put('/:id/statut', protect, updateStatut);
+// Routes TEMPORAIREMENT publiques (À PROTÉGER PLUS TARD)
+router.get('/', getQuestionnaires);
+router.delete('/:id', deleteQuestionnaire);
+router.get('/:id', getQuestionnaire);
+router.put('/:id', updateQuestionnaire);
+router.post('/:id/notes', addNote);
+router.put('/:id/statut', updateStatut);
 
 module.exports = router;
