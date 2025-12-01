@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { FaVideo, FaChartBar, FaTachometerAlt, FaBars, FaTimes, FaHome, FaFileAlt, FaBuilding, FaDraftingCompass, FaCube, FaMapMarkerAlt, FaChartLine, FaMoneyBillWave, FaSignOutAlt, FaUser } from 'react-icons/fa';
+import { FaVideo, FaChartBar, FaTachometerAlt, FaBars, FaTimes, FaHome, FaFileAlt, FaBuilding, FaDraftingCompass, FaCube, FaMapMarkerAlt, FaChartLine, FaMoneyBillWave, FaClipboardList, FaSignOutAlt, FaUser } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import './Navbar.css';
 
@@ -181,6 +181,17 @@ const Navbar = () => {
             >
               <FaMoneyBillWave className="nav-icon" />
               <span>Option d'Achat</span>
+            </Link>
+          </li>
+
+          <li className="nav-item">
+            <Link
+              to="/questionnaire"
+              className={`nav-link ${isActive('/questionnaire')}`}
+              onClick={closeMenu}
+            >
+              <FaClipboardList className="nav-icon" />
+              <span>Questionnaire</span>
             </Link>
           </li>
 
