@@ -294,11 +294,6 @@
   color: var(--text-color);
   line-height: 1.6;
   margin-bottom: var(--spacing-md);
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .logement-equipements {

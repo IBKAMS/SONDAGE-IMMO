@@ -24,6 +24,27 @@ const logementsContentSchema = new mongoose.Schema({
       labelPrixMin: {
         type: String,
         default: 'Prix minimum'
+      },
+      // Valeurs personnalisables des statistiques
+      useCustomStats: {
+        type: Boolean,
+        default: false
+      },
+      customTotal: {
+        type: Number,
+        default: 0
+      },
+      customDisponibles: {
+        type: Number,
+        default: 0
+      },
+      customPrixMin: {
+        type: Number,
+        default: 0
+      },
+      customPrixMax: {
+        type: Number,
+        default: 0
       }
     }
   },

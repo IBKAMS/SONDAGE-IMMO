@@ -5,17 +5,21 @@ import './Accueil.css';
 
 const Accueil = () => {
   const [content, setContent] = useState(null);
+  const [footerContent, setFooterContent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [savingFooter, setSavingFooter] = useState(false);
   const [expandedSections, setExpandedSections] = useState({
     hero: true,
     stats: true,
     quickLinks: true,
-    cta: true
+    cta: true,
+    footer: true
   });
 
   useEffect(() => {
     fetchContent();
+    fetchFooterContent();
   }, []);
 
   const fetchContent = async () => {
@@ -30,6 +34,18 @@ const Accueil = () => {
       alert('Erreur lors du chargement du contenu');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchFooterContent = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/footer-content`);
+      const data = await response.json();
+      if (data.success) {
+        setFooterContent(data.data);
+      }
+    } catch (error) {
+      console.error('Erreur chargement footer:', error);
     }
   };
 
@@ -143,6 +159,141 @@ const Accueil = () => {
         [field]: value
       }
     }));
+  };
+
+  // Footer handlers
+  const handleFooterBrandChange = (field, value) => {
+    setFooterContent(prev => ({
+      ...prev,
+      brand: {
+        ...prev.brand,
+        [field]: value
+      }
+    }));
+  };
+
+  const handleFooterContactChange = (field, value) => {
+    setFooterContent(prev => ({
+      ...prev,
+      contact: {
+        ...prev.contact,
+        [field]: value
+      }
+    }));
+  };
+
+  const handleFooterCopyrightChange = (value) => {
+    setFooterContent(prev => ({
+      ...prev,
+      copyright: {
+        ...prev.copyright,
+        text: value
+      }
+    }));
+  };
+
+  const handleFooterNavLinkChange = (index, field, value) => {
+    const newLinks = [...footerContent.navigation.links];
+    newLinks[index] = {
+      ...newLinks[index],
+      [field]: value
+    };
+    setFooterContent(prev => ({
+      ...prev,
+      navigation: {
+        ...prev.navigation,
+        links: newLinks
+      }
+    }));
+  };
+
+  const addFooterNavLink = () => {
+    setFooterContent(prev => ({
+      ...prev,
+      navigation: {
+        ...prev.navigation,
+        links: [...prev.navigation.links, { label: '', url: '' }]
+      }
+    }));
+  };
+
+  const removeFooterNavLink = (index) => {
+    if (window.confirm('Supprimer ce lien de navigation ?')) {
+      const newLinks = footerContent.navigation.links.filter((_, i) => i !== index);
+      setFooterContent(prev => ({
+        ...prev,
+        navigation: {
+          ...prev.navigation,
+          links: newLinks
+        }
+      }));
+    }
+  };
+
+  const handleFooterInfoLinkChange = (index, field, value) => {
+    const newLinks = [...footerContent.informations.links];
+    newLinks[index] = {
+      ...newLinks[index],
+      [field]: value
+    };
+    setFooterContent(prev => ({
+      ...prev,
+      informations: {
+        ...prev.informations,
+        links: newLinks
+      }
+    }));
+  };
+
+  const addFooterInfoLink = () => {
+    setFooterContent(prev => ({
+      ...prev,
+      informations: {
+        ...prev.informations,
+        links: [...prev.informations.links, { label: '', url: '' }]
+      }
+    }));
+  };
+
+  const removeFooterInfoLink = (index) => {
+    if (window.confirm('Supprimer ce lien d\'information ?')) {
+      const newLinks = footerContent.informations.links.filter((_, i) => i !== index);
+      setFooterContent(prev => ({
+        ...prev,
+        informations: {
+          ...prev.informations,
+          links: newLinks
+        }
+      }));
+    }
+  };
+
+  const handleSaveFooter = async () => {
+    if (!window.confirm('Enregistrer les modifications du footer ?')) return;
+
+    setSavingFooter(true);
+    try {
+      const response = await fetch(`${API_URL}/api/footer-content/${footerContent._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(footerContent)
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        alert('Footer enregistré avec succès!');
+        fetchFooterContent();
+      } else {
+        alert('Erreur lors de l\'enregistrement du footer');
+      }
+    } catch (error) {
+      console.error('Erreur sauvegarde footer:', error);
+      alert('Erreur lors de l\'enregistrement du footer');
+    } finally {
+      setSavingFooter(false);
+    }
   };
 
   const handleSave = async () => {
@@ -424,6 +575,192 @@ const Accueil = () => {
             </div>
           )}
         </div>
+
+        {/* Section Footer */}
+        {footerContent && (
+          <div className="content-section footer-section-admin">
+            <div
+              className="section-header"
+              onClick={() => toggleSection('footer')}
+            >
+              <h2>Section Footer (Pied de page)</h2>
+              {expandedSections.footer ? <FaChevronUp /> : <FaChevronDown />}
+            </div>
+            {expandedSections.footer && (
+              <div className="section-body">
+                {/* Marque */}
+                <div className="subsection">
+                  <h3>Marque</h3>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Nom de la marque</label>
+                      <input
+                        type="text"
+                        value={footerContent.brand?.name || ''}
+                        onChange={(e) => handleFooterBrandChange('name', e.target.value)}
+                        placeholder="Ex: CITÉ KONGO"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Slogan</label>
+                      <input
+                        type="text"
+                        value={footerContent.brand?.slogan || ''}
+                        onChange={(e) => handleFooterBrandChange('slogan', e.target.value)}
+                        placeholder="Ex: Votre projet immobilier de prestige"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Liens Navigation */}
+                <div className="subsection">
+                  <h3>Navigation ({footerContent.navigation?.links?.length || 0} liens)</h3>
+                  {footerContent.navigation?.links?.map((link, index) => (
+                    <div key={index} className="item-card">
+                      <div className="item-header">
+                        <h4>Lien {index + 1}</h4>
+                        <button
+                          className="btn-delete"
+                          onClick={() => removeFooterNavLink(index)}
+                        >
+                          <FaTrash />
+                        </button>
+                      </div>
+                      <div className="form-row">
+                        <div className="form-group">
+                          <label>Libellé</label>
+                          <input
+                            type="text"
+                            value={link.label || ''}
+                            onChange={(e) => handleFooterNavLinkChange(index, 'label', e.target.value)}
+                            placeholder="Ex: Présentation"
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>URL</label>
+                          <input
+                            type="text"
+                            value={link.url || ''}
+                            onChange={(e) => handleFooterNavLinkChange(index, 'url', e.target.value)}
+                            placeholder="Ex: /presentation"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  <button
+                    className="btn btn-add"
+                    onClick={addFooterNavLink}
+                  >
+                    <FaPlus /> Ajouter un lien de navigation
+                  </button>
+                </div>
+
+                {/* Liens Informations */}
+                <div className="subsection">
+                  <h3>Informations ({footerContent.informations?.links?.length || 0} liens)</h3>
+                  {footerContent.informations?.links?.map((link, index) => (
+                    <div key={index} className="item-card">
+                      <div className="item-header">
+                        <h4>Lien {index + 1}</h4>
+                        <button
+                          className="btn-delete"
+                          onClick={() => removeFooterInfoLink(index)}
+                        >
+                          <FaTrash />
+                        </button>
+                      </div>
+                      <div className="form-row">
+                        <div className="form-group">
+                          <label>Libellé</label>
+                          <input
+                            type="text"
+                            value={link.label || ''}
+                            onChange={(e) => handleFooterInfoLinkChange(index, 'label', e.target.value)}
+                            placeholder="Ex: Le Promoteur"
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>URL</label>
+                          <input
+                            type="text"
+                            value={link.url || ''}
+                            onChange={(e) => handleFooterInfoLinkChange(index, 'url', e.target.value)}
+                            placeholder="Ex: /promoteur"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  <button
+                    className="btn btn-add"
+                    onClick={addFooterInfoLink}
+                  >
+                    <FaPlus /> Ajouter un lien d'information
+                  </button>
+                </div>
+
+                {/* Contact */}
+                <div className="subsection">
+                  <h3>Contact</h3>
+                  <div className="form-group">
+                    <label>Téléphone</label>
+                    <input
+                      type="text"
+                      value={footerContent.contact?.phone || ''}
+                      onChange={(e) => handleFooterContactChange('phone', e.target.value)}
+                      placeholder="Ex: +225 XX XX XX XX XX"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Email</label>
+                    <input
+                      type="email"
+                      value={footerContent.contact?.email || ''}
+                      onChange={(e) => handleFooterContactChange('email', e.target.value)}
+                      placeholder="Ex: contact@citekongo.ci"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Adresse</label>
+                    <input
+                      type="text"
+                      value={footerContent.contact?.address || ''}
+                      onChange={(e) => handleFooterContactChange('address', e.target.value)}
+                      placeholder="Ex: Abidjan, Côte d'Ivoire"
+                    />
+                  </div>
+                </div>
+
+                {/* Copyright */}
+                <div className="subsection">
+                  <h3>Copyright</h3>
+                  <div className="form-group">
+                    <label>Texte du copyright</label>
+                    <input
+                      type="text"
+                      value={footerContent.copyright?.text || ''}
+                      onChange={(e) => handleFooterCopyrightChange(e.target.value)}
+                      placeholder="Ex: © 2024 Cité Kongo. Tous droits réservés."
+                    />
+                  </div>
+                </div>
+
+                {/* Bouton de sauvegarde du footer */}
+                <div className="footer-save-section">
+                  <button
+                    className="btn btn-primary"
+                    onClick={handleSaveFooter}
+                    disabled={savingFooter}
+                  >
+                    <FaSave /> {savingFooter ? 'Enregistrement...' : 'Enregistrer le Footer'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Boutons de sauvegarde en bas */}

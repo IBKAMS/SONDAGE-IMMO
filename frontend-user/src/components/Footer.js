@@ -1,16 +1,62 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FaPhone, FaEnvelope, FaMapMarkerAlt, FaFacebook, FaTwitter, FaInstagram, FaLinkedin } from 'react-icons/fa';
+import API_URL from '../config';
 import './Footer.css';
 
 const Footer = () => {
+  const [content, setContent] = useState(null);
+
+  useEffect(() => {
+    const fetchFooterContent = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/footer-content`);
+        const data = await response.json();
+        if (data.success) {
+          setContent(data.data);
+        }
+      } catch (error) {
+        console.error('Erreur chargement footer:', error);
+      }
+    };
+
+    fetchFooterContent();
+  }, []);
+
+  // Valeurs par défaut si l'API n'est pas disponible
+  const brand = content?.brand || {
+    name: 'CITÉ KONGO',
+    slogan: "Votre projet immobilier de prestige en Côte d'Ivoire"
+  };
+
+  const navigation = content?.navigation?.links || [
+    { label: 'Présentation', url: '/presentation' },
+    { label: 'Logements', url: '/logements' },
+    { label: 'Localisation', url: '/localisation' },
+    { label: "Option d'Achat", url: '/option-achat' }
+  ];
+
+  const informations = content?.informations?.links || [
+    { label: 'Le Promoteur', url: '/promoteur' },
+    { label: "L'Architecte", url: '/architecte' },
+    { label: 'Analyse Économique', url: '/analyse-economique' }
+  ];
+
+  const contact = content?.contact || {
+    phone: '+225 XX XX XX XX XX',
+    email: 'contact@citekongo.ci',
+    address: "Abidjan, Côte d'Ivoire"
+  };
+
+  const copyright = content?.copyright?.text || `© ${new Date().getFullYear()} Kongo Immobilier. Tous droits réservés. | Powered by ALiz Strategy`;
+
   return (
     <footer className="footer">
       <div className="container">
         <div className="footer-content">
           <div className="footer-section">
-            <h3>CITÉ KONGO</h3>
-            <p>Votre projet immobilier de prestige en Côte d'Ivoire</p>
+            <h3>{brand.name}</h3>
+            <p>{brand.slogan}</p>
             <div className="social-links">
               <a href="#" aria-label="Facebook"><FaFacebook /></a>
               <a href="#" aria-label="Twitter"><FaTwitter /></a>
@@ -20,45 +66,48 @@ const Footer = () => {
           </div>
 
           <div className="footer-section">
-            <h4>Navigation</h4>
+            <h4>{content?.navigation?.title || 'Navigation'}</h4>
             <ul>
-              <li><Link to="/presentation">Présentation</Link></li>
-              <li><Link to="/logements">Logements</Link></li>
-              <li><Link to="/localisation">Localisation</Link></li>
-              <li><Link to="/option-achat">Option d'Achat</Link></li>
+              {navigation.map((link, index) => (
+                <li key={index}>
+                  <Link to={link.url}>{link.label}</Link>
+                </li>
+              ))}
             </ul>
           </div>
 
           <div className="footer-section">
-            <h4>Informations</h4>
+            <h4>{content?.informations?.title || 'Informations'}</h4>
             <ul>
-              <li><Link to="/promoteur">Le Promoteur</Link></li>
-              <li><Link to="/architecte">L'Architecte</Link></li>
-              <li><Link to="/analyse-economique">Analyse Économique</Link></li>
+              {informations.map((link, index) => (
+                <li key={index}>
+                  <Link to={link.url}>{link.label}</Link>
+                </li>
+              ))}
             </ul>
           </div>
 
           <div className="footer-section">
-            <h4>Contact</h4>
+            <h4>{content?.contact?.title || 'Contact'}</h4>
             <ul className="contact-info">
               <li>
                 <FaPhone />
-                <span>+225 XX XX XX XX XX</span>
+                <span>{contact.phone}</span>
               </li>
               <li>
                 <FaEnvelope />
-                <span>contact@citekongo.ci</span>
+                <span>{contact.email}</span>
               </li>
               <li>
                 <FaMapMarkerAlt />
-                <span>Abidjan, Côte d'Ivoire</span>
+                <span>{contact.address}</span>
               </li>
             </ul>
           </div>
         </div>
 
         <div className="footer-bottom">
-          <p>&copy; {new Date().getFullYear()} Kongo Immobilier. Tous droits réservés. | Powered by ALiz Strategy</p>
+          <p>{copyright}</p>
         </div>
       </div>
     </footer>

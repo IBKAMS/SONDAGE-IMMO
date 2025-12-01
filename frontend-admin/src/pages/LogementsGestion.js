@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { FaSave, FaPlus, FaTrash, FaEdit, FaHome, FaTimes, FaCheck } from 'react-icons/fa';
+import React, { useState, useEffect, useRef } from 'react';
+import { FaSave, FaPlus, FaTrash, FaEdit, FaHome, FaTimes, FaCheck, FaUpload, FaLink, FaImage } from 'react-icons/fa';
 import API_URL from '../config';
 import './PromoteurAdmin.css';
 
@@ -9,6 +9,15 @@ const LogementsGestion = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [savingStats, setSavingStats] = useState(false);
+  const [logementsContent, setLogementsContent] = useState(null);
+  const [customStats, setCustomStats] = useState({
+    useCustomStats: false,
+    customTotal: 0,
+    customDisponibles: 0,
+    customPrixMin: 0,
+    customPrixMax: 0
+  });
   const [editingLogement, setEditingLogement] = useState(null);
   const [formData, setFormData] = useState({
     reference: '',
@@ -37,10 +46,14 @@ const LogementsGestion = () => {
     actif: true
   });
   const [equipementInput, setEquipementInput] = useState('');
+  const [imageUrlInput, setImageUrlInput] = useState('');
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     fetchLogements();
     fetchStats();
+    fetchLogementsContent();
   }, []);
 
   const fetchLogements = async () => {
@@ -68,6 +81,85 @@ const LogementsGestion = () => {
       }
     } catch (error) {
       console.error('Erreur chargement stats:', error);
+    }
+  };
+
+  const fetchLogementsContent = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/logements-content`);
+      const data = await response.json();
+      if (data.success && data.data) {
+        setLogementsContent(data.data);
+        if (data.data.hero?.stats) {
+          setCustomStats({
+            useCustomStats: data.data.hero.stats.useCustomStats || false,
+            customTotal: data.data.hero.stats.customTotal || 0,
+            customDisponibles: data.data.hero.stats.customDisponibles || 0,
+            customPrixMin: data.data.hero.stats.customPrixMin || 0,
+            customPrixMax: data.data.hero.stats.customPrixMax || 0
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Erreur chargement contenu logements:', error);
+    }
+  };
+
+  const handleCustomStatsChange = (field, value) => {
+    setCustomStats(prev => ({
+      ...prev,
+      [field]: field === 'useCustomStats' ? value : Number(value)
+    }));
+  };
+
+  const saveCustomStats = async () => {
+    setSavingStats(true);
+    try {
+      // Si pas de contenu existant, on crée un nouveau
+      const url = logementsContent?._id
+        ? `${API_URL}/api/logements-content/${logementsContent._id}`
+        : `${API_URL}/api/logements-content`;
+
+      const method = logementsContent?._id ? 'PUT' : 'POST';
+
+      const updatedContent = {
+        ...logementsContent,
+        hero: {
+          ...logementsContent?.hero,
+          title: logementsContent?.hero?.title || 'Nos Logements',
+          subtitle: logementsContent?.hero?.subtitle || 'Découvrez notre sélection d\'appartements et villas',
+          stats: {
+            ...logementsContent?.hero?.stats,
+            useCustomStats: customStats.useCustomStats,
+            customTotal: customStats.customTotal,
+            customDisponibles: customStats.customDisponibles,
+            customPrixMin: customStats.customPrixMin,
+            customPrixMax: customStats.customPrixMax
+          }
+        }
+      };
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(updatedContent)
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        alert('Statistiques enregistrées avec succès');
+        setLogementsContent(data.data);
+      } else {
+        alert(data.message || 'Erreur lors de l\'enregistrement');
+      }
+    } catch (error) {
+      console.error('Erreur:', error);
+      alert('Erreur lors de l\'enregistrement des statistiques');
+    } finally {
+      setSavingStats(false);
     }
   };
 
@@ -169,13 +261,66 @@ const LogementsGestion = () => {
     }));
   };
 
-  const addImage = () => {
-    const url = prompt('URL de l\'image:');
-    if (url && url.trim()) {
+  const addImageByUrl = () => {
+    if (imageUrlInput && imageUrlInput.trim()) {
       setFormData(prev => ({
         ...prev,
-        images: [...prev.images, url.trim()]
+        images: [...prev.images, imageUrlInput.trim()]
       }));
+      setImageUrlInput('');
+    }
+  };
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Vérifier le type de fichier
+    if (!file.type.startsWith('image/')) {
+      alert('Veuillez sélectionner un fichier image');
+      return;
+    }
+
+    // Vérifier la taille (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      alert('L\'image ne doit pas dépasser 10 Mo');
+      return;
+    }
+
+    setUploadingImage(true);
+
+    try {
+      const formDataUpload = new FormData();
+      formDataUpload.append('image', file);
+
+      const response = await fetch(`${API_URL}/api/logements/upload-image`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: formDataUpload
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setFormData(prev => ({
+          ...prev,
+          images: [...prev.images, data.data.url]
+        }));
+        alert('Image uploadée avec succès');
+      } else {
+        alert(data.message || 'Erreur lors de l\'upload');
+      }
+    } catch (error) {
+      console.error('Erreur upload:', error);
+      alert('Erreur lors de l\'upload de l\'image');
+    } finally {
+      setUploadingImage(false);
+      // Reset le file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
@@ -283,25 +428,81 @@ const LogementsGestion = () => {
         <div className="promoteur-content">
           <div className="section">
             <div className="section-header">
-              <h2>Statistiques</h2>
+              <h2>Statistiques (affichées sur le site)</h2>
+              <button
+                className="btn btn-success"
+                onClick={saveCustomStats}
+                disabled={savingStats}
+              >
+                <FaSave /> {savingStats ? 'Enregistrement...' : 'Enregistrer'}
+              </button>
             </div>
             <div className="section-body">
+              {/* Option pour utiliser des valeurs personnalisées */}
+              <div style={{
+                marginBottom: '1.5rem',
+                padding: '1rem',
+                backgroundColor: customStats.useCustomStats ? '#dcfce7' : '#f3f4f6',
+                borderRadius: '8px',
+                border: customStats.useCustomStats ? '2px solid #22c55e' : '1px solid #e5e7eb'
+              }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '600', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={customStats.useCustomStats}
+                    onChange={(e) => handleCustomStatsChange('useCustomStats', e.target.checked)}
+                    style={{ width: '20px', height: '20px' }}
+                  />
+                  Utiliser des valeurs personnalisées (sinon valeurs automatiques)
+                </label>
+                <p style={{ marginTop: '0.5rem', fontSize: '0.9rem', color: '#6b7280' }}>
+                  {customStats.useCustomStats
+                    ? 'Les valeurs ci-dessous seront affichées sur le site.'
+                    : `Valeurs automatiques actuelles: ${stats.total} logements, ${stats.disponibles} disponibles, ${formatPrice(stats.prixMin)} - ${formatPrice(stats.prixMax)}`
+                  }
+                </p>
+              </div>
+
               <div className="form-row">
                 <div className="form-group">
                   <label>Total de logements</label>
-                  <input type="text" value={stats.total} readOnly />
+                  <input
+                    type="number"
+                    value={customStats.useCustomStats ? customStats.customTotal : stats.total}
+                    onChange={(e) => handleCustomStatsChange('customTotal', e.target.value)}
+                    disabled={!customStats.useCustomStats}
+                    style={{ backgroundColor: customStats.useCustomStats ? '#fff' : '#f3f4f6' }}
+                  />
                 </div>
                 <div className="form-group">
                   <label>Disponibles</label>
-                  <input type="text" value={stats.disponibles} readOnly />
+                  <input
+                    type="number"
+                    value={customStats.useCustomStats ? customStats.customDisponibles : stats.disponibles}
+                    onChange={(e) => handleCustomStatsChange('customDisponibles', e.target.value)}
+                    disabled={!customStats.useCustomStats}
+                    style={{ backgroundColor: customStats.useCustomStats ? '#fff' : '#f3f4f6' }}
+                  />
                 </div>
                 <div className="form-group">
-                  <label>Prix minimum</label>
-                  <input type="text" value={formatPrice(stats.prixMin)} readOnly />
+                  <label>Prix minimum (FCFA)</label>
+                  <input
+                    type="number"
+                    value={customStats.useCustomStats ? customStats.customPrixMin : stats.prixMin}
+                    onChange={(e) => handleCustomStatsChange('customPrixMin', e.target.value)}
+                    disabled={!customStats.useCustomStats}
+                    style={{ backgroundColor: customStats.useCustomStats ? '#fff' : '#f3f4f6' }}
+                  />
                 </div>
                 <div className="form-group">
-                  <label>Prix maximum</label>
-                  <input type="text" value={formatPrice(stats.prixMax)} readOnly />
+                  <label>Prix maximum (FCFA)</label>
+                  <input
+                    type="number"
+                    value={customStats.useCustomStats ? customStats.customPrixMax : stats.prixMax}
+                    onChange={(e) => handleCustomStatsChange('customPrixMax', e.target.value)}
+                    disabled={!customStats.useCustomStats}
+                    style={{ backgroundColor: customStats.useCustomStats ? '#fff' : '#f3f4f6' }}
+                  />
                 </div>
               </div>
             </div>
@@ -672,29 +873,136 @@ const LogementsGestion = () => {
               </div>
 
               <div className="form-group">
-                <label>Images</label>
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={addImage}
-                  style={{ marginBottom: '0.5rem' }}
-                >
-                  <FaPlus /> Ajouter une image
-                </button>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  {formData.images.map((img, index) => (
-                    <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <input type="text" value={img} readOnly style={{ flex: 1 }} />
-                      <button
-                        type="button"
-                        className="btn btn-small btn-danger"
-                        onClick={() => removeImage(index)}
-                      >
-                        <FaTimes />
-                      </button>
-                    </div>
-                  ))}
+                <label><FaImage /> Images du logement</label>
+
+                {/* Section Upload depuis l'ordinateur */}
+                <div style={{
+                  marginBottom: '1rem',
+                  padding: '1rem',
+                  backgroundColor: '#f0f9ff',
+                  borderRadius: '8px',
+                  border: '2px dashed #3b82f6'
+                }}>
+                  <p style={{ marginBottom: '0.5rem', fontWeight: '600', color: '#1e40af' }}>
+                    <FaUpload /> Uploader depuis l'ordinateur
+                  </p>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    accept="image/*"
+                    onChange={handleFileUpload}
+                    disabled={uploadingImage}
+                    style={{ marginBottom: '0.5rem' }}
+                  />
+                  {uploadingImage && (
+                    <p style={{ color: '#3b82f6', fontSize: '0.9rem' }}>
+                      Upload en cours...
+                    </p>
+                  )}
                 </div>
+
+                {/* Section Ajouter par URL */}
+                <div style={{
+                  marginBottom: '1rem',
+                  padding: '1rem',
+                  backgroundColor: '#f0fdf4',
+                  borderRadius: '8px',
+                  border: '1px solid #86efac'
+                }}>
+                  <p style={{ marginBottom: '0.5rem', fontWeight: '600', color: '#166534' }}>
+                    <FaLink /> Ajouter par URL
+                  </p>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <input
+                      type="url"
+                      value={imageUrlInput}
+                      onChange={(e) => setImageUrlInput(e.target.value)}
+                      placeholder="https://exemple.com/image.jpg"
+                      style={{ flex: 1 }}
+                      onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addImageByUrl())}
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-success"
+                      onClick={addImageByUrl}
+                      disabled={!imageUrlInput.trim()}
+                    >
+                      <FaPlus /> Ajouter
+                    </button>
+                  </div>
+                </div>
+
+                {/* Liste des images avec aperçu */}
+                {formData.images.length > 0 && (
+                  <div style={{ marginTop: '1rem' }}>
+                    <p style={{ fontWeight: '600', marginBottom: '0.5rem' }}>
+                      Images ajoutées ({formData.images.length})
+                    </p>
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
+                      gap: '1rem'
+                    }}>
+                      {formData.images.map((img, index) => (
+                        <div
+                          key={index}
+                          style={{
+                            position: 'relative',
+                            borderRadius: '8px',
+                            overflow: 'hidden',
+                            border: '1px solid #e5e7eb',
+                            backgroundColor: '#fff'
+                          }}
+                        >
+                          <img
+                            src={img}
+                            alt={`Image ${index + 1}`}
+                            style={{
+                              width: '100%',
+                              height: '100px',
+                              objectFit: 'cover'
+                            }}
+                            onError={(e) => {
+                              e.target.src = 'https://via.placeholder.com/150x100?text=Image';
+                            }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeImage(index)}
+                            style={{
+                              position: 'absolute',
+                              top: '5px',
+                              right: '5px',
+                              background: '#ef4444',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '50%',
+                              width: '24px',
+                              height: '24px',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '12px'
+                            }}
+                          >
+                            <FaTimes />
+                          </button>
+                          <p style={{
+                            fontSize: '0.7rem',
+                            padding: '0.25rem',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            backgroundColor: '#f3f4f6'
+                          }}>
+                            {img.split('/').pop()}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="form-group">

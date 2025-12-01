@@ -5,13 +5,13 @@ import {
   FaBed, FaBath, FaRulerCombined, FaCar, FaMapMarkerAlt,
   FaFilter, FaTimes, FaCheck
 } from 'react-icons/fa';
-import { logements, filterLogements, getLogementsStats } from '../data/logements';
 import API_URL from '../config';
 import './Logements.css';
 
 const Logements = () => {
   const navigate = useNavigate();
-  const [filteredLogements, setFilteredLogements] = useState(logements);
+  const [logements, setLogements] = useState([]);
+  const [filteredLogements, setFilteredLogements] = useState([]);
   const [showFilters, setShowFilters] = useState(false);
   const [stats, setStats] = useState(null);
   const [apiImages, setApiImages] = useState({});
@@ -30,16 +30,47 @@ const Logements = () => {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    setStats(getLogementsStats());
 
-    // Charger le contenu et les images depuis l'API
+    // Charger les logements, contenu et images depuis l'API
     const fetchData = async () => {
       try {
+        // Charger les logements depuis l'API
+        const logementsResponse = await fetch(`${API_URL}/api/logements`);
+        if (logementsResponse.ok) {
+          const logementsData = await logementsResponse.json();
+          const logementsArray = logementsData.data || [];
+          setLogements(logementsArray);
+          setFilteredLogements(logementsArray);
+
+          // Calculer les stats
+          const disponibles = logementsArray.filter(log => log.statut === 'disponible');
+          const prix = logementsArray.map(log => log.prix);
+          if (prix.length > 0) {
+            setStats({
+              total: logementsArray.length,
+              disponibles: disponibles.length,
+              prixMin: Math.min(...prix),
+              prixMax: Math.max(...prix)
+            });
+          }
+        }
+
         // Charger le contenu texte
         const contentResponse = await fetch(`${API_URL}/api/logements-content`);
         if (contentResponse.ok) {
           const contentData = await contentResponse.json();
           setContent(contentData.data);
+
+          // Si des statistiques personnalisées sont activées, les utiliser
+          if (contentData.data?.hero?.stats?.useCustomStats) {
+            const customStats = contentData.data.hero.stats;
+            setStats({
+              total: customStats.customTotal || 0,
+              disponibles: customStats.customDisponibles || 0,
+              prixMin: customStats.customPrixMin || 0,
+              prixMax: customStats.customPrixMax || 0
+            });
+          }
         }
 
         // Charger les images
@@ -49,7 +80,6 @@ const Logements = () => {
           const formattedImages = {};
           Object.keys(data).forEach(type => {
             if (data[type] && data[type].url) {
-              // URL Cloudinary complète, pas besoin d'ajouter API_URL
               formattedImages[type] = data[type].url;
             }
           });
@@ -58,7 +88,6 @@ const Logements = () => {
       } catch (error) {
         console.error('Erreur lors du chargement des données:', error);
       } finally {
-        // Marquer les images comme chargées même en cas d'erreur ou si vide
         setImagesLoaded(true);
         setLoading(false);
       }
@@ -67,9 +96,30 @@ const Logements = () => {
   }, []);
 
   useEffect(() => {
-    const results = filterLogements(filters);
+    // Filtrer les logements localement
+    let results = logements.filter(log => log.actif !== false);
+
+    if (filters.type && filters.type !== 'tous') {
+      results = results.filter(log => log.type === filters.type);
+    }
+    if (filters.prixMin) {
+      results = results.filter(log => log.prix >= Number(filters.prixMin));
+    }
+    if (filters.prixMax) {
+      results = results.filter(log => log.prix <= Number(filters.prixMax));
+    }
+    if (filters.superficieMin) {
+      results = results.filter(log => log.superficie >= Number(filters.superficieMin));
+    }
+    if (filters.superficieMax) {
+      results = results.filter(log => log.superficie <= Number(filters.superficieMax));
+    }
+    if (filters.statut && filters.statut !== 'tous') {
+      results = results.filter(log => log.statut === filters.statut);
+    }
+
     setFilteredLogements(results);
-  }, [filters]);
+  }, [filters, logements]);
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
@@ -108,7 +158,12 @@ const Logements = () => {
   };
 
   const getLogementImage = (logement) => {
-    // Mapper les IDs de logement aux types d'image
+    // Priorité 1: Utiliser la première image du tableau images du logement (depuis l'API/admin)
+    if (logement.images && logement.images.length > 0 && logement.images[0]) {
+      return logement.images[0];
+    }
+
+    // Priorité 2: Mapper les IDs de logement aux types d'image (ancienne méthode)
     const imageTypeMap = {
       'LOG-001': 'villa-duplex-4p',
       'LOG-002': 'villa-duplex-5p',
@@ -127,8 +182,8 @@ const Logements = () => {
       return null;
     }
 
-    // Fallback sur l'image hardcodée SEULEMENT si l'API n'a pas encore chargé
-    return logement.images[0];
+    // Fallback sur le placeholder
+    return null;
   };
 
   return (
@@ -316,11 +371,11 @@ const Logements = () => {
                 </div>
 
                 <p className="logement-description">
-                  {logement.description.substring(0, 100)}...
+                  {logement.description}
                 </p>
 
                 <div className="logement-equipements">
-                  {logement.equipements.slice(0, 4).map((equip, idx) => (
+                  {logement.equipements.map((equip, idx) => (
                     <span key={idx} className="equipement-tag">
                       <FaCheck /> {equip}
                     </span>
