@@ -16,7 +16,10 @@ const LogementsGestion = () => {
     customTotal: 0,
     customDisponibles: 0,
     customPrixMin: 0,
-    customPrixMax: 0
+    customPrixMax: 0,
+    villasDuplex4P: 75,
+    villasDuplex5P: 30,
+    villasTriplex6P: 10
   });
   const [editingLogement, setEditingLogement] = useState(null);
   const [formData, setFormData] = useState({
@@ -96,7 +99,10 @@ const LogementsGestion = () => {
             customTotal: data.data.hero.stats.customTotal || 0,
             customDisponibles: data.data.hero.stats.customDisponibles || 0,
             customPrixMin: data.data.hero.stats.customPrixMin || 0,
-            customPrixMax: data.data.hero.stats.customPrixMax || 0
+            customPrixMax: data.data.hero.stats.customPrixMax || 0,
+            villasDuplex4P: data.data.hero.stats.villasDuplex4P || 75,
+            villasDuplex5P: data.data.hero.stats.villasDuplex5P || 30,
+            villasTriplex6P: data.data.hero.stats.villasTriplex6P || 10
           });
         }
       }
@@ -134,7 +140,10 @@ const LogementsGestion = () => {
             customTotal: customStats.customTotal,
             customDisponibles: customStats.customDisponibles,
             customPrixMin: customStats.customPrixMin,
-            customPrixMax: customStats.customPrixMax
+            customPrixMax: customStats.customPrixMax,
+            villasDuplex4P: customStats.villasDuplex4P,
+            villasDuplex5P: customStats.villasDuplex5P,
+            villasTriplex6P: customStats.villasTriplex6P
           }
         }
       };
@@ -503,6 +512,46 @@ const LogementsGestion = () => {
                     disabled={!customStats.useCustomStats}
                     style={{ backgroundColor: customStats.useCustomStats ? '#fff' : '#f3f4f6' }}
                   />
+                </div>
+              </div>
+
+              {/* Nouvelles statistiques par type de villa */}
+              <div style={{
+                marginTop: '1.5rem',
+                padding: '1rem',
+                backgroundColor: '#fef3c7',
+                borderRadius: '8px',
+                border: '2px solid #f59e0b'
+              }}>
+                <h4 style={{ margin: '0 0 1rem 0', color: '#92400e' }}>Répartition par type de villa</h4>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Villas Duplex 4P</label>
+                    <input
+                      type="number"
+                      value={customStats.villasDuplex4P}
+                      onChange={(e) => handleCustomStatsChange('villasDuplex4P', e.target.value)}
+                      style={{ backgroundColor: '#fff' }}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Villas Duplex 5P</label>
+                    <input
+                      type="number"
+                      value={customStats.villasDuplex5P}
+                      onChange={(e) => handleCustomStatsChange('villasDuplex5P', e.target.value)}
+                      style={{ backgroundColor: '#fff' }}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Villas Triplex 6P</label>
+                    <input
+                      type="number"
+                      value={customStats.villasTriplex6P}
+                      onChange={(e) => handleCustomStatsChange('villasTriplex6P', e.target.value)}
+                      style={{ backgroundColor: '#fff' }}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
