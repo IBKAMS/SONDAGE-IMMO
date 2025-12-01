@@ -8,6 +8,8 @@ const Questionnaire = () => {
   const { logementId } = useParams();
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
+  const [steps, setSteps] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     logementId: logementId || '',
     // Étape 1: Informations personnelles
@@ -103,6 +105,56 @@ const Questionnaire = () => {
     }
   }, [logementId]);
 
+  // Charger la configuration du questionnaire depuis l'API
+  useEffect(() => {
+    const fetchQuestionnaireConfig = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/questionnaire-content`);
+        const result = await response.json();
+
+        if (result.success && result.data && result.data.steps) {
+          // Transformer les steps de l'API vers le format attendu par le composant
+          const transformedSteps = result.data.steps
+            .filter(step => step.isActive)
+            .sort((a, b) => a.stepNumber - b.stepNumber)
+            .map(step => ({
+              title: step.title,
+              icon: step.icon,
+              questions: step.questions
+                .filter(q => q.isActive)
+                .sort((a, b) => a.order - b.order)
+                .map(q => ({
+                  name: q.name,
+                  label: q.label,
+                  type: q.type,
+                  required: q.required,
+                  tooltip: q.tooltip || undefined,
+                  placeholder: q.placeholder || undefined,
+                  min: q.min,
+                  max: q.max,
+                  step: q.step,
+                  maxSelections: q.maxSelections,
+                  // Transformer les options de [{label, value}] vers [string]
+                  options: q.options && q.options.length > 0
+                    ? q.options.map(opt => opt.value || opt.label)
+                    : undefined
+                }))
+            }));
+
+          setSteps(transformedSteps);
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement de la configuration du questionnaire:', error);
+        // Utiliser les steps par défaut en cas d'erreur (fallback)
+        setSteps(defaultSteps);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchQuestionnaireConfig();
+  }, []);
+
   // Liste des pays avec préfixes téléphoniques
   const paysAvecPrefixes = {
     'Côte d\'Ivoire': '+225',
@@ -134,7 +186,8 @@ const Questionnaire = () => {
     'Autre': ''
   };
 
-  const steps = [
+  // Fallback steps utilisés si l'API échoue
+  const defaultSteps = [
     {
       title: "Informations Personnelles",
       icon: "👤",
@@ -917,6 +970,33 @@ const Questionnaire = () => {
     }
     return value;
   };
+
+  // Afficher un loading pendant le chargement
+  if (loading || steps.length === 0) {
+    return (
+      <div className="questionnaire-page">
+        <div className="questionnaire-hero">
+          <div className="hero-overlay"></div>
+          <div className="hero-content">
+            <h1>Questionnaire Personnalisé</h1>
+            <p className="hero-subtitle">Chargement...</p>
+          </div>
+        </div>
+        <div className="container" style={{ textAlign: 'center', padding: '50px' }}>
+          <div className="loading-spinner" style={{
+            width: '50px',
+            height: '50px',
+            border: '5px solid #f3f3f3',
+            borderTop: '5px solid #2c5aa0',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto'
+          }}></div>
+          <p style={{ marginTop: '20px', color: '#666' }}>Chargement du questionnaire...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="questionnaire-page">
