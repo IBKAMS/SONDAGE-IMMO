@@ -15,18 +15,16 @@ const {
 // Routes publiques
 router.get('/', getLogements);
 router.get('/stats/all', getStats);
-router.get('/admin/all', getAllLogements); // Temporairement public pour développement
+router.get('/admin/all', getAllLogements);
 router.get('/:id', getLogement);
 
-// Routes protégées (admin)
-router.use(protect);
+// Routes TEMPORAIREMENT publiques (À PROTÉGER PLUS TARD)
+router.post('/', createLogement);
+router.put('/:id', updateLogement);
+router.delete('/:id', deleteLogement);
 
-router.post('/', authorize('super_admin', 'admin'), createLogement);
-router.put('/:id', authorize('super_admin', 'admin', 'editeur'), updateLogement);
-router.delete('/:id', authorize('super_admin', 'admin'), deleteLogement);
-
-// Route pour uploader une image de logement
-router.post('/upload-image', authorize('super_admin', 'admin', 'editeur'), uploadImage.single('image'), async (req, res) => {
+// Route pour uploader une image de logement (TEMPORAIREMENT publique)
+router.post('/upload-image', uploadImage.single('image'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({
