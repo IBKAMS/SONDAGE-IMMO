@@ -45,7 +45,24 @@ const logementsContentSchema = new mongoose.Schema({
       customPrixMax: {
         type: Number,
         default: 0
-      }
+      },
+      // Sections de statistiques personnalisées
+      customSections: [{
+        title: {
+          type: String,
+          default: 'Nouvelle section'
+        },
+        items: [{
+          label: {
+            type: String,
+            default: 'Label'
+          },
+          value: {
+            type: Number,
+            default: 0
+          }
+        }]
+      }]
     }
   },
   filters: {
