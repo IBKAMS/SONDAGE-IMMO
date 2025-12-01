@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaSave, FaUndo, FaPlus, FaTrash, FaChevronDown, FaChevronUp } from 'react-icons/fa';
+import { FaSave, FaUndo, FaPlus, FaTrash, FaChevronDown, FaChevronUp, FaImage, FaVideo, FaLink } from 'react-icons/fa';
 import API_URL from '../config';
 import './PromoteurAdmin.css';
 
@@ -154,6 +154,7 @@ const PromoteurAdmin = () => {
       partenariat: '',
       description: '',
       caracteristiques: [],
+      medias: [],
       order: content.projetsSection.projets.length + 1
     };
     setContent(prev => ({
@@ -162,6 +163,44 @@ const PromoteurAdmin = () => {
         ...prev.projetsSection,
         projets: [...prev.projetsSection.projets, newProjet]
       }
+    }));
+  };
+
+  // Fonctions pour gérer les médias des projets
+  const addMedia = (projetIndex, mediaType = 'image') => {
+    const newProjets = [...content.projetsSection.projets];
+    if (!newProjets[projetIndex].medias) {
+      newProjets[projetIndex].medias = [];
+    }
+    newProjets[projetIndex].medias.push({
+      type: mediaType,
+      url: '',
+      thumbnail: ''
+    });
+    setContent(prev => ({
+      ...prev,
+      projetsSection: { ...prev.projetsSection, projets: newProjets }
+    }));
+  };
+
+  const removeMedia = (projetIndex, mediaIndex) => {
+    const newProjets = [...content.projetsSection.projets];
+    newProjets[projetIndex].medias = newProjets[projetIndex].medias.filter((_, i) => i !== mediaIndex);
+    setContent(prev => ({
+      ...prev,
+      projetsSection: { ...prev.projetsSection, projets: newProjets }
+    }));
+  };
+
+  const handleMediaChange = (projetIndex, mediaIndex, field, value) => {
+    const newProjets = [...content.projetsSection.projets];
+    newProjets[projetIndex].medias[mediaIndex] = {
+      ...newProjets[projetIndex].medias[mediaIndex],
+      [field]: value
+    };
+    setContent(prev => ({
+      ...prev,
+      projetsSection: { ...prev.projetsSection, projets: newProjets }
     }));
   };
 
@@ -537,6 +576,90 @@ const PromoteurAdmin = () => {
                     >
                       <FaPlus /> Ajouter une caractéristique
                     </button>
+                  </div>
+
+                  {/* Section Médias du projet */}
+                  <div className="form-group medias-section">
+                    <label><FaImage /> Médias du projet (Images / Vidéos)</label>
+                    {projet.medias && projet.medias.length > 0 ? (
+                      <div className="medias-list">
+                        {projet.medias.map((media, mIndex) => (
+                          <div key={mIndex} className="media-item">
+                            <div className="media-type-badge">
+                              {media.type === 'video' ? <FaVideo /> : <FaImage />}
+                              <span>{media.type === 'video' ? 'Vidéo' : 'Image'}</span>
+                            </div>
+                            <div className="media-inputs">
+                              <select
+                                value={media.type}
+                                onChange={(e) => handleMediaChange(pIndex, mIndex, 'type', e.target.value)}
+                                className="media-type-select"
+                              >
+                                <option value="image">Image</option>
+                                <option value="video">Vidéo</option>
+                              </select>
+                              <input
+                                type="text"
+                                value={media.url || ''}
+                                onChange={(e) => handleMediaChange(pIndex, mIndex, 'url', e.target.value)}
+                                placeholder="URL du média (Cloudinary, YouTube, etc.)"
+                                className="media-url-input"
+                              />
+                              {media.type === 'video' && (
+                                <input
+                                  type="text"
+                                  value={media.thumbnail || ''}
+                                  onChange={(e) => handleMediaChange(pIndex, mIndex, 'thumbnail', e.target.value)}
+                                  placeholder="URL de la miniature (optionnel)"
+                                  className="media-thumbnail-input"
+                                />
+                              )}
+                            </div>
+                            {media.url && (
+                              <div className="media-preview">
+                                {media.type === 'video' ? (
+                                  <div className="video-preview">
+                                    {media.url.includes('youtube') || media.url.includes('youtu.be') ? (
+                                      <span className="preview-label">Vidéo YouTube</span>
+                                    ) : (
+                                      <video src={media.url} controls width="150" />
+                                    )}
+                                  </div>
+                                ) : (
+                                  <img src={media.url} alt={`Média ${mIndex + 1}`} className="image-preview" />
+                                )}
+                              </div>
+                            )}
+                            <button
+                              className="btn-delete-small"
+                              onClick={() => removeMedia(pIndex, mIndex)}
+                              title="Supprimer ce média"
+                            >
+                              <FaTrash />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="no-medias">Aucun média ajouté</p>
+                    )}
+                    <div className="media-actions">
+                      <button
+                        className="btn btn-secondary btn-small"
+                        onClick={() => addMedia(pIndex, 'image')}
+                      >
+                        <FaImage /> Ajouter une image
+                      </button>
+                      <button
+                        className="btn btn-secondary btn-small"
+                        onClick={() => addMedia(pIndex, 'video')}
+                      >
+                        <FaVideo /> Ajouter une vidéo
+                      </button>
+                    </div>
+                    <p className="media-help">
+                      <FaLink /> Collez l'URL de vos images/vidéos Cloudinary ou YouTube
+                    </p>
                   </div>
                 </div>
               ))}

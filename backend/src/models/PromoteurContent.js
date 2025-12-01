@@ -74,6 +74,12 @@ const promoteurContentSchema = new mongoose.Schema({
       partenariat: { type: String },
       description: { type: String, required: true },
       caracteristiques: [{ type: String }],
+      medias: [{
+        type: { type: String, enum: ['image', 'video'], default: 'image' },
+        url: { type: String },
+        publicId: { type: String },
+        thumbnail: { type: String }
+      }],
       order: { type: Number, required: true }
     }]
   },

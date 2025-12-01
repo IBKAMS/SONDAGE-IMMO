@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { FaBuilding, FaHome, FaUsers, FaAward, FaCheckCircle, FaPlay } from 'react-icons/fa';
+import { FaBuilding, FaHome, FaUsers, FaAward, FaCheckCircle, FaPlay, FaChevronLeft, FaChevronRight, FaImage, FaVideo } from 'react-icons/fa';
 import API_URL from '../config';
 import './Promoteur.css';
 
@@ -10,6 +10,7 @@ const Promoteur = () => {
   const [loadingVideo, setLoadingVideo] = useState(true);
   const [content, setContent] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [currentMediaIndex, setCurrentMediaIndex] = useState({});
   const videoRef = React.useRef(null);
   const [stats, setStats] = useState({
     projets: 0,
@@ -276,46 +277,157 @@ const Promoteur = () => {
           </p>
 
           <div className="projets-list">
-            {content.projetsSection?.projets && content.projetsSection.projets.sort((a, b) => a.order - b.order).map((projet, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, x: index % 2 === 0 ? -50 : 50 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6 }}
-                className={`projet-card ${index % 2 === 0 ? 'reverse' : ''}`}
-              >
-                <div className="projet-image">
-                  <img
-                    src={`https://via.placeholder.com/600x400/1a5490/ffffff?text=${encodeURIComponent(projet.nom)}`}
-                    alt={projet.nom}
-                  />
-                </div>
+            {content.projetsSection?.projets && content.projetsSection.projets.sort((a, b) => a.order - b.order).map((projet, index) => {
+              const hasMedias = projet.medias && projet.medias.length > 0;
+              const currentIndex = currentMediaIndex[index] || 0;
+              const currentMedia = hasMedias ? projet.medias[currentIndex] : null;
 
-                <div className="projet-content">
-                  <h3>{projet.nom}</h3>
-                  <div className="projet-location">
-                    <span className="location-badge">{projet.localisation}</span>
-                  </div>
-                  {projet.partenariat && (
-                    <p className="partenariat">{projet.partenariat}</p>
-                  )}
-                  <p className="projet-description">{projet.description}</p>
+              const goToPreviousMedia = (e) => {
+                e.stopPropagation();
+                setCurrentMediaIndex(prev => ({
+                  ...prev,
+                  [index]: currentIndex > 0 ? currentIndex - 1 : projet.medias.length - 1
+                }));
+              };
 
-                  <div className="caracteristiques">
-                    <h4>Caractéristiques :</h4>
-                    <ul>
-                      {projet.caracteristiques && projet.caracteristiques.map((carac, idx) => (
-                        <li key={idx}>
-                          <FaCheckCircle className="check-icon" />
-                          {carac}
-                        </li>
-                      ))}
-                    </ul>
+              const goToNextMedia = (e) => {
+                e.stopPropagation();
+                setCurrentMediaIndex(prev => ({
+                  ...prev,
+                  [index]: currentIndex < projet.medias.length - 1 ? currentIndex + 1 : 0
+                }));
+              };
+
+              const isYoutubeUrl = (url) => {
+                return url && (url.includes('youtube.com') || url.includes('youtu.be'));
+              };
+
+              const getYoutubeEmbedUrl = (url) => {
+                if (!url) return null;
+                let videoId = null;
+                if (url.includes('youtu.be/')) {
+                  videoId = url.split('youtu.be/')[1]?.split('?')[0];
+                } else if (url.includes('youtube.com/watch?v=')) {
+                  videoId = url.split('v=')[1]?.split('&')[0];
+                }
+                return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+              };
+
+              return (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, x: index % 2 === 0 ? -50 : 50 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6 }}
+                  className={`projet-card ${index % 2 === 0 ? 'reverse' : ''}`}
+                >
+                  <div className="projet-media">
+                    {hasMedias ? (
+                      <div className="media-carousel">
+                        {currentMedia.type === 'video' ? (
+                          isYoutubeUrl(currentMedia.url) ? (
+                            <div className="video-container youtube-container">
+                              <iframe
+                                src={getYoutubeEmbedUrl(currentMedia.url)}
+                                title={`${projet.nom} - Vidéo ${currentIndex + 1}`}
+                                frameBorder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                              />
+                            </div>
+                          ) : (
+                            <div className="video-container">
+                              <video
+                                src={currentMedia.url}
+                                controls
+                                poster={currentMedia.thumbnail}
+                              />
+                            </div>
+                          )
+                        ) : (
+                          <img
+                            src={currentMedia.url}
+                            alt={`${projet.nom} - Image ${currentIndex + 1}`}
+                            onError={(e) => {
+                              e.target.src = `https://via.placeholder.com/600x400/1a5490/ffffff?text=${encodeURIComponent(projet.nom)}`;
+                            }}
+                          />
+                        )}
+
+                        {/* Navigation arrows */}
+                        {projet.medias.length > 1 && (
+                          <>
+                            <button className="carousel-nav prev" onClick={goToPreviousMedia}>
+                              <FaChevronLeft />
+                            </button>
+                            <button className="carousel-nav next" onClick={goToNextMedia}>
+                              <FaChevronRight />
+                            </button>
+                          </>
+                        )}
+
+                        {/* Media type indicator */}
+                        <div className="media-type-indicator">
+                          {currentMedia.type === 'video' ? <FaVideo /> : <FaImage />}
+                        </div>
+
+                        {/* Dots indicator */}
+                        {projet.medias.length > 1 && (
+                          <div className="carousel-dots">
+                            {projet.medias.map((_, dotIndex) => (
+                              <button
+                                key={dotIndex}
+                                className={`dot ${dotIndex === currentIndex ? 'active' : ''}`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setCurrentMediaIndex(prev => ({ ...prev, [index]: dotIndex }));
+                                }}
+                              />
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Media counter */}
+                        {projet.medias.length > 1 && (
+                          <div className="media-counter">
+                            {currentIndex + 1} / {projet.medias.length}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <img
+                        src={`https://via.placeholder.com/600x400/1a5490/ffffff?text=${encodeURIComponent(projet.nom)}`}
+                        alt={projet.nom}
+                      />
+                    )}
                   </div>
-                </div>
-              </motion.div>
-            ))}
+
+                  <div className="projet-content">
+                    <h3>{projet.nom}</h3>
+                    <div className="projet-location">
+                      <span className="location-badge">{projet.localisation}</span>
+                    </div>
+                    {projet.partenariat && (
+                      <p className="partenariat">{projet.partenariat}</p>
+                    )}
+                    <p className="projet-description">{projet.description}</p>
+
+                    <div className="caracteristiques">
+                      <h4>Caractéristiques :</h4>
+                      <ul>
+                        {projet.caracteristiques && projet.caracteristiques.map((carac, idx) => (
+                          <li key={idx}>
+                            <FaCheckCircle className="check-icon" />
+                            {carac}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </section>
