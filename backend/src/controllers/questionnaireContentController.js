@@ -1083,3 +1083,20 @@ exports.resetToDefault = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// Forcer la réinitialisation complète (supprimer et recréer)
+exports.forceReset = async (req, res) => {
+  try {
+    // Supprimer tout le contenu existant
+    await QuestionnaireContent.deleteMany({});
+
+    // Créer nouveau contenu avec les valeurs par défaut
+    const content = new QuestionnaireContent(defaultContent);
+    await content.save();
+
+    res.json({ success: true, message: 'Questionnaire réinitialisé avec succès', data: content });
+  } catch (error) {
+    console.error('Erreur forceReset:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

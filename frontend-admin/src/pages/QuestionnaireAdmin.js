@@ -218,6 +218,31 @@ const QuestionnaireAdmin = () => {
     }
   };
 
+  const handleForceReset = async () => {
+    if (!window.confirm('ATTENTION: Cela va supprimer TOUTES les données du questionnaire et le recréer avec les valeurs originales (10 étapes avec emojis). Continuer ?')) return;
+
+    setSaving(true);
+    try {
+      const response = await fetch(`${API_URL}/api/questionnaire-content/force-reset`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setContent(data.data);
+        alert('Questionnaire recréé avec succès! Les 10 étapes originales sont restaurées.');
+      } else {
+        alert('Erreur lors de la recréation: ' + data.message);
+      }
+    } catch (error) {
+      console.error('Erreur force reset:', error);
+      alert('Erreur lors de la recréation');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const getTypeLabel = (type) => {
     const types = {
       'text': 'Texte',
@@ -255,6 +280,14 @@ const QuestionnaireAdmin = () => {
       <div className="promoteur-header">
         <h1>Gestion du Questionnaire</h1>
         <div className="header-actions">
+          <button
+            className="btn-reset"
+            onClick={handleForceReset}
+            disabled={saving}
+            style={{ background: '#dc3545', color: 'white', border: 'none' }}
+          >
+            Recréer (10 étapes)
+          </button>
           <button
             className="btn-reset"
             onClick={handleResetToDefault}

@@ -11,4 +11,7 @@ router.put('/:id', questionnaireContentController.updateContent);
 // POST - Réinitialiser aux valeurs par défaut
 router.post('/:id/reset', questionnaireContentController.resetToDefault);
 
+// POST - Forcer réinitialisation complète (supprimer et recréer)
+router.post('/force-reset', questionnaireContentController.forceReset);
+
 module.exports = router;
