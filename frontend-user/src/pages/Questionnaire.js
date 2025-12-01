@@ -781,7 +781,13 @@ const Questionnaire = () => {
     return true;
   };
 
-  const handleNext = () => {
+  const handleNext = (e) => {
+    // Empêcher la soumission du formulaire
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
     // Valider les champs obligatoires avant de continuer
     if (!validateCurrentStep()) {
       return;
@@ -1043,7 +1049,16 @@ const Questionnaire = () => {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="questionnaire-form">
+        <form
+          onSubmit={(e) => e.preventDefault()}
+          onKeyDown={(e) => {
+            // Empêcher la soumission du formulaire avec Entrée sauf si on est sur le dernier step
+            if (e.key === 'Enter' && currentStep < steps.length - 1) {
+              e.preventDefault();
+            }
+          }}
+          className="questionnaire-form"
+        >
           <AnimatePresence mode="wait">
             <motion.div
               key={currentStep}
@@ -1259,14 +1274,15 @@ const Questionnaire = () => {
             {currentStep < steps.length - 1 ? (
               <button
                 type="button"
-                onClick={handleNext}
+                onClick={(e) => handleNext(e)}
                 className="btn btn-primary"
               >
                 Suivant
               </button>
             ) : (
               <button
-                type="submit"
+                type="button"
+                onClick={handleSubmit}
                 className="btn btn-primary btn-submit"
               >
                 Soumettre le questionnaire
