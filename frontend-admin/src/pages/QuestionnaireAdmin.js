@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { FaSave, FaUndo, FaChevronDown, FaChevronUp, FaPlus, FaTrash, FaToggleOn, FaToggleOff } from 'react-icons/fa';
+import { FaSave, FaUndo, FaChevronDown, FaChevronUp, FaPlus, FaTrash, FaToggleOn, FaToggleOff, FaLink, FaHome } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
 import API_URL from '../config';
 import './PromoteurAdmin.css';
 
@@ -504,6 +505,20 @@ const QuestionnaireAdmin = () => {
                               Requis
                             </span>
                           )}
+                          {question.dynamicSource === 'logements' && (
+                            <span style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              background: '#1976d2',
+                              color: 'white',
+                              padding: '2px 8px',
+                              borderRadius: '4px',
+                              fontSize: '0.7rem'
+                            }}>
+                              <FaLink /> Lié aux logements
+                            </span>
+                          )}
                         </div>
                         <div style={{ display: 'flex', gap: '8px' }}>
                           <button
@@ -667,35 +682,81 @@ const QuestionnaireAdmin = () => {
                         {/* Options pour select/radio/checkbox/ranking */}
                         {['select', 'radio', 'checkbox', 'ranking'].includes(question.type) && (
                           <div style={{
-                            background: '#fff3e0',
+                            background: question.dynamicSource === 'logements' ? '#e3f2fd' : '#fff3e0',
                             padding: '15px',
                             borderRadius: '8px',
                             marginTop: '15px'
                           }}>
+                            {/* Indication source dynamique pour les logements */}
+                            {question.dynamicSource === 'logements' && (
+                              <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '10px',
+                                padding: '12px 15px',
+                                background: '#1976d2',
+                                color: 'white',
+                                borderRadius: '8px',
+                                marginBottom: '15px'
+                              }}>
+                                <FaLink style={{ fontSize: '1.2rem' }} />
+                                <div style={{ flex: 1 }}>
+                                  <strong style={{ display: 'block', marginBottom: '4px' }}>
+                                    Options liées dynamiquement aux logements
+                                  </strong>
+                                  <span style={{ fontSize: '0.85rem', opacity: 0.9 }}>
+                                    Ces options sont automatiquement mises à jour depuis la rubrique "Logements".
+                                    Modifiez les logements pour mettre à jour cette liste.
+                                  </span>
+                                </div>
+                                <Link
+                                  to="/logements-gestion"
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    padding: '8px 12px',
+                                    background: 'white',
+                                    color: '#1976d2',
+                                    borderRadius: '6px',
+                                    textDecoration: 'none',
+                                    fontWeight: '600',
+                                    fontSize: '0.85rem'
+                                  }}
+                                >
+                                  <FaHome /> Gérer les logements
+                                </Link>
+                              </div>
+                            )}
+
                             <div style={{
                               display: 'flex',
                               justifyContent: 'space-between',
                               alignItems: 'center',
                               marginBottom: '15px'
                             }}>
-                              <h5 style={{ margin: 0, color: '#e65100' }}>Options</h5>
-                              <button
-                                onClick={() => addOption(stepIndex, qIndex)}
-                                style={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: '6px',
-                                  padding: '6px 12px',
-                                  background: '#ff9800',
-                                  color: 'white',
-                                  border: 'none',
-                                  borderRadius: '4px',
-                                  cursor: 'pointer',
-                                  fontSize: '0.85rem'
-                                }}
-                              >
-                                <FaPlus /> Ajouter
-                              </button>
+                              <h5 style={{ margin: 0, color: question.dynamicSource === 'logements' ? '#1976d2' : '#e65100' }}>
+                                Options {question.dynamicSource === 'logements' && '(automatiques)'}
+                              </h5>
+                              {question.dynamicSource !== 'logements' && (
+                                <button
+                                  onClick={() => addOption(stepIndex, qIndex)}
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    padding: '6px 12px',
+                                    background: '#ff9800',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer',
+                                    fontSize: '0.85rem'
+                                  }}
+                                >
+                                  <FaPlus /> Ajouter
+                                </button>
+                              )}
                             </div>
 
                             {question.options && question.options.length > 0 ? (
@@ -710,7 +771,8 @@ const QuestionnaireAdmin = () => {
                                     background: 'white',
                                     border: '1px solid #e0e0e0',
                                     borderRadius: '6px',
-                                    marginBottom: '8px'
+                                    marginBottom: '8px',
+                                    opacity: question.dynamicSource === 'logements' ? 0.8 : 1
                                   }}
                                 >
                                   <input
@@ -719,6 +781,7 @@ const QuestionnaireAdmin = () => {
                                     onChange={(e) => handleOptionChange(stepIndex, qIndex, optIndex, 'label', e.target.value)}
                                     placeholder="Label"
                                     style={{ flex: 1 }}
+                                    disabled={question.dynamicSource === 'logements'}
                                   />
                                   <input
                                     type="text"
@@ -726,20 +789,23 @@ const QuestionnaireAdmin = () => {
                                     onChange={(e) => handleOptionChange(stepIndex, qIndex, optIndex, 'value', e.target.value)}
                                     placeholder="Valeur"
                                     style={{ flex: 1 }}
+                                    disabled={question.dynamicSource === 'logements'}
                                   />
-                                  <button
-                                    onClick={() => removeOption(stepIndex, qIndex, optIndex)}
-                                    style={{
-                                      background: '#ffebee',
-                                      color: '#dc3545',
-                                      border: 'none',
-                                      padding: '6px 8px',
-                                      borderRadius: '4px',
-                                      cursor: 'pointer'
-                                    }}
-                                  >
-                                    <FaTrash />
-                                  </button>
+                                  {question.dynamicSource !== 'logements' && (
+                                    <button
+                                      onClick={() => removeOption(stepIndex, qIndex, optIndex)}
+                                      style={{
+                                        background: '#ffebee',
+                                        color: '#dc3545',
+                                        border: 'none',
+                                        padding: '6px 8px',
+                                        borderRadius: '4px',
+                                        cursor: 'pointer'
+                                      }}
+                                    >
+                                      <FaTrash />
+                                    </button>
+                                  )}
                                 </div>
                               ))
                             ) : (

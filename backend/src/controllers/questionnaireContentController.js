@@ -1,4 +1,21 @@
 const QuestionnaireContent = require('../models/QuestionnaireContent');
+const Logement = require('../models/Logement');
+
+// Fonction pour formater le prix en FCFA
+const formatPrix = (prix) => {
+  if (prix >= 1000000000) {
+    return `${(prix / 1000000000).toFixed(0)} milliard${prix >= 2000000000 ? 's' : ''} FCFA`;
+  } else if (prix >= 1000000) {
+    return `${(prix / 1000000).toFixed(0)} millions FCFA`;
+  } else {
+    return `${prix.toLocaleString('fr-FR')} FCFA`;
+  }
+};
+
+// Fonction pour générer le label d'un logement
+const generateLogementLabel = (logement) => {
+  return `${logement.nom} (${logement.superficie} m²) - ${formatPrix(logement.prix)}`;
+};
 
 // Liste des pays avec préfixes téléphoniques
 const paysAvecPrefixes = [
@@ -972,6 +989,35 @@ const defaultContent = {
   ]
 };
 
+// Fonction pour injecter les logements dynamiquement dans le contenu
+const injectLogementsInContent = (content, logements) => {
+  // Convertir en objet simple si c'est un document Mongoose
+  const contentObj = content.toObject ? content.toObject() : JSON.parse(JSON.stringify(content));
+
+  // Générer les options de logements
+  const logementOptions = logements.map(log => ({
+    label: generateLogementLabel(log),
+    value: generateLogementLabel(log)
+  }));
+
+  // Ajouter l'option "Indécis"
+  logementOptions.push({ label: 'Indécis', value: 'Indécis' });
+
+  // Trouver l'étape 3 (Préférences de Logement) et mettre à jour la question typeLogement
+  if (contentObj.steps) {
+    const step3 = contentObj.steps.find(step => step.stepNumber === 3);
+    if (step3 && step3.questions) {
+      const typeLogementQuestion = step3.questions.find(q => q.name === 'typeLogement');
+      if (typeLogementQuestion) {
+        typeLogementQuestion.options = logementOptions;
+        typeLogementQuestion.dynamicSource = 'logements'; // Marquer comme source dynamique
+      }
+    }
+  }
+
+  return contentObj;
+};
+
 // Récupérer le contenu
 exports.getContent = async (req, res) => {
   try {
@@ -982,7 +1028,15 @@ exports.getContent = async (req, res) => {
       await content.save();
     }
 
-    res.json({ success: true, data: content });
+    // Récupérer les logements actifs et disponibles
+    const logements = await Logement.find({ actif: true, statut: 'disponible' })
+      .select('nom type superficie prix nombrePieces')
+      .sort({ prix: 1 });
+
+    // Injecter les logements dans le contenu
+    const contentWithLogements = injectLogementsInContent(content, logements);
+
+    res.json({ success: true, data: contentWithLogements });
   } catch (error) {
     console.error('Erreur getContent:', error);
     res.status(500).json({ success: false, message: error.message });
