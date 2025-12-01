@@ -340,9 +340,10 @@ const QuestionnaireAdmin = () => {
           >
             <div className="section-header" onClick={() => toggleStep(stepIndex)}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <span style={{ fontSize: '1.2rem' }}>Étape {step.stepNumber}</span>
+                <span style={{ fontSize: '1.5rem' }}>{step.icon}</span>
+                <span style={{ fontSize: '1rem', color: '#666' }}>Étape {step.stepNumber}</span>
                 <h2 style={{ margin: 0 }}>{step.title}</h2>
-                <span style={{ color: '#666', fontSize: '0.9rem' }}>
+                <span style={{ color: '#888', fontSize: '0.85rem' }}>
                   ({step.questions?.length || 0} questions)
                 </span>
                 {!step.isActive && (
@@ -596,6 +597,17 @@ const QuestionnaireAdmin = () => {
                           />
                         </div>
 
+                        <div className="form-group">
+                          <label>Tooltip (aide contextuelle)</label>
+                          <textarea
+                            value={question.tooltip || ''}
+                            onChange={(e) => handleQuestionChange(stepIndex, qIndex, 'tooltip', e.target.value)}
+                            placeholder="Texte d'aide affiché au survol..."
+                            rows="2"
+                            style={{ resize: 'vertical' }}
+                          />
+                        </div>
+
                         {/* Config Range */}
                         {question.type === 'range' && (
                           <div style={{
@@ -652,8 +664,8 @@ const QuestionnaireAdmin = () => {
                           </div>
                         )}
 
-                        {/* Options pour select/radio/checkbox */}
-                        {['select', 'radio', 'checkbox'].includes(question.type) && (
+                        {/* Options pour select/radio/checkbox/ranking */}
+                        {['select', 'radio', 'checkbox', 'ranking'].includes(question.type) && (
                           <div style={{
                             background: '#fff3e0',
                             padding: '15px',
@@ -736,7 +748,7 @@ const QuestionnaireAdmin = () => {
                               </p>
                             )}
 
-                            {question.type === 'checkbox' && (
+                            {(question.type === 'checkbox' || question.type === 'ranking') && (
                               <div className="form-group" style={{ marginTop: '15px' }}>
                                 <label>Nombre max de sélections</label>
                                 <input
