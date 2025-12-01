@@ -6,8 +6,8 @@
 /* Hero Section */
 .logements-hero {
   position: relative;
-  height: 50vh;
   min-height: 400px;
+  padding: 80px 0 100px;
   background: linear-gradient(135deg, #5865F2 0%, #8B5FBD 50%, #C850C0 100%);
   display: flex;
   align-items: center;
@@ -113,7 +113,7 @@
   padding: var(--spacing-xl);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
-  margin: calc(-1 * var(--spacing-xl)) auto var(--spacing-xl);
+  margin: var(--spacing-xl) auto var(--spacing-xl);
   position: relative;
   z-index: 10;
   max-width: 1200px;
