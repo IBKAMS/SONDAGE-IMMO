@@ -17,9 +17,13 @@ const LogementsGestion = () => {
     customDisponibles: 0,
     customPrixMin: 0,
     customPrixMax: 0,
-    villasDuplex4P: 75,
-    villasDuplex5P: 30,
-    villasTriplex6P: 10
+    villasSectionTitle: 'Répartition par type de villa',
+    villasLabel1: 'Villas Duplex 4P',
+    villasValue1: 75,
+    villasLabel2: 'Villas Duplex 5P',
+    villasValue2: 30,
+    villasLabel3: 'Villas Triplex 6P',
+    villasValue3: 10
   });
   const [editingLogement, setEditingLogement] = useState(null);
   const [formData, setFormData] = useState({
@@ -100,9 +104,13 @@ const LogementsGestion = () => {
             customDisponibles: data.data.hero.stats.customDisponibles || 0,
             customPrixMin: data.data.hero.stats.customPrixMin || 0,
             customPrixMax: data.data.hero.stats.customPrixMax || 0,
-            villasDuplex4P: data.data.hero.stats.villasDuplex4P || 75,
-            villasDuplex5P: data.data.hero.stats.villasDuplex5P || 30,
-            villasTriplex6P: data.data.hero.stats.villasTriplex6P || 10
+            villasSectionTitle: data.data.hero.stats.villasSectionTitle || 'Répartition par type de villa',
+            villasLabel1: data.data.hero.stats.villasLabel1 || 'Villas Duplex 4P',
+            villasValue1: data.data.hero.stats.villasValue1 || 75,
+            villasLabel2: data.data.hero.stats.villasLabel2 || 'Villas Duplex 5P',
+            villasValue2: data.data.hero.stats.villasValue2 || 30,
+            villasLabel3: data.data.hero.stats.villasLabel3 || 'Villas Triplex 6P',
+            villasValue3: data.data.hero.stats.villasValue3 || 10
           });
         }
       }
@@ -141,9 +149,13 @@ const LogementsGestion = () => {
             customDisponibles: customStats.customDisponibles,
             customPrixMin: customStats.customPrixMin,
             customPrixMax: customStats.customPrixMax,
-            villasDuplex4P: customStats.villasDuplex4P,
-            villasDuplex5P: customStats.villasDuplex5P,
-            villasTriplex6P: customStats.villasTriplex6P
+            villasSectionTitle: customStats.villasSectionTitle,
+            villasLabel1: customStats.villasLabel1,
+            villasValue1: customStats.villasValue1,
+            villasLabel2: customStats.villasLabel2,
+            villasValue2: customStats.villasValue2,
+            villasLabel3: customStats.villasLabel3,
+            villasValue3: customStats.villasValue3
           }
         }
       };
@@ -515,7 +527,7 @@ const LogementsGestion = () => {
                 </div>
               </div>
 
-              {/* Nouvelles statistiques par type de villa */}
+              {/* Statistiques personnalisables par type */}
               <div style={{
                 marginTop: '1.5rem',
                 padding: '1rem',
@@ -523,33 +535,66 @@ const LogementsGestion = () => {
                 borderRadius: '8px',
                 border: '2px solid #f59e0b'
               }}>
-                <h4 style={{ margin: '0 0 1rem 0', color: '#92400e' }}>Répartition par type de villa</h4>
+                <div className="form-group" style={{ marginBottom: '1rem' }}>
+                  <label style={{ fontWeight: '600', color: '#92400e' }}>Titre de la section</label>
+                  <input
+                    type="text"
+                    value={customStats.villasSectionTitle}
+                    onChange={(e) => handleCustomStatsChange('villasSectionTitle', e.target.value)}
+                    style={{ backgroundColor: '#fff', fontWeight: '600' }}
+                    placeholder="Ex: Répartition par type de villa"
+                  />
+                </div>
                 <div className="form-row">
                   <div className="form-group">
-                    <label>Villas Duplex 4P</label>
+                    <label>Label 1</label>
+                    <input
+                      type="text"
+                      value={customStats.villasLabel1}
+                      onChange={(e) => handleCustomStatsChange('villasLabel1', e.target.value)}
+                      style={{ backgroundColor: '#fff', marginBottom: '0.5rem' }}
+                      placeholder="Ex: Villas Duplex 4P"
+                    />
                     <input
                       type="number"
-                      value={customStats.villasDuplex4P}
-                      onChange={(e) => handleCustomStatsChange('villasDuplex4P', e.target.value)}
+                      value={customStats.villasValue1}
+                      onChange={(e) => handleCustomStatsChange('villasValue1', e.target.value)}
                       style={{ backgroundColor: '#fff' }}
+                      placeholder="Quantité"
                     />
                   </div>
                   <div className="form-group">
-                    <label>Villas Duplex 5P</label>
+                    <label>Label 2</label>
+                    <input
+                      type="text"
+                      value={customStats.villasLabel2}
+                      onChange={(e) => handleCustomStatsChange('villasLabel2', e.target.value)}
+                      style={{ backgroundColor: '#fff', marginBottom: '0.5rem' }}
+                      placeholder="Ex: Villas Duplex 5P"
+                    />
                     <input
                       type="number"
-                      value={customStats.villasDuplex5P}
-                      onChange={(e) => handleCustomStatsChange('villasDuplex5P', e.target.value)}
+                      value={customStats.villasValue2}
+                      onChange={(e) => handleCustomStatsChange('villasValue2', e.target.value)}
                       style={{ backgroundColor: '#fff' }}
+                      placeholder="Quantité"
                     />
                   </div>
                   <div className="form-group">
-                    <label>Villas Triplex 6P</label>
+                    <label>Label 3</label>
+                    <input
+                      type="text"
+                      value={customStats.villasLabel3}
+                      onChange={(e) => handleCustomStatsChange('villasLabel3', e.target.value)}
+                      style={{ backgroundColor: '#fff', marginBottom: '0.5rem' }}
+                      placeholder="Ex: Villas Triplex 6P"
+                    />
                     <input
                       type="number"
-                      value={customStats.villasTriplex6P}
-                      onChange={(e) => handleCustomStatsChange('villasTriplex6P', e.target.value)}
+                      value={customStats.villasValue3}
+                      onChange={(e) => handleCustomStatsChange('villasValue3', e.target.value)}
                       style={{ backgroundColor: '#fff' }}
+                      placeholder="Quantité"
                     />
                   </div>
                 </div>
