@@ -17,7 +17,6 @@ import Visite3DAdmin from './pages/Visite3D';
 import LocalisationAdmin from './pages/Localisation';
 import AnalyseEconomiqueAdmin from './pages/AnalyseEconomique';
 import OptionAchatAdmin from './pages/OptionAchatAdmin';
-import QuestionnaireAdmin from './pages/QuestionnaireAdmin';
 import TestCloudinary from './pages/TestCloudinary';
 import TestCompressionSimple from './pages/TestCompressionSimple';
 import './App.css';
@@ -53,7 +52,6 @@ function App() {
                       <Route path="/localisation" element={<LocalisationAdmin />} />
                       <Route path="/analyse-economique" element={<AnalyseEconomiqueAdmin />} />
                       <Route path="/option-achat" element={<OptionAchatAdmin />} />
-                      <Route path="/questionnaire" element={<QuestionnaireAdmin />} />
                       <Route path="/test-cloudinary" element={<TestCloudinary />} />
                       <Route path="/test-compression" element={<TestCompressionSimple />} />
                     </Routes>
