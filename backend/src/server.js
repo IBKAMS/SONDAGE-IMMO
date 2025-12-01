@@ -109,6 +109,7 @@ app.use('/api/visite3d-content', require('./routes/visite3dContent'));
 app.use('/api/localisation-content', require('./routes/localisationContent'));
 app.use('/api/analyse-economique-content', require('./routes/analyseEconomiqueContent'));
 app.use('/api/option-achat-content', require('./routes/optionAchatContent'));
+app.use('/api/questionnaire-content', require('./routes/questionnaireContent'));
 app.use('/api/footer-content', require('./routes/footerContent'));
 app.use('/api/dashboard-stats', require('./routes/dashboardStats'));
 
