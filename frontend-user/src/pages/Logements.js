@@ -216,6 +216,25 @@ const Logements = () => {
                 </div>
               </div>
             )}
+
+            {/* Sections de statistiques personnalisées */}
+            {content?.hero?.stats?.customSections && content.hero.stats.customSections.length > 0 && (
+              <div className="custom-stats-sections">
+                {content.hero.stats.customSections.map((section, sectionIndex) => (
+                  <div key={sectionIndex} className="custom-stats-section">
+                    <h3 className="section-title">{section.title}</h3>
+                    <div className="hero-stats custom-stats">
+                      {section.items && section.items.map((item, itemIndex) => (
+                        <div key={itemIndex} className="stat">
+                          <span className="number">{item.value}</span>
+                          <span className="label">{item.label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </motion.div>
         </div>
       </section>

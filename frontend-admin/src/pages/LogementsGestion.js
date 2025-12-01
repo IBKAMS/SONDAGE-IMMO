@@ -17,13 +17,7 @@ const LogementsGestion = () => {
     customDisponibles: 0,
     customPrixMin: 0,
     customPrixMax: 0,
-    villasSectionTitle: 'Répartition par type de villa',
-    villasLabel1: 'Villas Duplex 4P',
-    villasValue1: 75,
-    villasLabel2: 'Villas Duplex 5P',
-    villasValue2: 30,
-    villasLabel3: 'Villas Triplex 6P',
-    villasValue3: 10
+    customSections: []
   });
   const [editingLogement, setEditingLogement] = useState(null);
   const [formData, setFormData] = useState({
@@ -98,19 +92,29 @@ const LogementsGestion = () => {
       if (data.success && data.data) {
         setLogementsContent(data.data);
         if (data.data.hero?.stats) {
+          const statsData = data.data.hero.stats;
+
+          // Migration: convertir l'ancien format vers le nouveau si nécessaire
+          let sections = statsData.customSections || [];
+          if (sections.length === 0 && statsData.villasSectionTitle) {
+            // Convertir l'ancien format
+            sections = [{
+              title: statsData.villasSectionTitle || 'Répartition par type de villa',
+              items: [
+                { label: statsData.villasLabel1 || 'Villas Duplex 4P', value: statsData.villasValue1 || 75 },
+                { label: statsData.villasLabel2 || 'Villas Duplex 5P', value: statsData.villasValue2 || 30 },
+                { label: statsData.villasLabel3 || 'Villas Triplex 6P', value: statsData.villasValue3 || 10 }
+              ]
+            }];
+          }
+
           setCustomStats({
-            useCustomStats: data.data.hero.stats.useCustomStats || false,
-            customTotal: data.data.hero.stats.customTotal || 0,
-            customDisponibles: data.data.hero.stats.customDisponibles || 0,
-            customPrixMin: data.data.hero.stats.customPrixMin || 0,
-            customPrixMax: data.data.hero.stats.customPrixMax || 0,
-            villasSectionTitle: data.data.hero.stats.villasSectionTitle || 'Répartition par type de villa',
-            villasLabel1: data.data.hero.stats.villasLabel1 || 'Villas Duplex 4P',
-            villasValue1: data.data.hero.stats.villasValue1 || 75,
-            villasLabel2: data.data.hero.stats.villasLabel2 || 'Villas Duplex 5P',
-            villasValue2: data.data.hero.stats.villasValue2 || 30,
-            villasLabel3: data.data.hero.stats.villasLabel3 || 'Villas Triplex 6P',
-            villasValue3: data.data.hero.stats.villasValue3 || 10
+            useCustomStats: statsData.useCustomStats || false,
+            customTotal: statsData.customTotal || 0,
+            customDisponibles: statsData.customDisponibles || 0,
+            customPrixMin: statsData.customPrixMin || 0,
+            customPrixMax: statsData.customPrixMax || 0,
+            customSections: sections
           });
         }
       }
@@ -122,7 +126,81 @@ const LogementsGestion = () => {
   const handleCustomStatsChange = (field, value) => {
     setCustomStats(prev => ({
       ...prev,
-      [field]: field === 'useCustomStats' ? value : Number(value)
+      [field]: field === 'useCustomStats' ? value : (field === 'customSections' ? value : Number(value))
+    }));
+  };
+
+  // Fonctions pour gérer les sections personnalisées
+  const addSection = () => {
+    setCustomStats(prev => ({
+      ...prev,
+      customSections: [
+        ...prev.customSections,
+        {
+          title: 'Nouvelle section',
+          items: [
+            { label: 'Label 1', value: 0 },
+            { label: 'Label 2', value: 0 },
+            { label: 'Label 3', value: 0 }
+          ]
+        }
+      ]
+    }));
+  };
+
+  const removeSection = (sectionIndex) => {
+    setCustomStats(prev => ({
+      ...prev,
+      customSections: prev.customSections.filter((_, i) => i !== sectionIndex)
+    }));
+  };
+
+  const updateSectionTitle = (sectionIndex, title) => {
+    setCustomStats(prev => ({
+      ...prev,
+      customSections: prev.customSections.map((section, i) =>
+        i === sectionIndex ? { ...section, title } : section
+      )
+    }));
+  };
+
+  const updateSectionItem = (sectionIndex, itemIndex, field, value) => {
+    setCustomStats(prev => ({
+      ...prev,
+      customSections: prev.customSections.map((section, i) =>
+        i === sectionIndex
+          ? {
+              ...section,
+              items: section.items.map((item, j) =>
+                j === itemIndex
+                  ? { ...item, [field]: field === 'value' ? Number(value) : value }
+                  : item
+              )
+            }
+          : section
+      )
+    }));
+  };
+
+  const addItemToSection = (sectionIndex) => {
+    setCustomStats(prev => ({
+      ...prev,
+      customSections: prev.customSections.map((section, i) =>
+        i === sectionIndex
+          ? { ...section, items: [...section.items, { label: 'Nouveau label', value: 0 }] }
+          : section
+      )
+    }));
+  };
+
+  const removeItemFromSection = (sectionIndex, itemIndex) => {
+    setCustomStats(prev => ({
+      ...prev,
+      customSections: prev.customSections.map((section, i) =>
+        i === sectionIndex
+          ? { ...section, items: section.items.filter((_, j) => j !== itemIndex) }
+          : section
+      )
     }));
   };
 
@@ -149,13 +227,7 @@ const LogementsGestion = () => {
             customDisponibles: customStats.customDisponibles,
             customPrixMin: customStats.customPrixMin,
             customPrixMax: customStats.customPrixMax,
-            villasSectionTitle: customStats.villasSectionTitle,
-            villasLabel1: customStats.villasLabel1,
-            villasValue1: customStats.villasValue1,
-            villasLabel2: customStats.villasLabel2,
-            villasValue2: customStats.villasValue2,
-            villasLabel3: customStats.villasLabel3,
-            villasValue3: customStats.villasValue3
+            customSections: customStats.customSections
           }
         }
       };
@@ -527,77 +599,120 @@ const LogementsGestion = () => {
                 </div>
               </div>
 
-              {/* Statistiques personnalisables par type */}
-              <div style={{
-                marginTop: '1.5rem',
-                padding: '1rem',
-                backgroundColor: '#fef3c7',
-                borderRadius: '8px',
-                border: '2px solid #f59e0b'
-              }}>
-                <div className="form-group" style={{ marginBottom: '1rem' }}>
-                  <label style={{ fontWeight: '600', color: '#92400e' }}>Titre de la section</label>
-                  <input
-                    type="text"
-                    value={customStats.villasSectionTitle}
-                    onChange={(e) => handleCustomStatsChange('villasSectionTitle', e.target.value)}
-                    style={{ backgroundColor: '#fff', fontWeight: '600' }}
-                    placeholder="Ex: Répartition par type de villa"
-                  />
+              {/* Sections de statistiques personnalisables */}
+              <div style={{ marginTop: '1.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                  <h3 style={{ margin: 0, color: '#374151' }}>Sections de statistiques personnalisées</h3>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={addSection}
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                  >
+                    <FaPlus /> Ajouter une section
+                  </button>
                 </div>
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Label 1</label>
-                    <input
-                      type="text"
-                      value={customStats.villasLabel1}
-                      onChange={(e) => handleCustomStatsChange('villasLabel1', e.target.value)}
-                      style={{ backgroundColor: '#fff', marginBottom: '0.5rem' }}
-                      placeholder="Ex: Villas Duplex 4P"
-                    />
-                    <input
-                      type="number"
-                      value={customStats.villasValue1}
-                      onChange={(e) => handleCustomStatsChange('villasValue1', e.target.value)}
-                      style={{ backgroundColor: '#fff' }}
-                      placeholder="Quantité"
-                    />
+
+                {customStats.customSections.length === 0 ? (
+                  <div style={{
+                    padding: '2rem',
+                    backgroundColor: '#f3f4f6',
+                    borderRadius: '8px',
+                    textAlign: 'center',
+                    color: '#6b7280'
+                  }}>
+                    <p>Aucune section personnalisée. Cliquez sur "Ajouter une section" pour en créer une.</p>
                   </div>
-                  <div className="form-group">
-                    <label>Label 2</label>
-                    <input
-                      type="text"
-                      value={customStats.villasLabel2}
-                      onChange={(e) => handleCustomStatsChange('villasLabel2', e.target.value)}
-                      style={{ backgroundColor: '#fff', marginBottom: '0.5rem' }}
-                      placeholder="Ex: Villas Duplex 5P"
-                    />
-                    <input
-                      type="number"
-                      value={customStats.villasValue2}
-                      onChange={(e) => handleCustomStatsChange('villasValue2', e.target.value)}
-                      style={{ backgroundColor: '#fff' }}
-                      placeholder="Quantité"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Label 3</label>
-                    <input
-                      type="text"
-                      value={customStats.villasLabel3}
-                      onChange={(e) => handleCustomStatsChange('villasLabel3', e.target.value)}
-                      style={{ backgroundColor: '#fff', marginBottom: '0.5rem' }}
-                      placeholder="Ex: Villas Triplex 6P"
-                    />
-                    <input
-                      type="number"
-                      value={customStats.villasValue3}
-                      onChange={(e) => handleCustomStatsChange('villasValue3', e.target.value)}
-                      style={{ backgroundColor: '#fff' }}
-                      placeholder="Quantité"
-                    />
-                  </div>
-                </div>
+                ) : (
+                  customStats.customSections.map((section, sectionIndex) => (
+                    <div
+                      key={sectionIndex}
+                      style={{
+                        marginBottom: '1.5rem',
+                        padding: '1rem',
+                        backgroundColor: '#fef3c7',
+                        borderRadius: '8px',
+                        border: '2px solid #f59e0b'
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                        <div className="form-group" style={{ flex: 1, marginRight: '1rem', marginBottom: 0 }}>
+                          <label style={{ fontWeight: '600', color: '#92400e' }}>Titre de la section</label>
+                          <input
+                            type="text"
+                            value={section.title}
+                            onChange={(e) => updateSectionTitle(sectionIndex, e.target.value)}
+                            style={{ backgroundColor: '#fff', fontWeight: '600' }}
+                            placeholder="Ex: Répartition par type de villa"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          className="btn btn-danger btn-small"
+                          onClick={() => removeSection(sectionIndex)}
+                          style={{ marginTop: '1.5rem' }}
+                        >
+                          <FaTrash /> Supprimer
+                        </button>
+                      </div>
+
+                      <div className="form-row" style={{ flexWrap: 'wrap' }}>
+                        {section.items.map((item, itemIndex) => (
+                          <div key={itemIndex} className="form-group" style={{ position: 'relative', minWidth: '200px' }}>
+                            <label>Label {itemIndex + 1}</label>
+                            <input
+                              type="text"
+                              value={item.label}
+                              onChange={(e) => updateSectionItem(sectionIndex, itemIndex, 'label', e.target.value)}
+                              style={{ backgroundColor: '#fff', marginBottom: '0.5rem' }}
+                              placeholder="Ex: Villas Duplex 4P"
+                            />
+                            <input
+                              type="number"
+                              value={item.value}
+                              onChange={(e) => updateSectionItem(sectionIndex, itemIndex, 'value', e.target.value)}
+                              style={{ backgroundColor: '#fff' }}
+                              placeholder="Quantité"
+                            />
+                            {section.items.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => removeItemFromSection(sectionIndex, itemIndex)}
+                                style={{
+                                  position: 'absolute',
+                                  top: '0',
+                                  right: '0',
+                                  background: '#ef4444',
+                                  color: 'white',
+                                  border: 'none',
+                                  borderRadius: '50%',
+                                  width: '20px',
+                                  height: '20px',
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontSize: '10px'
+                                }}
+                              >
+                                <FaTimes />
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-small"
+                        onClick={() => addItemToSection(sectionIndex)}
+                        style={{ marginTop: '0.5rem' }}
+                      >
+                        <FaPlus /> Ajouter un élément
+                      </button>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </div>
