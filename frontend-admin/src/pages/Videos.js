@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FaUpload, FaCheckCircle, FaVideo, FaPlay, FaTimes, FaDraftingCompass, FaImage, FaHome } from 'react-icons/fa';
+import { FaUpload, FaCheckCircle, FaVideo, FaPlay, FaTimes, FaDraftingCompass, FaImage, FaHome, FaBuilding } from 'react-icons/fa';
 import API_URL from '../config';
 import { useCloudinaryWidget } from '../hooks/useCloudinaryWidget';
 import './Videos.css';
@@ -16,6 +16,11 @@ const Videos = () => {
     'villa-duplex-4p': { file: null, name: '', url: '' },
     'villa-duplex-5p': { file: null, name: '', url: '' },
     'villa-triplex-6p': { file: null, name: '', url: '' }
+  });
+  const [promoteurImages, setPromoteurImages] = useState({
+    'residence-3k': { file: null, name: '', url: '' },
+    'residence-ciel-jardin': { file: null, name: '', url: '' },
+    'miensah-cite-lumiere': { file: null, name: '', url: '' }
   });
   const [loading, setLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({});
@@ -37,6 +42,12 @@ const Videos = () => {
     'villa-duplex-4p': useRef(null),
     'villa-duplex-5p': useRef(null),
     'villa-triplex-6p': useRef(null)
+  };
+
+  const promoteurImageInputRefs = {
+    'residence-3k': useRef(null),
+    'residence-ciel-jardin': useRef(null),
+    'miensah-cite-lumiere': useRef(null)
   };
 
   // Charger les vidéos existantes au montage du composant
@@ -95,6 +106,34 @@ const Videos = () => {
       }
     };
     fetchImages();
+  }, []);
+
+  // Charger les images promoteur existantes au montage du composant
+  useEffect(() => {
+    const fetchPromoteurImages = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/promoteur-images`);
+        if (response.ok) {
+          const data = await response.json();
+          const updatedImages = {};
+          Object.keys(data).forEach(type => {
+            if (data[type] && data[type].originalName && data[type].url) {
+              updatedImages[type] = {
+                file: null,
+                name: data[type].originalName,
+                url: data[type].url
+              };
+            }
+          });
+          if (Object.keys(updatedImages).length > 0) {
+            setPromoteurImages(prev => ({ ...prev, ...updatedImages }));
+          }
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement des images promoteur:', error);
+      }
+    };
+    fetchPromoteurImages();
   }, []);
 
   const handleFileSelect = (type) => (e) => {
@@ -205,6 +244,57 @@ const Videos = () => {
 
     // Mettre à jour le state
     setImages(prev => ({
+      ...prev,
+      [type]: { file: null, name: '', url: '' }
+    }));
+  };
+
+  const handlePromoteurImageSelect = (type) => (e) => {
+    const file = e.target.files[0];
+    if (file && file.type.startsWith('image/')) {
+      const imageUrl = URL.createObjectURL(file);
+      setPromoteurImages(prev => ({
+        ...prev,
+        [type]: { file, name: file.name, url: imageUrl }
+      }));
+    } else {
+      alert('Veuillez sélectionner un fichier image valide');
+    }
+  };
+
+  const triggerPromoteurImageInput = (type) => {
+    promoteurImageInputRefs[type].current.click();
+  };
+
+  const removePromoteurImage = async (type) => {
+    // Vérifier si l'image provient du serveur (uploadée sur Cloudinary)
+    const isUploadedImage = promoteurImages[type].url && promoteurImages[type].url.startsWith('http');
+
+    if (isUploadedImage) {
+      if (!window.confirm(`Voulez-vous vraiment supprimer cette image ? Elle ne sera plus visible dans la rubrique Promoteur du site utilisateur.`)) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_URL}/api/promoteur-images/${type}`, {
+          method: 'DELETE'
+        });
+
+        if (response.ok) {
+          console.log(`Image promoteur ${type} supprimée du serveur`);
+        } else {
+          throw new Error('Erreur lors de la suppression');
+        }
+      } catch (error) {
+        console.error(`Erreur lors de la suppression de l'image promoteur ${type}:`, error);
+        alert('Erreur lors de la suppression de l\'image');
+        return;
+      }
+    } else if (promoteurImages[type].url) {
+      URL.revokeObjectURL(promoteurImages[type].url);
+    }
+
+    setPromoteurImages(prev => ({
       ...prev,
       [type]: { file: null, name: '', url: '' }
     }));
@@ -564,6 +654,40 @@ const Videos = () => {
       }
     }
 
+    // Upload des images promoteur
+    for (const [type, image] of Object.entries(promoteurImages)) {
+      if (image.file) {
+        const formData = new FormData();
+        formData.append('image', image.file);
+        formData.append('type', type);
+
+        const uploadPromise = fetch(`${API_URL}/api/promoteur-images/upload`, {
+          method: 'POST',
+          body: formData,
+        })
+          .then(response => response.json())
+          .then(data => {
+            console.log(`Image promoteur ${type} uploadée:`, data);
+            if (data && data.image && data.image.originalName && data.image.url) {
+              setPromoteurImages(prev => ({
+                ...prev,
+                [type]: {
+                  file: null,
+                  name: data.image.originalName,
+                  url: data.image.url
+                }
+              }));
+            }
+          })
+          .catch(error => {
+            console.error(`Erreur upload promoteur ${type}:`, error);
+            throw error;
+          });
+
+        uploadPromises.push(uploadPromise);
+      }
+    }
+
     try {
       await Promise.all(uploadPromises);
       alert('Vidéos et images enregistrées avec succès !');
@@ -626,6 +750,30 @@ const Videos = () => {
       description: 'Image affichée dans la rubrique Logements pour ce type',
       icon: <FaHome />,
       color: '#059669'
+    }
+  ];
+
+  const promoteurImageCards = [
+    {
+      type: 'residence-3k',
+      title: 'Résidence 3K',
+      description: 'Image du projet Résidence 3K - Nos Projets Emblématiques',
+      icon: <FaBuilding />,
+      color: '#DC2626'
+    },
+    {
+      type: 'residence-ciel-jardin',
+      title: 'Résidence Ciel & Jardin',
+      description: 'Image du projet Résidence Ciel & Jardin - Nos Projets Emblématiques',
+      icon: <FaBuilding />,
+      color: '#EA580C'
+    },
+    {
+      type: 'miensah-cite-lumiere',
+      title: 'MIENSAH CITÉ LUMIÈRE',
+      description: 'Image du projet MIENSAH CITÉ LUMIÈRE - Nos Projets Emblématiques',
+      icon: <FaBuilding />,
+      color: '#D97706'
     }
   ];
 
@@ -796,6 +944,79 @@ const Videos = () => {
                 disabled={!images[card.type].url}
               >
                 <FaUpload /> {images[card.type].url ? 'Remplacer' : 'Charger'}
+              </button>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      <div className="videos-header" style={{ marginTop: '3rem' }}>
+        <h2 style={{ fontSize: '1.5rem', margin: 0 }}>Images des Projets Promoteur</h2>
+        <p style={{ margin: '0.5rem 0 0 0' }}>Gérez les images affichées dans la rubrique "Nos Projets Emblématiques" du site utilisateur</p>
+      </div>
+
+      <div className="videos-container">
+        {promoteurImageCards.map((card, index) => (
+          <motion.div
+            key={card.type}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: index * 0.1 }}
+            className="video-card"
+            style={{ '--card-color': card.color }}
+          >
+            <div className="video-card-header">
+              <div className="video-card-icon">{card.icon}</div>
+              <div className="video-card-title">
+                <h3>{card.title}</h3>
+                <p>{card.description}</p>
+              </div>
+            </div>
+
+            <div className="video-card-body">
+              {!promoteurImages[card.type].url ? (
+                <div className="upload-zone" onClick={() => triggerPromoteurImageInput(card.type)}>
+                  <FaUpload className="upload-icon" />
+                  <p className="upload-text">Cliquez pour sélectionner une image</p>
+                  <span className="upload-hint">ou glissez-déposez un fichier ici</span>
+                  <input
+                    ref={promoteurImageInputRefs[card.type]}
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePromoteurImageSelect(card.type)}
+                    style={{ display: 'none' }}
+                  />
+                </div>
+              ) : (
+                <div className="video-preview">
+                  <img
+                    className="preview-player"
+                    src={promoteurImages[card.type].url}
+                    alt={card.title}
+                    style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '8px' }}
+                  />
+                  <div className="video-info">
+                    <FaCheckCircle className="check-icon" />
+                    <span className="video-name">{promoteurImages[card.type].name}</span>
+                    <button
+                      className="btn-remove"
+                      onClick={() => removePromoteurImage(card.type)}
+                      title="Supprimer l'image"
+                    >
+                      <FaTimes />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="video-card-footer">
+              <button
+                className="btn-upload-action"
+                onClick={() => triggerPromoteurImageInput(card.type)}
+                disabled={!promoteurImages[card.type].url}
+              >
+                <FaUpload /> {promoteurImages[card.type].url ? 'Remplacer' : 'Charger'}
               </button>
             </div>
           </motion.div>
