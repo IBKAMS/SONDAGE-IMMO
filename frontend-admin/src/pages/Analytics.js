@@ -4,11 +4,6 @@ import {
   FaMoneyBillWave, FaCalendarAlt, FaFilter,
   FaDownload, FaEye, FaTrash
 } from 'react-icons/fa';
-
-// Wrapper div simple pour remplacer motion.div temporairement
-const motion = {
-  div: ({ children, initial, animate, transition, ...props }) => <div {...props}>{children}</div>
-};
 import API_URL from '../config';
 import {
   BarChart, Bar, PieChart, Pie, Cell, LineChart, Line,
@@ -17,6 +12,11 @@ import {
   Treemap
 } from 'recharts';
 import './Analytics.css';
+
+// Wrapper div simple pour remplacer motion.div temporairement
+const motion = {
+  div: ({ children, initial, animate, transition, ...props }) => <div {...props}>{children}</div>
+};
 
 const Analytics = () => {
   const [responses, setResponses] = useState([]);
