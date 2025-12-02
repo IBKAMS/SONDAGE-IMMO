@@ -2155,10 +2155,18 @@ const Analytics = () => {
                     <div className="stat-item">
                       <span>Nombre de pièces moyen demandé:</span>
                       <strong>{
-                        responses.reduce((sum, r) => {
-                          const rooms = parseInt(r.preferences?.roomsDesired?.replace(/[^0-9]/g, '')) || 0;
+                        (responses.reduce((sum, r) => {
+                          const roomsValue = r.preferences?.roomsDesired;
+                          let rooms = 0;
+                          if (typeof roomsValue === 'number') {
+                            rooms = roomsValue;
+                          } else if (typeof roomsValue === 'string') {
+                            rooms = parseInt(roomsValue.replace(/[^0-9]/g, '')) || 0;
+                          } else if (Array.isArray(roomsValue) && roomsValue.length > 0) {
+                            rooms = parseInt(String(roomsValue[0]).replace(/[^0-9]/g, '')) || 0;
+                          }
                           return sum + rooms;
-                        }, 0) / Math.max(responses.length, 1)
+                        }, 0) / Math.max(responses.length, 1)).toFixed(1)
                       } pièces</strong>
                     </div>
                     <div className="stat-item">
