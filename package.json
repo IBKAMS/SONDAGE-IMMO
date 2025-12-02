@@ -1,9 +1,0 @@
-{
-  "name": "sondage-immo-monorepo",
-  "version": "1.0.0",
-  "private": true,
-  "scripts": {
-    "build": "cd frontend-user && npm install && npm run build",
-    "install-frontend": "cd frontend-user && npm install"
-  }
-}
