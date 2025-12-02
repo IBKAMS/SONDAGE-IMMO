@@ -306,10 +306,10 @@ const Analytics = () => {
   // Calcul des catégories de qualification
   const qualificationStats = responses.reduce((acc, r) => {
     const score = r.score_interet || 0;
-    if (score >= 70) {
+    if (score >= 60) {
       acc.chaud.count++;
       acc.chaud.responses.push(r);
-    } else if (score >= 40) {
+    } else if (score >= 35) {
       acc.tiede.count++;
       acc.tiede.responses.push(r);
     } else {
@@ -1710,8 +1710,8 @@ const Analytics = () => {
                         <td>{response.demographics?.professionalCategory || response.profession || '-'}</td>
                         <td>
                           <span className={`score-badge ${
-                            response.score_interet >= 70 ? 'high' :
-                            response.score_interet >= 40 ? 'medium' : 'low'
+                            response.score_interet >= 60 ? 'high' :
+                            response.score_interet >= 35 ? 'medium' : 'low'
                           }`}>
                             {response.score_interet || 0}
                           </span>
@@ -1769,17 +1769,17 @@ const Analytics = () => {
                   <h3>Répartition par Qualification</h3>
                   <div className="qualification-breakdown">
                     <div className="qualification-item chaud">
-                      <span className="qualification-label">🔥 CHAUD (≥70pts)</span>
+                      <span className="qualification-label">🔥 CHAUD (≥60pts)</span>
                       <span className="qualification-value">{qualificationStats.chaud.count}</span>
                       <span className="qualification-percent">{qualificationStats.chaud.percentage}%</span>
                     </div>
                     <div className="qualification-item tiede">
-                      <span className="qualification-label">🌡️ TIÈDE (40-69pts)</span>
+                      <span className="qualification-label">🌡️ TIÈDE (35-59pts)</span>
                       <span className="qualification-value">{qualificationStats.tiede.count}</span>
                       <span className="qualification-percent">{qualificationStats.tiede.percentage}%</span>
                     </div>
                     <div className="qualification-item froid">
-                      <span className="qualification-label">❄️ FROID (&lt;40pts)</span>
+                      <span className="qualification-label">❄️ FROID (≤34pts)</span>
                       <span className="qualification-value">{qualificationStats.froid.count}</span>
                       <span className="qualification-percent">{qualificationStats.froid.percentage}%</span>
                     </div>
@@ -2043,7 +2043,7 @@ const Analytics = () => {
                       <div className="category-header">
                         <span className="category-icon">🔥</span>
                         <h4>CHAUD</h4>
-                        <span className="category-range">≥ 70 points</span>
+                        <span className="category-range">≥ 60 points</span>
                       </div>
                       <div className="category-stats">
                         <div className="category-count">{qualificationStats.chaud.count} clients</div>
@@ -2056,7 +2056,7 @@ const Analytics = () => {
                       <div className="category-header">
                         <span className="category-icon">🌡️</span>
                         <h4>TIÈDE</h4>
-                        <span className="category-range">40 - 69 points</span>
+                        <span className="category-range">35 - 59 points</span>
                       </div>
                       <div className="category-stats">
                         <div className="category-count">{qualificationStats.tiede.count} clients</div>
@@ -2069,7 +2069,7 @@ const Analytics = () => {
                       <div className="category-header">
                         <span className="category-icon">❄️</span>
                         <h4>FROID</h4>
-                        <span className="category-range">{"<"} 40 points</span>
+                        <span className="category-range">≤ 34 points</span>
                       </div>
                       <div className="category-stats">
                         <div className="category-count">{qualificationStats.froid.count} clients</div>
