@@ -9,6 +9,7 @@ const Architecte = () => {
   const [videoUrl, setVideoUrl] = useState(null);
   const [loading, setLoading] = useState(true);
   const [content, setContent] = useState(null);
+  const [architecteImages, setArchitecteImages] = useState({});
   const videoRef = React.useRef(null);
 
   useEffect(() => {
@@ -36,6 +37,13 @@ const Architecte = () => {
               : `${API_URL}${videoData.url}`;
             setVideoUrl(url);
           }
+        }
+
+        // Charger les images des projets architecte
+        const imagesResponse = await fetch(`${API_URL}/api/architecte-images`);
+        if (imagesResponse.ok) {
+          const imagesData = await imagesResponse.json();
+          setArchitecteImages(imagesData);
         }
       } catch (error) {
         console.error('Erreur lors du chargement des données:', error);
@@ -85,6 +93,24 @@ const Architecte = () => {
     "Jeunesse & Dynamisme": <FaUsers />,
     "Précision": <FaAward />
   };
+
+  // Configuration des projets architecte
+  const projetsArchitecte = [
+    { type: 'projet-architecte-1', nom: 'Projet 1', description: 'Réalisation architecturale d\'exception' },
+    { type: 'projet-architecte-2', nom: 'Projet 2', description: 'Innovation et design contemporain' },
+    { type: 'projet-architecte-3', nom: 'Projet 3', description: 'Excellence et savoir-faire' }
+  ];
+
+  // Fonction pour obtenir l'URL d'une image architecte
+  const getArchitecteImageUrl = (type) => {
+    if (architecteImages[type] && architecteImages[type].url) {
+      return architecteImages[type].url;
+    }
+    return null;
+  };
+
+  // Vérifier si au moins une image de projet architecte est disponible
+  const hasArchitecteProjects = projetsArchitecte.some(projet => getArchitecteImageUrl(projet.type));
 
   // Afficher un message de chargement pendant le chargement initial
   if (loading) {
@@ -192,6 +218,55 @@ const Architecte = () => {
           </motion.div>
         </div>
       </section>
+
+      {/* Nos Projets Emblématiques - Section conditionnelle */}
+      {hasArchitecteProjects && (
+        <section className="section projets-emblematiques-section">
+          <div className="container">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <h2 className="section-title text-center">Nos Projets Emblématiques</h2>
+              <p className="section-subtitle text-center">
+                Découvrez quelques-unes de nos réalisations architecturales
+              </p>
+
+              <div className="projets-emblematiques-grid">
+                {projetsArchitecte.map((projet, index) => {
+                  const imageUrl = getArchitecteImageUrl(projet.type);
+                  if (!imageUrl) return null;
+
+                  return (
+                    <motion.div
+                      key={projet.type}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      whileInView={{ opacity: 1, scale: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.5, delay: index * 0.1 }}
+                      className="projet-emblematique-card"
+                    >
+                      <div className="projet-emblematique-image">
+                        <img
+                          src={imageUrl}
+                          alt={projet.nom}
+                          loading="lazy"
+                        />
+                        <div className="projet-emblematique-overlay">
+                          <h3>{projet.nom}</h3>
+                          <p>{projet.description}</p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          </div>
+        </section>
+      )}
 
       {/* Équipe */}
       <section className="section equipe-section">

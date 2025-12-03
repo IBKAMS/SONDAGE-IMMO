@@ -22,6 +22,11 @@ const Videos = () => {
     'residence-ciel-jardin': { file: null, name: '', url: '' },
     'miensah-cite-lumiere': { file: null, name: '', url: '' }
   });
+  const [architecteImages, setArchitecteImages] = useState({
+    'projet-architecte-1': { file: null, name: '', url: '' },
+    'projet-architecte-2': { file: null, name: '', url: '' },
+    'projet-architecte-3': { file: null, name: '', url: '' }
+  });
   const [loading, setLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({});
   const [uploadingType, setUploadingType] = useState(null);
@@ -48,6 +53,12 @@ const Videos = () => {
     'residence-3k': useRef(null),
     'residence-ciel-jardin': useRef(null),
     'miensah-cite-lumiere': useRef(null)
+  };
+
+  const architecteImageInputRefs = {
+    'projet-architecte-1': useRef(null),
+    'projet-architecte-2': useRef(null),
+    'projet-architecte-3': useRef(null)
   };
 
   // Charger les vidéos existantes au montage du composant
@@ -134,6 +145,34 @@ const Videos = () => {
       }
     };
     fetchPromoteurImages();
+  }, []);
+
+  // Charger les images architecte existantes au montage du composant
+  useEffect(() => {
+    const fetchArchitecteImages = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/architecte-images`);
+        if (response.ok) {
+          const data = await response.json();
+          const updatedImages = {};
+          Object.keys(data).forEach(type => {
+            if (data[type] && data[type].originalName && data[type].url) {
+              updatedImages[type] = {
+                file: null,
+                name: data[type].originalName,
+                url: data[type].url
+              };
+            }
+          });
+          if (Object.keys(updatedImages).length > 0) {
+            setArchitecteImages(prev => ({ ...prev, ...updatedImages }));
+          }
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement des images architecte:', error);
+      }
+    };
+    fetchArchitecteImages();
   }, []);
 
   const handleFileSelect = (type) => (e) => {
@@ -295,6 +334,57 @@ const Videos = () => {
     }
 
     setPromoteurImages(prev => ({
+      ...prev,
+      [type]: { file: null, name: '', url: '' }
+    }));
+  };
+
+  const handleArchitecteImageSelect = (type) => (e) => {
+    const file = e.target.files[0];
+    if (file && file.type.startsWith('image/')) {
+      const imageUrl = URL.createObjectURL(file);
+      setArchitecteImages(prev => ({
+        ...prev,
+        [type]: { file, name: file.name, url: imageUrl }
+      }));
+    } else {
+      alert('Veuillez sélectionner un fichier image valide');
+    }
+  };
+
+  const triggerArchitecteImageInput = (type) => {
+    architecteImageInputRefs[type].current.click();
+  };
+
+  const removeArchitecteImage = async (type) => {
+    // Vérifier si l'image provient du serveur (uploadée sur Cloudinary)
+    const isUploadedImage = architecteImages[type].url && architecteImages[type].url.startsWith('http');
+
+    if (isUploadedImage) {
+      if (!window.confirm(`Voulez-vous vraiment supprimer cette image ? Elle ne sera plus visible dans la rubrique Architecte du site utilisateur.`)) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_URL}/api/architecte-images/${type}`, {
+          method: 'DELETE'
+        });
+
+        if (response.ok) {
+          console.log(`Image architecte ${type} supprimée du serveur`);
+        } else {
+          throw new Error('Erreur lors de la suppression');
+        }
+      } catch (error) {
+        console.error(`Erreur lors de la suppression de l'image architecte ${type}:`, error);
+        alert('Erreur lors de la suppression de l\'image');
+        return;
+      }
+    } else if (architecteImages[type].url) {
+      URL.revokeObjectURL(architecteImages[type].url);
+    }
+
+    setArchitecteImages(prev => ({
       ...prev,
       [type]: { file: null, name: '', url: '' }
     }));
@@ -688,6 +778,40 @@ const Videos = () => {
       }
     }
 
+    // Upload des images architecte
+    for (const [type, image] of Object.entries(architecteImages)) {
+      if (image.file) {
+        const formData = new FormData();
+        formData.append('image', image.file);
+        formData.append('type', type);
+
+        const uploadPromise = fetch(`${API_URL}/api/architecte-images/upload`, {
+          method: 'POST',
+          body: formData,
+        })
+          .then(response => response.json())
+          .then(data => {
+            console.log(`Image architecte ${type} uploadée:`, data);
+            if (data && data.image && data.image.originalName && data.image.url) {
+              setArchitecteImages(prev => ({
+                ...prev,
+                [type]: {
+                  file: null,
+                  name: data.image.originalName,
+                  url: data.image.url
+                }
+              }));
+            }
+          })
+          .catch(error => {
+            console.error(`Erreur upload architecte ${type}:`, error);
+            throw error;
+          });
+
+        uploadPromises.push(uploadPromise);
+      }
+    }
+
     try {
       await Promise.all(uploadPromises);
       alert('Vidéos et images enregistrées avec succès !');
@@ -774,6 +898,30 @@ const Videos = () => {
       description: 'Image du projet MIENSAH CITÉ LUMIÈRE - Nos Projets Emblématiques',
       icon: <FaBuilding />,
       color: '#D97706'
+    }
+  ];
+
+  const architecteImageCards = [
+    {
+      type: 'projet-architecte-1',
+      title: 'Projet Architecte 1',
+      description: 'Image du premier projet - Rubrique Architecte',
+      icon: <FaDraftingCompass />,
+      color: '#0891B2'
+    },
+    {
+      type: 'projet-architecte-2',
+      title: 'Projet Architecte 2',
+      description: 'Image du deuxième projet - Rubrique Architecte',
+      icon: <FaDraftingCompass />,
+      color: '#0D9488'
+    },
+    {
+      type: 'projet-architecte-3',
+      title: 'Projet Architecte 3',
+      description: 'Image du troisième projet - Rubrique Architecte',
+      icon: <FaDraftingCompass />,
+      color: '#059669'
     }
   ];
 
@@ -1017,6 +1165,79 @@ const Videos = () => {
                 disabled={!promoteurImages[card.type].url}
               >
                 <FaUpload /> {promoteurImages[card.type].url ? 'Remplacer' : 'Charger'}
+              </button>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      <div className="videos-header" style={{ marginTop: '3rem' }}>
+        <h2 style={{ fontSize: '1.5rem', margin: 0 }}>Images des Projets Architecte</h2>
+        <p style={{ margin: '0.5rem 0 0 0' }}>Gérez les images affichées dans la rubrique "Architecte" du site utilisateur</p>
+      </div>
+
+      <div className="videos-container">
+        {architecteImageCards.map((card, index) => (
+          <motion.div
+            key={card.type}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: index * 0.1 }}
+            className="video-card"
+            style={{ '--card-color': card.color }}
+          >
+            <div className="video-card-header">
+              <div className="video-card-icon">{card.icon}</div>
+              <div className="video-card-title">
+                <h3>{card.title}</h3>
+                <p>{card.description}</p>
+              </div>
+            </div>
+
+            <div className="video-card-body">
+              {!architecteImages[card.type].url ? (
+                <div className="upload-zone" onClick={() => triggerArchitecteImageInput(card.type)}>
+                  <FaUpload className="upload-icon" />
+                  <p className="upload-text">Cliquez pour sélectionner une image</p>
+                  <span className="upload-hint">ou glissez-déposez un fichier ici</span>
+                  <input
+                    ref={architecteImageInputRefs[card.type]}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleArchitecteImageSelect(card.type)}
+                    style={{ display: 'none' }}
+                  />
+                </div>
+              ) : (
+                <div className="video-preview">
+                  <img
+                    className="preview-player"
+                    src={architecteImages[card.type].url}
+                    alt={card.title}
+                    style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '8px' }}
+                  />
+                  <div className="video-info">
+                    <FaCheckCircle className="check-icon" />
+                    <span className="video-name">{architecteImages[card.type].name}</span>
+                    <button
+                      className="btn-remove"
+                      onClick={() => removeArchitecteImage(card.type)}
+                      title="Supprimer l'image"
+                    >
+                      <FaTimes />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="video-card-footer">
+              <button
+                className="btn-upload-action"
+                onClick={() => triggerArchitecteImageInput(card.type)}
+                disabled={!architecteImages[card.type].url}
+              >
+                <FaUpload /> {architecteImages[card.type].url ? 'Remplacer' : 'Charger'}
               </button>
             </div>
           </motion.div>

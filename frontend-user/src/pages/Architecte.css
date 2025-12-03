@@ -535,6 +535,77 @@
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
 }
 
+/* Projets Emblématiques Section */
+.projets-emblematiques-section {
+  background: linear-gradient(135deg, rgba(26, 84, 144, 0.03) 0%, rgba(243, 156, 18, 0.05) 100%);
+  padding: var(--spacing-xxl) 0;
+}
+
+.projets-emblematiques-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: var(--spacing-lg);
+  margin-top: var(--spacing-xl);
+}
+
+.projet-emblematique-card {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  transition: all var(--transition-normal);
+}
+
+.projet-emblematique-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+.projet-emblematique-image {
+  position: relative;
+  height: 280px;
+  overflow: hidden;
+}
+
+.projet-emblematique-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--transition-slow);
+}
+
+.projet-emblematique-card:hover .projet-emblematique-image img {
+  transform: scale(1.1);
+}
+
+.projet-emblematique-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: var(--spacing-lg);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.4) 60%, transparent 100%);
+  color: var(--white);
+  transform: translateY(30%);
+  transition: transform var(--transition-normal);
+}
+
+.projet-emblematique-card:hover .projet-emblematique-overlay {
+  transform: translateY(0);
+}
+
+.projet-emblematique-overlay h3 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: var(--spacing-xs);
+  color: var(--secondary-color);
+}
+
+.projet-emblematique-overlay p {
+  font-size: 0.95rem;
+  opacity: 0.9;
+  line-height: 1.5;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .architecte-hero .hero-content h1 {
@@ -568,5 +639,17 @@
 
   .contact-info-grid {
     grid-template-columns: 1fr;
+  }
+
+  .projets-emblematiques-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .projet-emblematique-image {
+    height: 220px;
+  }
+
+  .projet-emblematique-overlay {
+    transform: translateY(0);
   }
 }

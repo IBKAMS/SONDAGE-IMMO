@@ -99,6 +99,7 @@ app.use('/api/uploads', require('./routes/uploads'));
 app.use('/api/videos', require('./routes/videoRoutes'));
 app.use('/api/images', require('./routes/imageRoutes'));
 app.use('/api/promoteur-images', require('./routes/promoteurImageRoutes'));
+app.use('/api/architecte-images', require('./routes/architecteImageRoutes'));
 app.use('/api/upload', require('./routes/cloudinarySignature'));
 app.use('/api/home-content', require('./routes/homeContent'));
 app.use('/api/presentation-content', require('./routes/presentationContent'));
