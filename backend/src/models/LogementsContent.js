@@ -60,6 +60,10 @@ const logementsContentSchema = new mongoose.Schema({
           value: {
             type: Number,
             default: 0
+          },
+          optionsPosees: {
+            type: Number,
+            default: 0
           }
         }]
       }]
