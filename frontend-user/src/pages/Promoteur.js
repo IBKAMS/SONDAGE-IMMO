@@ -11,6 +11,7 @@ const Promoteur = () => {
   const [content, setContent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentMediaIndex, setCurrentMediaIndex] = useState({});
+  const [promoteurImages, setPromoteurImages] = useState({});
   const videoRef = React.useRef(null);
   const [stats, setStats] = useState({
     projets: 0,
@@ -25,6 +26,30 @@ const Promoteur = () => {
     1: <FaUsers />,
     2: <FaHome />,
     3: <FaAward />
+  };
+
+  // Mapping des noms de projets vers les types d'images promoteur
+  const getPromoteurImageType = (projetNom) => {
+    const nomLower = projetNom?.toLowerCase() || '';
+    if (nomLower.includes('3k') || nomLower.includes('résidence 3k')) {
+      return 'residence-3k';
+    }
+    if (nomLower.includes('ciel') || nomLower.includes('jardin') || nomLower.includes('ciel & jardin') || nomLower.includes('ciel et jardin')) {
+      return 'residence-ciel-jardin';
+    }
+    if (nomLower.includes('miensah') || nomLower.includes('lumière') || nomLower.includes('lumiere') || nomLower.includes('cité lumière')) {
+      return 'miensah-cite-lumiere';
+    }
+    return null;
+  };
+
+  // Fonction pour obtenir l'URL de l'image promoteur uploadée
+  const getPromoteurImageUrl = (projetNom) => {
+    const imageType = getPromoteurImageType(projetNom);
+    if (imageType && promoteurImages[imageType]) {
+      return promoteurImages[imageType].url;
+    }
+    return null;
   };
 
   useEffect(() => {
@@ -66,6 +91,20 @@ const Promoteur = () => {
       }
     };
     fetchVideo();
+
+    // Charger les images des projets promoteur depuis le backend
+    const fetchPromoteurImages = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/promoteur-images`);
+        if (response.ok) {
+          const data = await response.json();
+          setPromoteurImages(data);
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement des images promoteur:', error);
+      }
+    };
+    fetchPromoteurImages();
   }, []);
 
   // Animation des statistiques - déclenché quand le contenu est chargé
@@ -313,6 +352,9 @@ const Promoteur = () => {
                 return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
               };
 
+              // Vérifier si une image promoteur uploadée existe pour ce projet
+              const promoteurImageUrl = getPromoteurImageUrl(projet.nom);
+
               return (
                 <motion.div
                   key={index}
@@ -323,7 +365,17 @@ const Promoteur = () => {
                   className={`projet-card ${index % 2 === 0 ? 'reverse' : ''}`}
                 >
                   <div className="projet-media">
-                    {hasMedias ? (
+                    {/* Priorité 1: Image promoteur uploadée via l'admin */}
+                    {promoteurImageUrl ? (
+                      <img
+                        src={promoteurImageUrl}
+                        alt={projet.nom}
+                        onError={(e) => {
+                          e.target.src = `https://via.placeholder.com/600x400/1a5490/ffffff?text=${encodeURIComponent(projet.nom)}`;
+                        }}
+                      />
+                    ) : hasMedias ? (
+                      /* Priorité 2: Medias du contenu */
                       <div className="media-carousel">
                         {currentMedia.type === 'video' ? (
                           isYoutubeUrl(currentMedia.url) ? (
@@ -396,6 +448,7 @@ const Promoteur = () => {
                         )}
                       </div>
                     ) : (
+                      /* Priorité 3: Placeholder */
                       <img
                         src={`https://via.placeholder.com/600x400/1a5490/ffffff?text=${encodeURIComponent(projet.nom)}`}
                         alt={projet.nom}
