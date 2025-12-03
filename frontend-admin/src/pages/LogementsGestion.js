@@ -139,9 +139,9 @@ const LogementsGestion = () => {
         {
           title: 'Nouvelle section',
           items: [
-            { label: 'Label 1', value: 0 },
-            { label: 'Label 2', value: 0 },
-            { label: 'Label 3', value: 0 }
+            { label: 'Label 1', value: 0, optionsPosees: 0 },
+            { label: 'Label 2', value: 0, optionsPosees: 0 },
+            { label: 'Label 3', value: 0, optionsPosees: 0 }
           ]
         }
       ]
@@ -173,7 +173,7 @@ const LogementsGestion = () => {
               ...section,
               items: section.items.map((item, j) =>
                 j === itemIndex
-                  ? { ...item, [field]: field === 'value' ? Number(value) : value }
+                  ? { ...item, [field]: (field === 'value' || field === 'optionsPosees') ? Number(value) : value }
                   : item
               )
             }
@@ -187,7 +187,7 @@ const LogementsGestion = () => {
       ...prev,
       customSections: prev.customSections.map((section, i) =>
         i === sectionIndex
-          ? { ...section, items: [...section.items, { label: 'Nouveau label', value: 0 }] }
+          ? { ...section, items: [...section.items, { label: 'Nouveau label', value: 0, optionsPosees: 0 }] }
           : section
       )
     }));
@@ -658,22 +658,40 @@ const LogementsGestion = () => {
 
                       <div className="form-row" style={{ flexWrap: 'wrap' }}>
                         {section.items.map((item, itemIndex) => (
-                          <div key={itemIndex} className="form-group" style={{ position: 'relative', minWidth: '200px' }}>
-                            <label>Label {itemIndex + 1}</label>
+                          <div key={itemIndex} className="form-group" style={{ position: 'relative', minWidth: '250px' }}>
+                            <label>Type de logement {itemIndex + 1}</label>
                             <input
                               type="text"
                               value={item.label}
                               onChange={(e) => updateSectionItem(sectionIndex, itemIndex, 'label', e.target.value)}
                               style={{ backgroundColor: '#fff', marginBottom: '0.5rem' }}
-                              placeholder="Ex: Villas Duplex 4P"
+                              placeholder="Ex: Duplex 4P"
                             />
-                            <input
-                              type="number"
-                              value={item.value}
-                              onChange={(e) => updateSectionItem(sectionIndex, itemIndex, 'value', e.target.value)}
-                              style={{ backgroundColor: '#fff' }}
-                              placeholder="Quantité"
-                            />
+                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                              <div style={{ flex: 1 }}>
+                                <label style={{ fontSize: '0.8rem', color: '#6b7280' }}>Total unités</label>
+                                <input
+                                  type="number"
+                                  value={item.value}
+                                  onChange={(e) => updateSectionItem(sectionIndex, itemIndex, 'value', e.target.value)}
+                                  style={{ backgroundColor: '#fff' }}
+                                  placeholder="75"
+                                />
+                              </div>
+                              <div style={{ flex: 1 }}>
+                                <label style={{ fontSize: '0.8rem', color: '#22c55e', fontWeight: '600' }}>Options posées</label>
+                                <input
+                                  type="number"
+                                  value={item.optionsPosees || 0}
+                                  onChange={(e) => updateSectionItem(sectionIndex, itemIndex, 'optionsPosees', e.target.value)}
+                                  style={{ backgroundColor: '#dcfce7', borderColor: '#22c55e' }}
+                                  placeholder="12"
+                                />
+                              </div>
+                            </div>
+                            <p style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem', fontStyle: 'italic' }}>
+                              Affichera: "Déjà {item.optionsPosees || 0} options posées sur les {item.value} {item.label}"
+                            </p>
                             {section.items.length > 1 && (
                               <button
                                 type="button"

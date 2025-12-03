@@ -217,7 +217,7 @@ const Logements = () => {
               </div>
             )}
 
-            {/* Sections de statistiques personnalisées */}
+            {/* Sections de statistiques personnalisées avec preuve sociale */}
             {content?.hero?.stats?.customSections && content.hero.stats.customSections.length > 0 && (
               <div className="custom-stats-sections">
                 {content.hero.stats.customSections.map((section, sectionIndex) => (
@@ -225,9 +225,14 @@ const Logements = () => {
                     <h3 className="section-title">{section.title}</h3>
                     <div className="hero-stats custom-stats">
                       {section.items && section.items.map((item, itemIndex) => (
-                        <div key={itemIndex} className="stat">
+                        <div key={itemIndex} className="stat social-proof-stat">
                           <span className="number">{item.value}</span>
                           <span className="label">{item.label}</span>
+                          {item.optionsPosees > 0 && (
+                            <span className="social-proof-badge">
+                              Déjà {item.optionsPosees} options posées
+                            </span>
+                          )}
                         </div>
                       ))}
                     </div>
