@@ -126,6 +126,139 @@
   display: block;
 }
 
+/* Carrousel d'images de carte */
+.map-container-clean {
+  position: relative;
+}
+
+.map-container-clean .map-info-overlay {
+  display: none;
+}
+
+.custom-map-carousel {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.carousel-main-image {
+  position: relative;
+  flex: 1;
+  min-height: 500px;
+  overflow: hidden;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.carousel-main-image img {
+  transition: transform 0.3s ease;
+}
+
+.carousel-caption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+  color: white;
+  padding: var(--spacing-lg) var(--spacing-xl);
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+.carousel-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.3rem;
+  color: #4F46E5;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  z-index: 10;
+}
+
+.carousel-nav:hover {
+  background: #4F46E5;
+  color: white;
+  transform: translateY(-50%) scale(1.1);
+}
+
+.carousel-prev {
+  left: var(--spacing-md);
+}
+
+.carousel-next {
+  right: var(--spacing-md);
+}
+
+.carousel-thumbnails {
+  display: flex;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background: #f8f9fa;
+  justify-content: center;
+}
+
+.carousel-thumbnail {
+  width: 80px;
+  height: 60px;
+  border: 3px solid transparent;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0;
+  background: none;
+}
+
+.carousel-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.carousel-thumbnail:hover {
+  border-color: #7C3AED;
+  transform: scale(1.05);
+}
+
+.carousel-thumbnail.active {
+  border-color: #4F46E5;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.4);
+}
+
+.map-link-bottom {
+  background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+  padding: var(--spacing-md);
+  text-align: center;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+
+.map-link-btn {
+  color: white;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  transition: all 0.3s ease;
+}
+
+.map-link-btn:hover {
+  transform: translateY(-2px);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
 .map-search-link {
   padding: var(--spacing-md);
   background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);

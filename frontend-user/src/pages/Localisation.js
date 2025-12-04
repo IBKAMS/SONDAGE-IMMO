@@ -7,13 +7,17 @@ import {
   FaShoppingCart,
   FaHospital,
   FaBus,
-  FaWater
+  FaWater,
+  FaChevronLeft,
+  FaChevronRight,
+  FaExternalLinkAlt
 } from 'react-icons/fa';
 import API_URL from '../config';
 import './Localisation.css';
 
 const Localisation = () => {
   const [content, setContent] = useState(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -122,25 +126,79 @@ const Localisation = () => {
             {content?.mapSection?.subtitle || "Abekan Bernard, Port-Bouët - Abidjan, Côte d'Ivoire"}
           </p>
 
-          <div className="map-container">
+          <div className="map-container map-container-clean">
             <div className="map-wrapper">
-              {/* Afficher l'image personnalisée ou l'iframe Google Maps */}
-              {content?.mapSection?.useCustomImage && content?.mapSection?.mapImageUrl ? (
-                <>
-                  {/* Image de carte personnalisée */}
-                  <div className="custom-map-image">
+              {/* Afficher les images personnalisées ou l'iframe Google Maps */}
+              {content?.mapSection?.useCustomImage && content?.mapSection?.mapImages && content?.mapSection?.mapImages.length > 0 ? (
+                <div className="custom-map-carousel">
+                  {/* Image principale */}
+                  <div className="carousel-main-image">
                     <img
-                      src={content.mapSection.mapImageUrl}
-                      alt="Localisation CITÉ KONGO - Abekan Bernard, Port-Bouët"
+                      src={content.mapSection.mapImages[currentImageIndex]?.url}
+                      alt={content.mapSection.mapImages[currentImageIndex]?.caption || `Vue de la localisation ${currentImageIndex + 1}`}
                       style={{
                         width: '100%',
                         height: '100%',
-                        objectFit: 'cover',
-                        borderRadius: '8px'
+                        objectFit: 'cover'
                       }}
                     />
+
+                    {/* Légende si présente */}
+                    {content.mapSection.mapImages[currentImageIndex]?.caption && (
+                      <div className="carousel-caption">
+                        {content.mapSection.mapImages[currentImageIndex].caption}
+                      </div>
+                    )}
+
+                    {/* Flèches de navigation si plus d'une image */}
+                    {content.mapSection.mapImages.length > 1 && (
+                      <>
+                        <button
+                          className="carousel-nav carousel-prev"
+                          onClick={() => setCurrentImageIndex(prev => prev === 0 ? content.mapSection.mapImages.length - 1 : prev - 1)}
+                          aria-label="Image précédente"
+                        >
+                          <FaChevronLeft />
+                        </button>
+                        <button
+                          className="carousel-nav carousel-next"
+                          onClick={() => setCurrentImageIndex(prev => prev === content.mapSection.mapImages.length - 1 ? 0 : prev + 1)}
+                          aria-label="Image suivante"
+                        >
+                          <FaChevronRight />
+                        </button>
+                      </>
+                    )}
                   </div>
-                </>
+
+                  {/* Miniatures si plusieurs images */}
+                  {content.mapSection.mapImages.length > 1 && (
+                    <div className="carousel-thumbnails">
+                      {content.mapSection.mapImages.map((image, index) => (
+                        <button
+                          key={index}
+                          className={`carousel-thumbnail ${index === currentImageIndex ? 'active' : ''}`}
+                          onClick={() => setCurrentImageIndex(index)}
+                          aria-label={`Vue ${index + 1}`}
+                        >
+                          <img src={image.url} alt={`Miniature ${index + 1}`} />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Lien Google Maps discret en bas */}
+                  <div className="map-link-bottom">
+                    <a
+                      href={content?.mapSection?.mapDirectUrl || "https://www.google.com/maps/search/Abekan+Bernard+Port-Bouet+Abidjan"}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="map-link-btn"
+                    >
+                      <FaExternalLinkAlt /> Voir sur Google Maps
+                    </a>
+                  </div>
+                </div>
               ) : (
                 <>
                   {/* Carte Google Maps avec marqueur sur Abekan Bernard */}
@@ -154,48 +212,29 @@ const Localisation = () => {
                     referrerPolicy="no-referrer-when-downgrade"
                     title="Localisation CITÉ KONGO - Abekan Bernard, Port-Bouët"
                   ></iframe>
+
+                  {/* Indicateur visuel sur la carte (seulement pour iframe) */}
+                  <div className="map-indicator">
+                    <div className="indicator-badge">
+                      <FaMapMarkerAlt className="indicator-icon" />
+                      <span>{content?.mapSection?.indicatorText || "Site du Projet"}</span>
+                    </div>
+                    <p className="indicator-text">{content?.mapSection?.indicatorLocation || "Abekan Bernard"}</p>
+                  </div>
+
+                  {/* Lien pour ouvrir dans Google Maps */}
+                  <div className="map-search-link">
+                    <a
+                      href={content?.mapSection?.mapSearchUrl || "https://www.google.com/maps/search/Abekan+Bernard,+Port-Bouet,+Abidjan/@5.2447,-3.9317,16z"}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-link"
+                    >
+                      📍 {content?.mapSection?.linkText || "Ouvrir dans Google Maps (Vue détaillée)"}
+                    </a>
+                  </div>
                 </>
               )}
-
-              {/* Indicateur visuel sur la carte */}
-              <div className="map-indicator">
-                <div className="indicator-badge">
-                  <FaMapMarkerAlt className="indicator-icon" />
-                  <span>{content?.mapSection?.indicatorText || "Site du Projet"}</span>
-                </div>
-                <p className="indicator-text">{content?.mapSection?.indicatorLocation || "Abekan Bernard"}</p>
-              </div>
-
-              {/* Lien pour ouvrir dans Google Maps */}
-              <div className="map-search-link">
-                <a
-                  href={content?.mapSection?.mapSearchUrl || "https://www.google.com/maps/search/Abekan+Bernard,+Port-Bouet,+Abidjan/@5.2447,-3.9317,16z"}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-link"
-                >
-                  📍 {content?.mapSection?.linkText || "Ouvrir dans Google Maps (Vue détaillée)"}
-                </a>
-              </div>
-            </div>
-
-            <div className="map-info-overlay">
-              <div className="map-info-card">
-                <h3>
-                  <FaMapMarkerAlt /> {content?.mapSection?.cardTitle || "CITÉ KONGO"}
-                </h3>
-                <p>{content?.mapSection?.cardLocation1 || "Abekan Bernard"}</p>
-                <p>{content?.mapSection?.cardLocation2 || "Port-Bouët, Abidjan"}</p>
-                <p>{content?.mapSection?.cardLocation3 || "Côte d'Ivoire"}</p>
-                <a
-                  href={content?.mapSection?.mapDirectUrl || "https://www.google.com/maps/search/Abekan+Bernard+Port-Bouet+Abidjan"}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn btn-primary"
-                >
-                  {content?.mapSection?.cardButtonText || "Ouvrir dans Google Maps"}
-                </a>
-              </div>
             </div>
           </div>
         </motion.section>

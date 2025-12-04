@@ -9,6 +9,7 @@ const {
   activateLocalisationContent,
   uploadMapImage,
   deleteMapImage,
+  updateMapImageCaption,
   uploadMapImageMiddleware
 } = require('../controllers/localisationContentController');
 
@@ -22,8 +23,10 @@ router.put('/:id', updateLocalisationContent);
 router.delete('/:id', deleteLocalisationContent);
 router.put('/:id/activate', activateLocalisationContent);
 
-// Routes pour l'image de carte
+// Routes pour les images de carte (jusqu'à 3 images)
 router.post('/:id/map-image', uploadMapImageMiddleware, uploadMapImage);
-router.delete('/:id/map-image', deleteMapImage);
+router.delete('/:id/map-image', deleteMapImage);  // Supprimer toutes les images
+router.delete('/:id/map-image/:imageIndex', deleteMapImage);  // Supprimer une image spécifique
+router.put('/:id/map-image/:imageIndex/caption', updateMapImageCaption);  // Mettre à jour la légende
 
 module.exports = router;

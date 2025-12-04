@@ -236,7 +236,7 @@ exports.activateLocalisationContent = async (req, res) => {
   }
 };
 
-// @desc    Upload map image for localisation content
+// @desc    Upload map image for localisation content (supports up to 3 images)
 // @route   POST /api/localisation-content/:id/map-image
 // @access  Admin
 exports.uploadMapImage = async (req, res) => {
@@ -256,21 +256,29 @@ exports.uploadMapImage = async (req, res) => {
       });
     }
 
-    // Supprimer l'ancienne image de Cloudinary si elle existe
-    if (content.mapSection.mapImagePublicId) {
-      try {
-        await cloudinary.uploader.destroy(content.mapSection.mapImagePublicId);
-      } catch (error) {
-        console.error('Erreur lors de la suppression de l\'ancienne image:', error);
-      }
+    // Vérifier qu'on n'a pas déjà 3 images
+    if (!content.mapSection.mapImages) {
+      content.mapSection.mapImages = [];
     }
 
-    // Mettre à jour avec la nouvelle image
+    if (content.mapSection.mapImages.length >= 3) {
+      return res.status(400).json({
+        success: false,
+        message: 'Maximum 3 images autorisées. Supprimez une image avant d\'en ajouter une nouvelle.'
+      });
+    }
+
+    // Ajouter la nouvelle image
     const imageUrl = req.file.path;
     const publicId = req.file.filename;
+    const caption = req.body.caption || '';
 
-    content.mapSection.mapImageUrl = imageUrl;
-    content.mapSection.mapImagePublicId = publicId;
+    content.mapSection.mapImages.push({
+      url: imageUrl,
+      publicId: publicId,
+      caption: caption
+    });
+
     content.mapSection.useCustomImage = true;
 
     await content.save();
@@ -279,7 +287,7 @@ exports.uploadMapImage = async (req, res) => {
       success: true,
       message: 'Image de carte uploadée avec succès',
       data: {
-        mapImageUrl: imageUrl,
+        mapImages: content.mapSection.mapImages,
         useCustomImage: true
       }
     });
@@ -292,8 +300,8 @@ exports.uploadMapImage = async (req, res) => {
   }
 };
 
-// @desc    Delete map image for localisation content
-// @route   DELETE /api/localisation-content/:id/map-image
+// @desc    Delete a specific map image for localisation content
+// @route   DELETE /api/localisation-content/:id/map-image/:imageIndex
 // @access  Admin
 exports.deleteMapImage = async (req, res) => {
   try {
@@ -305,31 +313,107 @@ exports.deleteMapImage = async (req, res) => {
       });
     }
 
-    // Supprimer l'image de Cloudinary si elle existe
-    if (content.mapSection.mapImagePublicId) {
-      try {
-        await cloudinary.uploader.destroy(content.mapSection.mapImagePublicId);
-      } catch (error) {
-        console.error('Erreur lors de la suppression de l\'image:', error);
+    const imageIndex = parseInt(req.params.imageIndex);
+
+    // Si imageIndex n'est pas fourni, supprimer toutes les images
+    if (isNaN(imageIndex)) {
+      // Supprimer toutes les images de Cloudinary
+      if (content.mapSection.mapImages && content.mapSection.mapImages.length > 0) {
+        for (const image of content.mapSection.mapImages) {
+          if (image.publicId) {
+            try {
+              await cloudinary.uploader.destroy(image.publicId);
+            } catch (error) {
+              console.error('Erreur lors de la suppression de l\'image:', error);
+            }
+          }
+        }
+      }
+      content.mapSection.mapImages = [];
+      content.mapSection.useCustomImage = false;
+    } else {
+      // Supprimer une image spécifique
+      if (!content.mapSection.mapImages || imageIndex >= content.mapSection.mapImages.length) {
+        return res.status(404).json({
+          success: false,
+          message: 'Image non trouvée'
+        });
+      }
+
+      const imageToDelete = content.mapSection.mapImages[imageIndex];
+
+      // Supprimer de Cloudinary
+      if (imageToDelete.publicId) {
+        try {
+          await cloudinary.uploader.destroy(imageToDelete.publicId);
+        } catch (error) {
+          console.error('Erreur lors de la suppression de l\'image:', error);
+        }
+      }
+
+      // Retirer du tableau
+      content.mapSection.mapImages.splice(imageIndex, 1);
+
+      // Si plus d'images, désactiver useCustomImage
+      if (content.mapSection.mapImages.length === 0) {
+        content.mapSection.useCustomImage = false;
       }
     }
-
-    // Réinitialiser les champs d'image
-    content.mapSection.mapImageUrl = '';
-    content.mapSection.mapImagePublicId = '';
-    content.mapSection.useCustomImage = false;
 
     await content.save();
 
     res.status(200).json({
       success: true,
-      message: 'Image de carte supprimée avec succès'
+      message: 'Image de carte supprimée avec succès',
+      data: {
+        mapImages: content.mapSection.mapImages,
+        useCustomImage: content.mapSection.useCustomImage
+      }
     });
   } catch (error) {
     console.error('Erreur lors de la suppression de l\'image de carte:', error);
     res.status(500).json({
       success: false,
       message: 'Erreur serveur lors de la suppression'
+    });
+  }
+};
+
+// @desc    Update map image caption
+// @route   PUT /api/localisation-content/:id/map-image/:imageIndex/caption
+// @access  Admin
+exports.updateMapImageCaption = async (req, res) => {
+  try {
+    const content = await LocalisationContent.findById(req.params.id);
+    if (!content) {
+      return res.status(404).json({
+        success: false,
+        message: 'Contenu non trouvé'
+      });
+    }
+
+    const imageIndex = parseInt(req.params.imageIndex);
+
+    if (!content.mapSection.mapImages || imageIndex >= content.mapSection.mapImages.length) {
+      return res.status(404).json({
+        success: false,
+        message: 'Image non trouvée'
+      });
+    }
+
+    content.mapSection.mapImages[imageIndex].caption = req.body.caption || '';
+    await content.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Légende mise à jour avec succès',
+      data: content.mapSection.mapImages[imageIndex]
+    });
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour de la légende:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur serveur'
     });
   }
 };

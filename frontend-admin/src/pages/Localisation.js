@@ -144,7 +144,7 @@ const LocalisationAdmin = () => {
     }
   };
 
-  // Upload de l'image de carte
+  // Upload d'une image de carte (jusqu'à 3 images)
   const handleMapImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -158,6 +158,13 @@ const LocalisationAdmin = () => {
     // Vérifier la taille (max 10MB)
     if (file.size > 10 * 1024 * 1024) {
       alert('L\'image ne doit pas dépasser 10 Mo');
+      return;
+    }
+
+    // Vérifier qu'on n'a pas déjà 3 images
+    const currentImages = content.mapSection?.mapImages || [];
+    if (currentImages.length >= 3) {
+      alert('Maximum 3 images autorisées. Supprimez une image avant d\'en ajouter une nouvelle.');
       return;
     }
 
@@ -175,13 +182,13 @@ const LocalisationAdmin = () => {
       const data = await response.json();
 
       if (data.success) {
-        // Mettre à jour le state local
+        // Mettre à jour le state local avec le tableau d'images
         setContent(prev => ({
           ...prev,
           mapSection: {
             ...prev.mapSection,
-            mapImageUrl: data.data.mapImageUrl,
-            useCustomImage: true
+            mapImages: data.data.mapImages,
+            useCustomImage: data.data.useCustomImage
           }
         }));
         alert('Image de carte uploadée avec succès!');
@@ -199,14 +206,22 @@ const LocalisationAdmin = () => {
     }
   };
 
-  // Supprimer l'image de carte
-  const handleDeleteMapImage = async () => {
-    if (!window.confirm('Supprimer l\'image de carte personnalisée?')) return;
+  // Supprimer une image de carte spécifique
+  const handleDeleteMapImage = async (imageIndex) => {
+    const confirmMsg = imageIndex !== undefined
+      ? `Supprimer l'image ${imageIndex + 1} ?`
+      : 'Supprimer toutes les images de carte ?';
+
+    if (!window.confirm(confirmMsg)) return;
 
     setUploadingMapImage(true);
 
     try {
-      const response = await fetch(`${API_URL}/api/localisation-content/${content._id}/map-image`, {
+      const url = imageIndex !== undefined
+        ? `${API_URL}/api/localisation-content/${content._id}/map-image/${imageIndex}`
+        : `${API_URL}/api/localisation-content/${content._id}/map-image`;
+
+      const response = await fetch(url, {
         method: 'DELETE'
       });
 
@@ -217,8 +232,8 @@ const LocalisationAdmin = () => {
           ...prev,
           mapSection: {
             ...prev.mapSection,
-            mapImageUrl: '',
-            useCustomImage: false
+            mapImages: data.data.mapImages,
+            useCustomImage: data.data.useCustomImage
           }
         }));
         alert('Image supprimée avec succès');
@@ -230,6 +245,38 @@ const LocalisationAdmin = () => {
       alert('Erreur lors de la suppression');
     } finally {
       setUploadingMapImage(false);
+    }
+  };
+
+  // Mettre à jour la légende d'une image
+  const handleUpdateImageCaption = async (imageIndex, caption) => {
+    try {
+      const response = await fetch(
+        `${API_URL}/api/localisation-content/${content._id}/map-image/${imageIndex}/caption`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ caption })
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.success) {
+        setContent(prev => {
+          const newMapImages = [...(prev.mapSection.mapImages || [])];
+          newMapImages[imageIndex] = { ...newMapImages[imageIndex], caption };
+          return {
+            ...prev,
+            mapSection: {
+              ...prev.mapSection,
+              mapImages: newMapImages
+            }
+          };
+        });
+      }
+    } catch (error) {
+      console.error('Erreur mise à jour légende:', error);
     }
   };
 
@@ -352,94 +399,141 @@ const LocalisationAdmin = () => {
                 />
               </div>
 
-              {/* Section Image de Carte Personnalisée */}
+              {/* Section Images de Carte Personnalisées (jusqu'à 3) */}
               <div style={{ marginTop: '20px', padding: '15px', background: '#e8f5e9', borderRadius: '8px', border: '2px solid #4caf50' }}>
                 <h3 style={{ marginBottom: '15px', color: '#2e7d32', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <FaImage /> Image de Carte Personnalisée (Recommandé)
+                  <FaImage /> Images de Carte Personnalisées (Recommandé)
                 </h3>
                 <p style={{ color: '#666', fontSize: '0.9rem', marginBottom: '15px' }}>
-                  Uploadez votre propre image de carte au lieu d'utiliser Google Maps iframe.
+                  Uploadez jusqu'à <strong>3 images</strong> de carte pour créer un carrousel.
                   Cela évite les problèmes de blocage CORS avec les images Google.
                 </p>
 
-                {content.mapSection.mapImageUrl ? (
-                  <div style={{ marginBottom: '15px' }}>
-                    <div style={{ position: 'relative', maxWidth: '400px', marginBottom: '10px' }}>
-                      <img
-                        src={content.mapSection.mapImageUrl}
-                        alt="Image de carte"
-                        style={{ width: '100%', borderRadius: '8px', border: '1px solid #ddd' }}
-                      />
-                      <span style={{
-                        position: 'absolute',
-                        top: '10px',
-                        left: '10px',
-                        background: '#4caf50',
-                        color: 'white',
-                        padding: '4px 8px',
-                        borderRadius: '4px',
-                        fontSize: '0.8rem'
-                      }}>
-                        Image active
-                      </span>
-                    </div>
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                      <button
-                        type="button"
-                        onClick={() => mapImageInputRef.current?.click()}
-                        disabled={uploadingMapImage}
-                        style={{
-                          padding: '8px 16px',
-                          background: '#1a5490',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '5px'
-                        }}
-                      >
-                        <FaUpload /> {uploadingMapImage ? 'Chargement...' : 'Remplacer'}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleDeleteMapImage}
-                        disabled={uploadingMapImage}
-                        style={{
-                          padding: '8px 16px',
-                          background: '#e74c3c',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '5px'
-                        }}
-                      >
-                        <FaTrash /> Supprimer
-                      </button>
+                {/* Affichage des images existantes */}
+                {content.mapSection?.mapImages && content.mapSection.mapImages.length > 0 && (
+                  <div style={{ marginBottom: '20px' }}>
+                    <p style={{ color: '#2e7d32', fontWeight: 'bold', marginBottom: '10px' }}>
+                      Images uploadées ({content.mapSection.mapImages.length}/3):
+                    </p>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '15px' }}>
+                      {content.mapSection.mapImages.map((image, index) => (
+                        <div key={index} style={{
+                          background: 'white',
+                          borderRadius: '8px',
+                          padding: '10px',
+                          border: '1px solid #ddd',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                        }}>
+                          <div style={{ position: 'relative', marginBottom: '10px' }}>
+                            <img
+                              src={image.url}
+                              alt={`Image de carte ${index + 1}`}
+                              style={{ width: '100%', height: '150px', objectFit: 'cover', borderRadius: '4px' }}
+                            />
+                            <span style={{
+                              position: 'absolute',
+                              top: '5px',
+                              left: '5px',
+                              background: '#4caf50',
+                              color: 'white',
+                              padding: '2px 8px',
+                              borderRadius: '4px',
+                              fontSize: '0.75rem',
+                              fontWeight: 'bold'
+                            }}>
+                              #{index + 1}
+                            </span>
+                          </div>
+                          <input
+                            type="text"
+                            placeholder="Légende de l'image (optionnel)"
+                            value={image.caption || ''}
+                            onChange={(e) => handleUpdateImageCaption(index, e.target.value)}
+                            style={{
+                              width: '100%',
+                              padding: '8px',
+                              borderRadius: '4px',
+                              border: '1px solid #ddd',
+                              marginBottom: '10px',
+                              fontSize: '0.9rem'
+                            }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteMapImage(index)}
+                            disabled={uploadingMapImage}
+                            style={{
+                              width: '100%',
+                              padding: '6px 12px',
+                              background: '#e74c3c',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '5px',
+                              fontSize: '0.85rem'
+                            }}
+                          >
+                            <FaTrash /> Supprimer
+                          </button>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                ) : (
+                )}
+
+                {/* Zone d'upload si moins de 3 images */}
+                {(!content.mapSection?.mapImages || content.mapSection.mapImages.length < 3) && (
                   <div
                     onClick={() => mapImageInputRef.current?.click()}
                     style={{
                       border: '2px dashed #4caf50',
                       borderRadius: '8px',
-                      padding: '40px 20px',
+                      padding: '30px 20px',
                       textAlign: 'center',
                       cursor: 'pointer',
-                      background: '#f5fff5'
+                      background: '#f5fff5',
+                      marginBottom: '15px'
                     }}
                   >
                     <FaUpload style={{ fontSize: '2rem', color: '#4caf50', marginBottom: '10px' }} />
-                    <p style={{ color: '#2e7d32', fontWeight: 'bold' }}>
-                      {uploadingMapImage ? 'Chargement en cours...' : 'Cliquez pour uploader une image de carte'}
+                    <p style={{ color: '#2e7d32', fontWeight: 'bold', margin: '0' }}>
+                      {uploadingMapImage ? 'Chargement en cours...' : 'Cliquez pour ajouter une image'}
                     </p>
-                    <small style={{ color: '#666' }}>PNG, JPG, WEBP - Max 10 Mo</small>
+                    <small style={{ color: '#666' }}>
+                      PNG, JPG, WEBP - Max 10 Mo
+                      {content.mapSection?.mapImages?.length > 0 &&
+                        ` (${3 - content.mapSection.mapImages.length} restante${3 - content.mapSection.mapImages.length > 1 ? 's' : ''})`
+                      }
+                    </small>
                   </div>
+                )}
+
+                {/* Bouton pour supprimer toutes les images */}
+                {content.mapSection?.mapImages && content.mapSection.mapImages.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteMapImage()}
+                    disabled={uploadingMapImage}
+                    style={{
+                      padding: '8px 16px',
+                      background: '#ff9800',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      fontSize: '0.9rem',
+                      marginBottom: '15px'
+                    }}
+                  >
+                    <FaTrash /> Supprimer toutes les images
+                  </button>
                 )}
 
                 <input
@@ -454,11 +548,14 @@ const LocalisationAdmin = () => {
                   <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
                     <input
                       type="checkbox"
-                      checked={content.mapSection.useCustomImage || false}
+                      checked={content.mapSection?.useCustomImage || false}
                       onChange={(e) => handleMapSectionChange('useCustomImage', e.target.checked)}
                     />
-                    <span>Utiliser l'image personnalisée (au lieu de l'iframe Google Maps)</span>
+                    <span>Utiliser les images personnalisées (au lieu de l'iframe Google Maps)</span>
                   </label>
+                  <small style={{ color: '#666', marginLeft: '26px', display: 'block', marginTop: '5px' }}>
+                    Active le carrousel d'images sur la page Localisation du site
+                  </small>
                 </div>
               </div>
 
