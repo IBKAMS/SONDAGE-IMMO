@@ -41,6 +41,18 @@ const localisationContentSchema = new mongoose.Schema({
       required: true,
       default: 'Abekan Bernard, Port-Bouët - Abidjan, Côte d\'Ivoire'
     },
+    mapImageUrl: {
+      type: String,
+      default: ''
+    },
+    mapImagePublicId: {
+      type: String,
+      default: ''
+    },
+    useCustomImage: {
+      type: Boolean,
+      default: false
+    },
     mapEmbedUrl: {
       type: String,
       required: true,

@@ -1,4 +1,5 @@
 const LocalisationContent = require('../models/LocalisationContent');
+const { uploadImage, cloudinary } = require('../config/cloudinary');
 
 // @desc    Get active localisation content (public)
 // @route   GET /api/localisation-content
@@ -234,3 +235,104 @@ exports.activateLocalisationContent = async (req, res) => {
     });
   }
 };
+
+// @desc    Upload map image for localisation content
+// @route   POST /api/localisation-content/:id/map-image
+// @access  Admin
+exports.uploadMapImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'Aucun fichier image fourni'
+      });
+    }
+
+    const content = await LocalisationContent.findById(req.params.id);
+    if (!content) {
+      return res.status(404).json({
+        success: false,
+        message: 'Contenu non trouvé'
+      });
+    }
+
+    // Supprimer l'ancienne image de Cloudinary si elle existe
+    if (content.mapSection.mapImagePublicId) {
+      try {
+        await cloudinary.uploader.destroy(content.mapSection.mapImagePublicId);
+      } catch (error) {
+        console.error('Erreur lors de la suppression de l\'ancienne image:', error);
+      }
+    }
+
+    // Mettre à jour avec la nouvelle image
+    const imageUrl = req.file.path;
+    const publicId = req.file.filename;
+
+    content.mapSection.mapImageUrl = imageUrl;
+    content.mapSection.mapImagePublicId = publicId;
+    content.mapSection.useCustomImage = true;
+
+    await content.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Image de carte uploadée avec succès',
+      data: {
+        mapImageUrl: imageUrl,
+        useCustomImage: true
+      }
+    });
+  } catch (error) {
+    console.error('Erreur lors de l\'upload de l\'image de carte:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur serveur lors de l\'upload'
+    });
+  }
+};
+
+// @desc    Delete map image for localisation content
+// @route   DELETE /api/localisation-content/:id/map-image
+// @access  Admin
+exports.deleteMapImage = async (req, res) => {
+  try {
+    const content = await LocalisationContent.findById(req.params.id);
+    if (!content) {
+      return res.status(404).json({
+        success: false,
+        message: 'Contenu non trouvé'
+      });
+    }
+
+    // Supprimer l'image de Cloudinary si elle existe
+    if (content.mapSection.mapImagePublicId) {
+      try {
+        await cloudinary.uploader.destroy(content.mapSection.mapImagePublicId);
+      } catch (error) {
+        console.error('Erreur lors de la suppression de l\'image:', error);
+      }
+    }
+
+    // Réinitialiser les champs d'image
+    content.mapSection.mapImageUrl = '';
+    content.mapSection.mapImagePublicId = '';
+    content.mapSection.useCustomImage = false;
+
+    await content.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Image de carte supprimée avec succès'
+    });
+  } catch (error) {
+    console.error('Erreur lors de la suppression de l\'image de carte:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur serveur lors de la suppression'
+    });
+  }
+};
+
+// Middleware pour upload d'image
+exports.uploadMapImageMiddleware = uploadImage.single('mapImage');

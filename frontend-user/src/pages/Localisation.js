@@ -124,17 +124,38 @@ const Localisation = () => {
 
           <div className="map-container">
             <div className="map-wrapper">
-              {/* Carte Google Maps avec marqueur sur Abekan Bernard */}
-              <iframe
-                src={content?.mapSection?.mapEmbedUrl || "https://maps.google.com/maps?q=5.2447,-3.9317+(CITÉ+KONGO+-+Abekan+Bernard)&hl=fr&z=16&output=embed"}
-                width="100%"
-                height="100%"
-                style={{ border: 0 }}
-                allowFullScreen=""
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-                title="Localisation CITÉ KONGO - Abekan Bernard, Port-Bouët"
-              ></iframe>
+              {/* Afficher l'image personnalisée ou l'iframe Google Maps */}
+              {content?.mapSection?.useCustomImage && content?.mapSection?.mapImageUrl ? (
+                <>
+                  {/* Image de carte personnalisée */}
+                  <div className="custom-map-image">
+                    <img
+                      src={content.mapSection.mapImageUrl}
+                      alt="Localisation CITÉ KONGO - Abekan Bernard, Port-Bouët"
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        borderRadius: '8px'
+                      }}
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Carte Google Maps avec marqueur sur Abekan Bernard */}
+                  <iframe
+                    src={content?.mapSection?.mapEmbedUrl || "https://maps.google.com/maps?q=5.2447,-3.9317+(CITÉ+KONGO+-+Abekan+Bernard)&hl=fr&z=16&output=embed"}
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0 }}
+                    allowFullScreen=""
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    title="Localisation CITÉ KONGO - Abekan Bernard, Port-Bouët"
+                  ></iframe>
+                </>
+              )}
 
               {/* Indicateur visuel sur la carte */}
               <div className="map-indicator">

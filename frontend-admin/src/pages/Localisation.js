@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { FaSave, FaUndo, FaChevronDown, FaChevronUp } from 'react-icons/fa';
+import React, { useState, useEffect, useRef } from 'react';
+import { FaSave, FaUndo, FaChevronDown, FaChevronUp, FaImage, FaTrash, FaUpload } from 'react-icons/fa';
 import API_URL from '../config';
 import './PromoteurAdmin.css';
 
@@ -7,6 +7,8 @@ const LocalisationAdmin = () => {
   const [content, setContent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingMapImage, setUploadingMapImage] = useState(false);
+  const mapImageInputRef = useRef(null);
   const [expandedSections, setExpandedSections] = useState({
     hero: true,
     infoSection: true,
@@ -142,6 +144,95 @@ const LocalisationAdmin = () => {
     }
   };
 
+  // Upload de l'image de carte
+  const handleMapImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Vérifier le type de fichier
+    if (!file.type.startsWith('image/')) {
+      alert('Veuillez sélectionner une image valide');
+      return;
+    }
+
+    // Vérifier la taille (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      alert('L\'image ne doit pas dépasser 10 Mo');
+      return;
+    }
+
+    setUploadingMapImage(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('mapImage', file);
+
+      const response = await fetch(`${API_URL}/api/localisation-content/${content._id}/map-image`, {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Mettre à jour le state local
+        setContent(prev => ({
+          ...prev,
+          mapSection: {
+            ...prev.mapSection,
+            mapImageUrl: data.data.mapImageUrl,
+            useCustomImage: true
+          }
+        }));
+        alert('Image de carte uploadée avec succès!');
+      } else {
+        alert(data.message || 'Erreur lors de l\'upload');
+      }
+    } catch (error) {
+      console.error('Erreur upload image carte:', error);
+      alert('Erreur lors de l\'upload de l\'image');
+    } finally {
+      setUploadingMapImage(false);
+      if (mapImageInputRef.current) {
+        mapImageInputRef.current.value = '';
+      }
+    }
+  };
+
+  // Supprimer l'image de carte
+  const handleDeleteMapImage = async () => {
+    if (!window.confirm('Supprimer l\'image de carte personnalisée?')) return;
+
+    setUploadingMapImage(true);
+
+    try {
+      const response = await fetch(`${API_URL}/api/localisation-content/${content._id}/map-image`, {
+        method: 'DELETE'
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setContent(prev => ({
+          ...prev,
+          mapSection: {
+            ...prev.mapSection,
+            mapImageUrl: '',
+            useCustomImage: false
+          }
+        }));
+        alert('Image supprimée avec succès');
+      } else {
+        alert(data.message || 'Erreur lors de la suppression');
+      }
+    } catch (error) {
+      console.error('Erreur suppression image carte:', error);
+      alert('Erreur lors de la suppression');
+    } finally {
+      setUploadingMapImage(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="promoteur-admin-page">
@@ -261,8 +352,121 @@ const LocalisationAdmin = () => {
                 />
               </div>
 
+              {/* Section Image de Carte Personnalisée */}
+              <div style={{ marginTop: '20px', padding: '15px', background: '#e8f5e9', borderRadius: '8px', border: '2px solid #4caf50' }}>
+                <h3 style={{ marginBottom: '15px', color: '#2e7d32', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <FaImage /> Image de Carte Personnalisée (Recommandé)
+                </h3>
+                <p style={{ color: '#666', fontSize: '0.9rem', marginBottom: '15px' }}>
+                  Uploadez votre propre image de carte au lieu d'utiliser Google Maps iframe.
+                  Cela évite les problèmes de blocage CORS avec les images Google.
+                </p>
+
+                {content.mapSection.mapImageUrl ? (
+                  <div style={{ marginBottom: '15px' }}>
+                    <div style={{ position: 'relative', maxWidth: '400px', marginBottom: '10px' }}>
+                      <img
+                        src={content.mapSection.mapImageUrl}
+                        alt="Image de carte"
+                        style={{ width: '100%', borderRadius: '8px', border: '1px solid #ddd' }}
+                      />
+                      <span style={{
+                        position: 'absolute',
+                        top: '10px',
+                        left: '10px',
+                        background: '#4caf50',
+                        color: 'white',
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        fontSize: '0.8rem'
+                      }}>
+                        Image active
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                      <button
+                        type="button"
+                        onClick={() => mapImageInputRef.current?.click()}
+                        disabled={uploadingMapImage}
+                        style={{
+                          padding: '8px 16px',
+                          background: '#1a5490',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '5px'
+                        }}
+                      >
+                        <FaUpload /> {uploadingMapImage ? 'Chargement...' : 'Remplacer'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleDeleteMapImage}
+                        disabled={uploadingMapImage}
+                        style={{
+                          padding: '8px 16px',
+                          background: '#e74c3c',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '5px'
+                        }}
+                      >
+                        <FaTrash /> Supprimer
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    onClick={() => mapImageInputRef.current?.click()}
+                    style={{
+                      border: '2px dashed #4caf50',
+                      borderRadius: '8px',
+                      padding: '40px 20px',
+                      textAlign: 'center',
+                      cursor: 'pointer',
+                      background: '#f5fff5'
+                    }}
+                  >
+                    <FaUpload style={{ fontSize: '2rem', color: '#4caf50', marginBottom: '10px' }} />
+                    <p style={{ color: '#2e7d32', fontWeight: 'bold' }}>
+                      {uploadingMapImage ? 'Chargement en cours...' : 'Cliquez pour uploader une image de carte'}
+                    </p>
+                    <small style={{ color: '#666' }}>PNG, JPG, WEBP - Max 10 Mo</small>
+                  </div>
+                )}
+
+                <input
+                  type="file"
+                  ref={mapImageInputRef}
+                  onChange={handleMapImageUpload}
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                />
+
+                <div className="form-group" style={{ marginTop: '15px' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={content.mapSection.useCustomImage || false}
+                      onChange={(e) => handleMapSectionChange('useCustomImage', e.target.checked)}
+                    />
+                    <span>Utiliser l'image personnalisée (au lieu de l'iframe Google Maps)</span>
+                  </label>
+                </div>
+              </div>
+
               <div style={{ marginTop: '20px', padding: '15px', background: '#f8f9fa', borderRadius: '8px' }}>
-                <h3 style={{ marginBottom: '15px', color: '#1a5490' }}>URLs Google Maps</h3>
+                <h3 style={{ marginBottom: '15px', color: '#1a5490' }}>URLs Google Maps (Alternative)</h3>
+                <small style={{ color: '#666', display: 'block', marginBottom: '15px' }}>
+                  Ces URLs seront utilisées si aucune image personnalisée n'est définie ou si la checkbox ci-dessus est décochée.
+                </small>
                 <div className="form-group">
                   <label>URL d'embed de la carte (iframe)</label>
                   <textarea
@@ -272,7 +476,7 @@ const LocalisationAdmin = () => {
                     rows="2"
                   />
                   <small style={{ color: '#666', fontSize: '0.85rem' }}>
-                    Pour obtenir cette URL: Allez sur Google Maps → Cherchez votre localisation → Cliquez sur "Partager" → "Intégrer une carte" → Copiez l'URL dans src=""
+                    Pour obtenir cette URL: Allez sur Google Maps &rarr; Cherchez votre localisation &rarr; Cliquez sur "Partager" &rarr; "Intégrer une carte" &rarr; Copiez l'URL dans src=""
                   </small>
                 </div>
                 <div className="form-group">
