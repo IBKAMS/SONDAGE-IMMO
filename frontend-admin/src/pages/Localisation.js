@@ -144,7 +144,7 @@ const LocalisationAdmin = () => {
     }
   };
 
-  // Upload d'une image de carte (jusqu'à 3 images)
+  // Upload d'une image de carte (jusqu'à 4 images)
   const handleMapImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -161,10 +161,10 @@ const LocalisationAdmin = () => {
       return;
     }
 
-    // Vérifier qu'on n'a pas déjà 3 images
+    // Vérifier qu'on n'a pas déjà 4 images
     const currentImages = content.mapSection?.mapImages || [];
-    if (currentImages.length >= 3) {
-      alert('Maximum 3 images autorisées. Supprimez une image avant d\'en ajouter une nouvelle.');
+    if (currentImages.length >= 4) {
+      alert('Maximum 4 images autorisées. Supprimez une image avant d\'en ajouter une nouvelle.');
       return;
     }
 
@@ -399,13 +399,13 @@ const LocalisationAdmin = () => {
                 />
               </div>
 
-              {/* Section Images de Carte Personnalisées (jusqu'à 3) */}
+              {/* Section Images de Carte Personnalisées (jusqu'à 4) */}
               <div style={{ marginTop: '20px', padding: '15px', background: '#e8f5e9', borderRadius: '8px', border: '2px solid #4caf50' }}>
                 <h3 style={{ marginBottom: '15px', color: '#2e7d32', display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <FaImage /> Images de Carte Personnalisées (Recommandé)
                 </h3>
                 <p style={{ color: '#666', fontSize: '0.9rem', marginBottom: '15px' }}>
-                  Uploadez jusqu'à <strong>3 images</strong> de carte pour créer un carrousel.
+                  Uploadez jusqu'à <strong>4 images</strong> de carte pour créer un carrousel.
                   Cela évite les problèmes de blocage CORS avec les images Google.
                 </p>
 
@@ -413,7 +413,7 @@ const LocalisationAdmin = () => {
                 {content.mapSection?.mapImages && content.mapSection.mapImages.length > 0 && (
                   <div style={{ marginBottom: '20px' }}>
                     <p style={{ color: '#2e7d32', fontWeight: 'bold', marginBottom: '10px' }}>
-                      Images uploadées ({content.mapSection.mapImages.length}/3):
+                      Images uploadées ({content.mapSection.mapImages.length}/4):
                     </p>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '15px' }}>
                       {content.mapSection.mapImages.map((image, index) => (
@@ -485,8 +485,8 @@ const LocalisationAdmin = () => {
                   </div>
                 )}
 
-                {/* Zone d'upload si moins de 3 images */}
-                {(!content.mapSection?.mapImages || content.mapSection.mapImages.length < 3) && (
+                {/* Zone d'upload si moins de 4 images */}
+                {(!content.mapSection?.mapImages || content.mapSection.mapImages.length < 4) && (
                   <div
                     onClick={() => mapImageInputRef.current?.click()}
                     style={{

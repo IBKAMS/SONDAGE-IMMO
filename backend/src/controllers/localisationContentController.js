@@ -261,10 +261,10 @@ exports.uploadMapImage = async (req, res) => {
       content.mapSection.mapImages = [];
     }
 
-    if (content.mapSection.mapImages.length >= 3) {
+    if (content.mapSection.mapImages.length >= 4) {
       return res.status(400).json({
         success: false,
-        message: 'Maximum 3 images autorisées. Supprimez une image avant d\'en ajouter une nouvelle.'
+        message: 'Maximum 4 images autorisées. Supprimez une image avant d\'en ajouter une nouvelle.'
       });
     }
 
