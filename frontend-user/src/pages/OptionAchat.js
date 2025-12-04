@@ -365,7 +365,7 @@ const OptionAchat = () => {
                   <span className="prix-label">Prix:</span>
                   <span className="prix">{formatPrix(logement.prix)}</span>
                 </div>
-                <p className="logement-description">{logement.description.substring(0, 150)}...</p>
+                <p className="logement-description">{logement.description}</p>
                 <ul className="caracteristiques-list">
                   {logement.equipements.slice(0, 6).map((equip, idx) => (
                     <li key={idx}>
