@@ -189,10 +189,13 @@ const Architecte = () => {
                     ref={videoRef}
                     className="video-architecte-player"
                     controls
+                    controlsList="nodownload noplaybackrate"
+                    disablePictureInPicture
                     preload="metadata"
                     poster="/assets/images/architecte-poster.jpg"
                     onPlay={() => setIsPlaying(true)}
                     onPause={() => setIsPlaying(false)}
+                    onContextMenu={(e) => e.preventDefault()}
                   >
                     <source src={videoUrl} type="video/mp4" />
                     Votre navigateur ne supporte pas la lecture de vidéos.

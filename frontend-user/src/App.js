@@ -3,6 +3,9 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
+// Hook de protection des médias
+import useMediaProtection from './hooks/useMediaProtection';
+
 // Pages
 import Home from './pages/Home';
 import Presentation from './pages/Presentation';
@@ -20,6 +23,9 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 
 function App() {
+  // Activer la protection des médias (images et vidéos)
+  useMediaProtection();
+
   return (
     <Router>
       <div className="App">
