@@ -543,8 +543,8 @@
 
 .projets-emblematiques-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: var(--spacing-lg);
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: var(--spacing-xl);
   margin-top: var(--spacing-xl);
 }
 
@@ -562,7 +562,7 @@
 
 .projet-emblematique-image {
   position: relative;
-  height: 280px;
+  height: 350px;
   overflow: hidden;
 }
 
@@ -646,7 +646,7 @@
   }
 
   .projet-emblematique-image {
-    height: 220px;
+    height: 280px;
   }
 
   .projet-emblematique-overlay {
