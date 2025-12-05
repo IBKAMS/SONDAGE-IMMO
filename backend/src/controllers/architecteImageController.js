@@ -2,7 +2,7 @@ const ArchitecteImage = require('../models/ArchitecteImage');
 const { uploadImage, cloudinary } = require('../config/cloudinary');
 
 // Types d'images architecte valides
-const validTypes = ['projet-architecte-1', 'projet-architecte-2', 'projet-architecte-3'];
+const validTypes = ['projet-architecte-1', 'projet-architecte-2', 'projet-architecte-3', 'projet-architecte-4'];
 
 // Upload d'une image architecte
 exports.uploadArchitecteImage = async (req, res) => {

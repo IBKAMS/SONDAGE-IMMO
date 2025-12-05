@@ -4,7 +4,7 @@ const architecteImageSchema = new mongoose.Schema({
   type: {
     type: String,
     required: true,
-    enum: ['projet-architecte-1', 'projet-architecte-2', 'projet-architecte-3'],
+    enum: ['projet-architecte-1', 'projet-architecte-2', 'projet-architecte-3', 'projet-architecte-4'],
     unique: true
   },
   filename: {
