@@ -25,7 +25,8 @@ const Videos = () => {
   const [architecteImages, setArchitecteImages] = useState({
     'projet-architecte-1': { file: null, name: '', url: '' },
     'projet-architecte-2': { file: null, name: '', url: '' },
-    'projet-architecte-3': { file: null, name: '', url: '' }
+    'projet-architecte-3': { file: null, name: '', url: '' },
+    'projet-architecte-4': { file: null, name: '', url: '' }
   });
   const [loading, setLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({});
@@ -58,7 +59,8 @@ const Videos = () => {
   const architecteImageInputRefs = {
     'projet-architecte-1': useRef(null),
     'projet-architecte-2': useRef(null),
-    'projet-architecte-3': useRef(null)
+    'projet-architecte-3': useRef(null),
+    'projet-architecte-4': useRef(null)
   };
 
   // Charger les vidéos existantes au montage du composant
@@ -922,6 +924,13 @@ const Videos = () => {
       description: 'Image du troisième projet - Rubrique Architecte',
       icon: <FaDraftingCompass />,
       color: '#059669'
+    },
+    {
+      type: 'projet-architecte-4',
+      title: 'Projet Architecte 4',
+      description: 'Image du quatrième projet - Rubrique Architecte',
+      icon: <FaDraftingCompass />,
+      color: '#10B981'
     }
   ];
 

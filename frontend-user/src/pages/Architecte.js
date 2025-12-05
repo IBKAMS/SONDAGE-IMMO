@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import { FaBuilding, FaUsers, FaAward, FaPhone, FaEnvelope, FaMapMarkerAlt, FaGlobe, FaPlay } from 'react-icons/fa';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FaBuilding, FaUsers, FaAward, FaPhone, FaEnvelope, FaMapMarkerAlt, FaGlobe, FaPlay, FaTimes, FaSearchPlus } from 'react-icons/fa';
 import API_URL from '../config';
 import './Architecte.css';
 
@@ -10,6 +10,8 @@ const Architecte = () => {
   const [loading, setLoading] = useState(true);
   const [content, setContent] = useState(null);
   const [architecteImages, setArchitecteImages] = useState({});
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
   const videoRef = React.useRef(null);
 
   useEffect(() => {
@@ -98,8 +100,23 @@ const Architecte = () => {
   const projetsArchitecte = [
     { type: 'projet-architecte-1', nom: 'Projet 1', description: 'Réalisation architecturale d\'exception' },
     { type: 'projet-architecte-2', nom: 'Projet 2', description: 'Innovation et design contemporain' },
-    { type: 'projet-architecte-3', nom: 'Projet 3', description: 'Excellence et savoir-faire' }
+    { type: 'projet-architecte-3', nom: 'Projet 3', description: 'Excellence et savoir-faire' },
+    { type: 'projet-architecte-4', nom: 'Projet 4', description: 'Conception moderne et fonctionnelle' }
   ];
+
+  // Fonction pour ouvrir la lightbox
+  const openLightbox = (projet, imageUrl) => {
+    setSelectedImage({ ...projet, url: imageUrl });
+    setLightboxOpen(true);
+    document.body.style.overflow = 'hidden';
+  };
+
+  // Fonction pour fermer la lightbox
+  const closeLightbox = () => {
+    setLightboxOpen(false);
+    setSelectedImage(null);
+    document.body.style.overflow = 'auto';
+  };
 
   // Fonction pour obtenir l'URL d'une image architecte
   const getArchitecteImageUrl = (type) => {
@@ -250,6 +267,8 @@ const Architecte = () => {
                       viewport={{ once: true }}
                       transition={{ duration: 0.5, delay: index * 0.1 }}
                       className="projet-emblematique-card"
+                      onClick={() => openLightbox(projet, imageUrl)}
+                      style={{ cursor: 'pointer' }}
                     >
                       <div className="projet-emblematique-image">
                         <img
@@ -260,6 +279,7 @@ const Architecte = () => {
                         <div className="projet-emblematique-overlay">
                           <h3>{projet.nom}</h3>
                           <p>{projet.description}</p>
+                          <span className="zoom-hint"><FaSearchPlus /> Cliquez pour agrandir</span>
                         </div>
                       </div>
                     </motion.div>
@@ -413,6 +433,40 @@ const Architecte = () => {
           </motion.div>
         </div>
       </section>
+
+      {/* Lightbox Modal */}
+      <AnimatePresence>
+        {lightboxOpen && selectedImage && (
+          <motion.div
+            className="image-lightbox"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            onClick={closeLightbox}
+          >
+            <motion.div
+              className="lightbox-content"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button className="lightbox-close" onClick={closeLightbox}>
+                <FaTimes />
+              </button>
+              <div className="lightbox-image-wrapper">
+                <img src={selectedImage.url} alt={selectedImage.nom} />
+              </div>
+              <div className="lightbox-info">
+                <h3>{selectedImage.nom}</h3>
+                <p>{selectedImage.description}</p>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

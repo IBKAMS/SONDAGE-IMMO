@@ -606,6 +606,108 @@
   line-height: 1.5;
 }
 
+.zoom-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  margin-top: var(--spacing-sm);
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+  color: var(--secondary-color);
+}
+
+.projet-emblematique-card:hover .zoom-hint {
+  opacity: 1;
+}
+
+/* Lightbox Modal Styles */
+.image-lightbox {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-lg);
+  cursor: pointer;
+}
+
+.lightbox-content {
+  position: relative;
+  max-width: 90vw;
+  max-height: 90vh;
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+  cursor: default;
+  display: flex;
+  flex-direction: column;
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: rgba(0, 0, 0, 0.7);
+  color: var(--white);
+  border-radius: 50%;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  z-index: 10;
+}
+
+.lightbox-close:hover {
+  background: var(--secondary-color);
+  transform: scale(1.1);
+}
+
+.lightbox-image-wrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #000;
+}
+
+.lightbox-image-wrapper img {
+  max-width: 100%;
+  max-height: 70vh;
+  object-fit: contain;
+}
+
+.lightbox-info {
+  padding: var(--spacing-lg);
+  background: linear-gradient(135deg, rgba(243, 156, 18, 0.1) 0%, rgba(243, 156, 18, 0.2) 100%);
+  border-top: 3px solid var(--secondary-color);
+}
+
+.lightbox-info h3 {
+  font-size: 1.5rem;
+  color: var(--primary-color);
+  margin-bottom: var(--spacing-sm);
+  font-weight: 700;
+}
+
+.lightbox-info p {
+  font-size: 1.1rem;
+  color: var(--text-color);
+  line-height: 1.6;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .architecte-hero .hero-content h1 {
@@ -651,5 +753,39 @@
 
   .projet-emblematique-overlay {
     transform: translateY(0);
+  }
+
+  /* Lightbox Mobile */
+  .image-lightbox {
+    padding: var(--spacing-sm);
+  }
+
+  .lightbox-content {
+    max-width: 95vw;
+    max-height: 95vh;
+  }
+
+  .lightbox-image-wrapper img {
+    max-height: 50vh;
+  }
+
+  .lightbox-info {
+    padding: var(--spacing-md);
+  }
+
+  .lightbox-info h3 {
+    font-size: 1.2rem;
+  }
+
+  .lightbox-info p {
+    font-size: 1rem;
+  }
+
+  .lightbox-close {
+    width: 35px;
+    height: 35px;
+    top: 10px;
+    right: 10px;
+    font-size: 1rem;
   }
 }
