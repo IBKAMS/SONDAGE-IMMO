@@ -1,7 +1,7 @@
 # SYNTHESE PROJET - PLATEFORME SONDAGE IMMOBILIER CITE KONGO
 
-**Derniere mise a jour**: 4 Decembre 2024
-**Version**: 1.0
+**Derniere mise a jour**: 6 Decembre 2024
+**Version**: 2.0
 **Statut**: En production
 
 ---
@@ -85,7 +85,12 @@ Plateforme web complete de **sondage et prospection immobiliere** pour le projet
 │   │   │   ├── database.js          # Connexion MongoDB
 │   │   │   └── cloudinary.js        # Config Cloudinary
 │   │   ├── controllers/             # 23+ controleurs
+│   │   │   ├── architecteImageController.js  # Images architecte (4 types)
+│   │   │   ├── localisationContentController.js
+│   │   │   └── ...
 │   │   ├── models/                  # 20+ modeles MongoDB
+│   │   │   ├── ArchitecteImage.js   # Schema images architecte
+│   │   │   └── ...
 │   │   ├── routes/                  # 23+ fichiers routes
 │   │   ├── middleware/
 │   │   │   └── auth.js              # Middleware JWT
@@ -96,6 +101,9 @@ Plateforme web complete de **sondage et prospection immobiliere** pour le projet
 ├── frontend-user/                    # App React publique
 │   ├── src/
 │   │   ├── pages/                   # 11 pages
+│   │   │   ├── Architecte.js        # Page avec lightbox modal
+│   │   │   ├── Architecte.css       # Styles + lightbox
+│   │   │   └── ...
 │   │   ├── components/              # Navbar, Footer
 │   │   ├── services/api.js          # Appels API
 │   │   ├── hooks/                   # useMediaProtection
@@ -106,6 +114,8 @@ Plateforme web complete de **sondage et prospection immobiliere** pour le projet
 ├── frontend-admin/                   # App React admin
 │   ├── src/
 │   │   ├── pages/                   # 18 pages admin
+│   │   │   ├── Videos.js            # Upload images architecte (4 slots)
+│   │   │   └── ...
 │   │   ├── components/              # Navbar, ProtectedRoute
 │   │   ├── context/AuthContext.js   # Authentification
 │   │   ├── utils/                   # Compression video
@@ -113,7 +123,8 @@ Plateforme web complete de **sondage et prospection immobiliere** pour le projet
 │   │   └── App.js                   # Routeur protege
 │   └── package.json
 │
-└── PROJET_SYNTHESE.md               # Ce fichier
+├── PROJET_SYNTHESE.md               # CE FICHIER - Documentation complete
+└── README.md
 ```
 
 ---
@@ -127,7 +138,7 @@ Plateforme web complete de **sondage et prospection immobiliere** pour le projet
 | Accueil | `/` | Hero, statistiques, appels a action |
 | Presentation | `/presentation` | Presentation detaillee du projet |
 | Promoteur | `/promoteur` | Informations KONGO IMMOBILIER |
-| Architecte | `/architecte` | Portfolio ARCHITECTES 21 |
+| **Architecte** | `/architecte` | Portfolio ARCHITECTES 21 + **4 projets + lightbox** |
 | Logements | `/logements` | Catalogue avec filtres (type, prix, surface) |
 | Visite 3D | `/visite-3d` | Visite virtuelle interactive |
 | Localisation | `/localisation` | Carte interactive + carrousel images (4 max) |
@@ -154,7 +165,7 @@ Plateforme web complete de **sondage et prospection immobiliere** pour le projet
 | Localisation | `/localisation` | Carte, images personnalisees (4 max) |
 | Analyse Economique | `/analyse-economique` | Edition donnees economiques |
 | Options d'Achat | `/option-achat` | Edition options financement |
-| Videos | `/videos` | Upload et gestion videos |
+| **Videos** | `/videos` | Upload videos + **4 images architecte** |
 
 ### Systeme de Questionnaire (42 questions)
 
@@ -224,6 +235,15 @@ POST   /api/localisation-content/:id/map-image           # Upload image (max 4)
 DELETE /api/localisation-content/:id/map-image/:index    # Supprimer image
 PUT    /api/localisation-content/:id/map-image/:index/caption  # Modifier legende
 
+IMAGES ARCHITECTE (4 types)
+POST   /api/architecte-images       # Upload image architecte
+GET    /api/architecte-images       # Liste toutes les images
+GET    /api/architecte-images/:type # Image par type
+DELETE /api/architecte-images/:type # Supprimer image
+
+Types valides: projet-architecte-1, projet-architecte-2,
+               projet-architecte-3, projet-architecte-4
+
 MEDIAS
 POST   /api/videos                  # Upload video
 GET    /api/videos                  # Liste videos
@@ -245,6 +265,7 @@ GET    /api/dashboard-stats         # Stats dashboard
 | PresentationContent | Contenu presentation |
 | PromoteurContent | Infos promoteur |
 | ArchitecteContent | Infos architecte |
+| **ArchitecteImage** | Images projets (4 types: projet-architecte-1 a 4) |
 | LocalisationContent | Carte + images (mapImages array, max 4) |
 | OptionAchatContent | Options financement |
 | Video/Image | Medias uploades |
@@ -279,6 +300,7 @@ Mot de passe: Admin123!
 - Build: `npm install`
 - Start: `npm start`
 - Variables d'environnement configurees
+- **Auto-deploy sur push GitHub**
 
 **Frontend User (Vercel)**
 - Framework: Create React App
@@ -334,22 +356,62 @@ REACT_APP_API_URL=https://sondage-immo-backend.onrender.com
 
 ---
 
-## 8. HISTORIQUE DES MODIFICATIONS RECENTES
+## 8. HISTORIQUE COMPLET DES MODIFICATIONS
+
+### 6 Decembre 2024 (Session actuelle)
+- [x] **Agrandissement images** section "Projets Emblematiques" (page Architecte)
+  - Hauteur images: 280px → 350px
+  - Largeur min cartes: 320px → 400px
+  - Hauteur mobile: 220px → 280px
+- [x] **Ajout 4eme image architecte** dans frontend-admin (Videos.js)
+  - Nouveau slot `projet-architecte-4`
+  - Nouvelle carte dans la section upload
+- [x] **Ajout lightbox modal** dans frontend-user (Architecte.js)
+  - Clic sur image → ouverture modal plein ecran
+  - Affichage nom + description du projet
+  - Animation Framer Motion
+  - Styles responsive mobile
+- [x] **Support backend 4eme image**
+  - Modification `ArchitecteImage.js` (enum)
+  - Modification `architecteImageController.js` (validTypes)
 
 ### 4 Decembre 2024
 - [x] Augmentation nombre images carte localisation de 3 a 4
 - [x] Correction affichage description complete logements (page Option Achat)
-- [x] Creation fichier synthese projet
+- [x] Creation fichier synthese projet (v1.0)
 
 ### Modifications Anterieures
 - Implementation carrousel images localisation (evite CORS Google Maps)
 - Upload images via Cloudinary
 - Systeme de legendes pour images carte
 - Compression video FFmpeg cote client
+- Systeme de scoring automatique questionnaires
+- Dashboard analytics avec Recharts
 
 ---
 
-## 9. PROBLEMES CONNUS ET SOLUTIONS
+## 9. FICHIERS CLES MODIFIES RECEMMENT
+
+### Frontend User
+| Fichier | Description |
+|---------|-------------|
+| `src/pages/Architecte.js` | 4 projets + lightbox modal + fonctions open/close |
+| `src/pages/Architecte.css` | Styles agrandis + lightbox + responsive |
+
+### Frontend Admin
+| Fichier | Description |
+|---------|-------------|
+| `src/pages/Videos.js` | 4 slots upload images architecte |
+
+### Backend
+| Fichier | Description |
+|---------|-------------|
+| `src/models/ArchitecteImage.js` | Enum avec 4 types |
+| `src/controllers/architecteImageController.js` | validTypes avec 4 elements |
+
+---
+
+## 10. PROBLEMES CONNUS ET SOLUTIONS
 
 ### Upload images en production (Vercel)
 **Probleme**: Les images ne s'uploadent pas depuis admin en production
@@ -362,9 +424,16 @@ REACT_APP_API_URL=https://sondage-immo-backend.onrender.com
 **Probleme**: Les images Google Maps ne s'affichent pas
 **Solution**: Utiliser des images personnalisees uploadees sur Cloudinary (carrousel 4 images max)
 
+### 4eme image architecte n'apparait pas
+**Probleme**: L'image uploadee n'apparait pas sur le frontend user
+**Solution**: Le backend doit supporter `projet-architecte-4` dans:
+- `backend/src/models/ArchitecteImage.js` (enum)
+- `backend/src/controllers/architecteImageController.js` (validTypes)
+**CORRIGE le 6 Decembre 2024**
+
 ---
 
-## 10. CONTACTS ET RESSOURCES
+## 11. CONTACTS ET RESSOURCES
 
 ### Repository
 - GitHub: https://github.com/IBKAMS/SONDAGE-IMMO
@@ -381,30 +450,51 @@ REACT_APP_API_URL=https://sondage-immo-backend.onrender.com
 
 ---
 
-## 11. POUR REPRENDRE LE PROJET
+## 12. POUR REPRENDRE LE PROJET (CLAUDE CODE)
 
-### Etapes pour un nouveau developpeur ou Claude
+### IMPORTANT - Lire en premier
+Ce fichier `PROJET_SYNTHESE.md` contient toute l'information necessaire pour reprendre le developpement. **Toujours le lire en debut de session.**
 
-1. **Lire ce fichier** pour comprendre l'architecture
-2. **Cloner le repository** depuis GitHub
-3. **Configurer les variables d'environnement** (.env)
-4. **Installer les dependances** (`npm install` dans chaque dossier)
+### Etapes pour reprendre
+
+1. **Lire ce fichier** pour comprendre l'architecture et l'etat actuel
+2. **Verifier le git status** pour voir les modifications en cours
+3. **Consulter l'historique des commits** pour comprendre les derniers changements
+4. **Installer les dependances** si necessaire (`npm install`)
 5. **Demarrer en local** pour tester
-6. **Consulter les issues GitHub** pour les taches en cours
 
-### Points d'attention
-- Le scoring questionnaire est automatique (voir backend controller)
-- Les images localisation passent par Cloudinary (max 4)
-- L'authentification admin utilise JWT stocke dans localStorage
-- Chaque section de contenu a son propre endpoint API
+### Points d'attention critiques
+
+1. **Images Architecte**: 4 types supportes (`projet-architecte-1` a `4`)
+   - Frontend admin: `Videos.js` (upload)
+   - Frontend user: `Architecte.js` (affichage + lightbox)
+   - Backend: `ArchitecteImage.js` + `architecteImageController.js`
+
+2. **Images Localisation**: Maximum 4 images
+   - Stockees dans `LocalisationContent.mapSection.mapImages`
+
+3. **Scoring Questionnaire**: Automatique dans le controller backend
+
+4. **Authentification**: JWT stocke dans localStorage
+
+5. **Deploiement**: Auto sur push GitHub (Vercel + Render)
 
 ### Commandes Utiles
 ```bash
 # Voir les logs backend
-npm run dev
+cd backend && npm run dev
 
-# Linter frontend
-npm run lint
+# Lancer frontend user
+cd frontend-user && npm start
+
+# Lancer frontend admin
+cd frontend-admin && PORT=3001 npm start
+
+# Git status
+git status
+
+# Voir derniers commits
+git log --oneline -10
 
 # Build production
 npm run build
@@ -413,6 +503,28 @@ npm run build
 npm test
 ```
 
+### Structure des endpoints images architecte
+```
+GET    /api/architecte-images           # Toutes les images
+POST   /api/architecte-images           # Upload (body: type, file: image)
+GET    /api/architecte-images/:type     # Par type
+DELETE /api/architecte-images/:type     # Supprimer
+```
+
 ---
 
-**Ce document doit etre mis a jour a chaque modification majeure du projet.**
+## 13. CHECKLIST AVANT DEPLOIEMENT
+
+- [ ] Tester en local (frontend-user, frontend-admin, backend)
+- [ ] Verifier les variables d'environnement
+- [ ] Commit avec message clair
+- [ ] Push sur GitHub (deploiement auto)
+- [ ] Attendre deploiement Render (backend) ~2-5 min
+- [ ] Attendre deploiement Vercel (frontends) ~1-2 min
+- [ ] Tester en production
+- [ ] Mettre a jour ce fichier si modification majeure
+
+---
+
+**CE DOCUMENT DOIT ETRE MIS A JOUR A CHAQUE MODIFICATION MAJEURE DU PROJET.**
+**Derniere modification: 6 Decembre 2024 - Ajout 4eme image architecte + lightbox**
