@@ -14,7 +14,11 @@ const app = express();
 connectDB();
 
 // Middleware de sécurité
-app.use(helmet());
+// Désactiver frameguard pour permettre l'affichage des PDF dans les iframes
+app.use(helmet({
+  frameguard: false,
+  contentSecurityPolicy: false
+}));
 app.use(compression());
 
 // CORS - Configuration stricte avec whitelist

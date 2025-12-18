@@ -69,6 +69,8 @@ exports.getPlanByType = async (req, res) => {
 
 // Proxy pour visualiser un PDF (contourne les restrictions Cloudinary)
 exports.viewPlan = async (req, res) => {
+  const https = require('https');
+
   try {
     const { type } = req.params;
     const plan = await PlanArchitectural.findOne({ type });
@@ -78,19 +80,18 @@ exports.viewPlan = async (req, res) => {
     }
 
     // Utiliser l'API Admin de Cloudinary pour obtenir le fichier
-    // Cela contourne les restrictions d'accès public
     const result = await cloudinary.api.resource(plan.cloudinaryId, {
       resource_type: 'raw'
     });
 
     if (result && result.secure_url) {
-      // Télécharger le PDF et le renvoyer au client
-      const https = require('https');
-
-      // Ajouter les headers pour permettre l'affichage dans iframe
+      // Headers pour permettre l'affichage dans iframe
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `inline; filename="${plan.originalName}"`);
       res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('X-Frame-Options', 'ALLOWALL');
+      res.setHeader('Content-Security-Policy', "frame-ancestors *");
+      res.removeHeader('X-Content-Type-Options');
 
       // Proxy le fichier
       https.get(result.secure_url, (pdfResponse) => {
