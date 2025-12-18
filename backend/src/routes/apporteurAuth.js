@@ -4,12 +4,14 @@ const {
   login,
   getMe,
   updatePassword,
-  updateProfile
+  updateProfile,
+  adminLoginAs
 } = require('../controllers/apporteurAuthController');
 const { protectApporteur } = require('../middleware/auth');
 
 // Routes publiques
 router.post('/login', login);
+router.post('/admin-login-as', adminLoginAs); // Admin impersonation
 
 // Routes protégées (nécessitent authentification apporteur)
 router.get('/me', protectApporteur, getMe);

@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FaEnvelope, FaLock, FaSpinner, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaEnvelope, FaLock, FaSpinner, FaEye, FaEyeSlash, FaPhone, FaUser } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import './Login.css';
 
 const Login = () => {
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState(''); // Email ou téléphone
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -32,22 +32,15 @@ const Login = () => {
     setError('');
 
     // Basic validation
-    if (!email || !password) {
+    if (!identifier || !password) {
       setError('Veuillez remplir tous les champs');
-      return;
-    }
-
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setError('Veuillez entrer un email valide');
       return;
     }
 
     setLoading(true);
 
     try {
-      const result = await login(email, password);
+      const result = await login(identifier, password);
 
       if (result.success) {
         // Rediriger vers le dashboard approprié selon le type d'utilisateur
@@ -105,19 +98,19 @@ const Login = () => {
 
         <form onSubmit={handleSubmit} className="login-form">
           <div className="form-group">
-            <label htmlFor="email" className="form-label">
-              <FaEnvelope className="label-icon" />
-              Email
+            <label htmlFor="identifier" className="form-label">
+              <FaUser className="label-icon" />
+              Email ou Téléphone
             </label>
             <input
-              type="email"
-              id="email"
+              type="text"
+              id="identifier"
               className="form-input"
-              placeholder="votre@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              placeholder="votre@email.com ou +225 07 XX XX XX"
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
               disabled={loading}
-              autoComplete="email"
+              autoComplete="username"
               autoFocus
             />
           </div>

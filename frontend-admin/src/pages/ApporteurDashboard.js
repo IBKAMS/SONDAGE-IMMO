@@ -4,7 +4,7 @@ import {
   FaUsers, FaMoneyBillWave, FaChartLine, FaCalendarAlt,
   FaSync, FaEye, FaCopy, FaCheck, FaUserTie, FaClipboardList,
   FaPhoneAlt, FaEnvelope, FaHome, FaPercentage, FaInfoCircle,
-  FaExclamationTriangle
+  FaExclamationTriangle, FaCog, FaLock, FaTimes, FaEyeSlash
 } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import API_URL from '../config';
@@ -20,6 +20,19 @@ const ApporteurDashboard = () => {
   const [showProspectModal, setShowProspectModal] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
   const [activeTab, setActiveTab] = useState('prospects');
+
+  // Password change states
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState('');
+  const [submittingPassword, setSubmittingPassword] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
 
   useEffect(() => {
     fetchDashboardData();
@@ -78,6 +91,77 @@ const ApporteurDashboard = () => {
       navigator.clipboard.writeText(user.code);
       setCopiedCode(true);
       setTimeout(() => setCopiedCode(false), 2000);
+    }
+  };
+
+  const handleOpenPasswordModal = () => {
+    setPasswordForm({
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: ''
+    });
+    setPasswordError('');
+    setPasswordSuccess('');
+    setShowPasswordModal(true);
+  };
+
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    setPasswordError('');
+    setPasswordSuccess('');
+
+    // Validation
+    if (!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
+      setPasswordError('Veuillez remplir tous les champs');
+      return;
+    }
+
+    if (passwordForm.newPassword.length < 6) {
+      setPasswordError('Le nouveau mot de passe doit contenir au moins 6 caractères');
+      return;
+    }
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordError('Les mots de passe ne correspondent pas');
+      return;
+    }
+
+    setSubmittingPassword(true);
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/apporteur/update-password`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          currentPassword: passwordForm.currentPassword,
+          newPassword: passwordForm.newPassword
+        })
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        setPasswordSuccess('Mot de passe modifié avec succès');
+        setPasswordForm({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: ''
+        });
+        setTimeout(() => {
+          setShowPasswordModal(false);
+          setPasswordSuccess('');
+        }, 2000);
+      } else {
+        setPasswordError(result.message || 'Erreur lors de la modification du mot de passe');
+      }
+    } catch (error) {
+      setPasswordError('Erreur de connexion au serveur');
+    } finally {
+      setSubmittingPassword(false);
     }
   };
 
@@ -147,12 +231,22 @@ const ApporteurDashboard = () => {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
+            className="welcome-left"
           >
             <h1>
               <FaUserTie /> Bienvenue, {user?.prenom} {user?.nom}
             </h1>
             <p>Voici le suivi de vos activités d'apporteur d'affaires</p>
           </motion.div>
+          <div className="welcome-actions">
+            <button
+              className="btn-settings"
+              onClick={handleOpenPasswordModal}
+              title="Changer le mot de passe"
+            >
+              <FaCog /> Paramètres
+            </button>
+          </div>
           <div className="code-section">
             <span className="code-label">Votre Code Apporteur</span>
             <div className="code-display">
@@ -540,6 +634,119 @@ const ApporteurDashboard = () => {
                 )}
               </div>
             </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Password Change Modal */}
+      {showPasswordModal && (
+        <div className="modal-overlay" onClick={() => setShowPasswordModal(false)}>
+          <motion.div
+            className="modal-content modal-password"
+            onClick={(e) => e.stopPropagation()}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.2 }}
+          >
+            <div className="modal-header">
+              <h2>
+                <FaLock /> Changer le Mot de Passe
+              </h2>
+              <button className="btn-close" onClick={() => setShowPasswordModal(false)}>
+                <FaTimes />
+              </button>
+            </div>
+
+            <form onSubmit={handlePasswordChange} className="password-form">
+              {passwordError && (
+                <div className="password-alert error">
+                  {passwordError}
+                </div>
+              )}
+
+              {passwordSuccess && (
+                <div className="password-alert success">
+                  {passwordSuccess}
+                </div>
+              )}
+
+              <div className="form-group">
+                <label><FaLock /> Mot de passe actuel</label>
+                <div className="password-input-wrapper">
+                  <input
+                    type={showCurrentPassword ? "text" : "password"}
+                    value={passwordForm.currentPassword}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
+                    placeholder="Entrez votre mot de passe actuel"
+                    disabled={submittingPassword}
+                  />
+                  <button
+                    type="button"
+                    className="password-toggle"
+                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                  >
+                    {showCurrentPassword ? <FaEyeSlash /> : <FaEye />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label><FaLock /> Nouveau mot de passe</label>
+                <div className="password-input-wrapper">
+                  <input
+                    type={showNewPassword ? "text" : "password"}
+                    value={passwordForm.newPassword}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                    placeholder="Minimum 6 caractères"
+                    disabled={submittingPassword}
+                  />
+                  <button
+                    type="button"
+                    className="password-toggle"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                  >
+                    {showNewPassword ? <FaEyeSlash /> : <FaEye />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label><FaLock /> Confirmer le nouveau mot de passe</label>
+                <input
+                  type="password"
+                  value={passwordForm.confirmPassword}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                  placeholder="Retapez le nouveau mot de passe"
+                  disabled={submittingPassword}
+                />
+              </div>
+
+              <div className="form-actions">
+                <button
+                  type="button"
+                  className="btn-cancel"
+                  onClick={() => setShowPasswordModal(false)}
+                  disabled={submittingPassword}
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  className="btn-submit"
+                  disabled={submittingPassword}
+                >
+                  {submittingPassword ? (
+                    <>
+                      <FaSync className="loading-spinner" /> Modification...
+                    </>
+                  ) : (
+                    <>
+                      <FaCheck /> Modifier
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
           </motion.div>
         </div>
       )}

@@ -1,4 +1,5 @@
 const ApporteurAffaires = require('../models/ApporteurAffaires');
+const Admin = require('../models/Admin');
 const { generateToken } = require('../middleware/auth');
 
 // @desc    Connexion apporteur d'affaires
@@ -6,18 +7,25 @@ const { generateToken } = require('../middleware/auth');
 // @access  Public
 exports.login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { identifier, password } = req.body;
 
     // Validation
-    if (!email || !password) {
+    if (!identifier || !password) {
       return res.status(400).json({
         success: false,
-        message: 'Veuillez fournir un email et un mot de passe'
+        message: 'Veuillez fournir un email ou numéro de téléphone et un mot de passe'
       });
     }
 
-    // Vérifier si l'apporteur existe
-    const apporteur = await ApporteurAffaires.findOne({ email }).select('+password');
+    // Déterminer si c'est un email ou un téléphone
+    const isEmail = identifier.includes('@');
+
+    // Vérifier si l'apporteur existe (par email ou téléphone)
+    const query = isEmail
+      ? { email: identifier.toLowerCase() }
+      : { telephone: identifier };
+
+    const apporteur = await ApporteurAffaires.findOne(query).select('+password');
 
     if (!apporteur) {
       return res.status(401).json({
@@ -144,6 +152,8 @@ exports.updatePassword = async (req, res) => {
 
     // Mettre à jour le mot de passe
     apporteur.password = newPassword;
+    apporteur.motDePasseInitial = newPassword; // Stocker le nouveau mot de passe en clair pour l'admin
+    apporteur.motDePasseModifie = true; // Marquer comme modifié par l'apporteur
     await apporteur.save();
 
     res.status(200).json({
@@ -193,6 +203,86 @@ exports.updateProfile = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Erreur lors de la mise à jour du profil',
+      error: error.message
+    });
+  }
+};
+
+// @desc    Admin se connecte en tant qu'apporteur (impersonation)
+// @route   POST /api/apporteur/admin-login-as
+// @access  Public (mais nécessite identifiants admin)
+exports.adminLoginAs = async (req, res) => {
+  try {
+    const { apporteurIdentifier, adminEmail, adminPassword } = req.body;
+
+    // Validation
+    if (!apporteurIdentifier || !adminEmail || !adminPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'Veuillez fournir l\'identifiant apporteur et les identifiants admin'
+      });
+    }
+
+    // Vérifier les identifiants admin
+    const admin = await Admin.findOne({ email: adminEmail }).select('+password');
+
+    if (!admin) {
+      return res.status(401).json({
+        success: false,
+        message: 'Identifiants admin incorrects'
+      });
+    }
+
+    const isAdminMatch = await admin.matchPassword(adminPassword);
+
+    if (!isAdminMatch) {
+      return res.status(401).json({
+        success: false,
+        message: 'Identifiants admin incorrects'
+      });
+    }
+
+    // Trouver l'apporteur par email ou téléphone
+    const isEmail = apporteurIdentifier.includes('@');
+    const query = isEmail
+      ? { email: apporteurIdentifier.toLowerCase() }
+      : { telephone: apporteurIdentifier };
+
+    const apporteur = await ApporteurAffaires.findOne(query);
+
+    if (!apporteur) {
+      return res.status(404).json({
+        success: false,
+        message: 'Apporteur non trouvé'
+      });
+    }
+
+    // Générer le token avec type 'apporteur' mais avec indication d'impersonation
+    const token = generateToken(apporteur._id, 'apporteur');
+
+    res.status(200).json({
+      success: true,
+      token,
+      userType: 'apporteur',
+      isImpersonation: true,
+      adminName: `${admin.prenom} ${admin.nom}`,
+      apporteur: {
+        id: apporteur._id,
+        code: apporteur.code,
+        nom: apporteur.nom,
+        prenom: apporteur.prenom,
+        email: apporteur.email,
+        telephone: apporteur.telephone,
+        pays: apporteur.pays,
+        tauxCommission: apporteur.tauxCommission,
+        statistiques: apporteur.statistiques
+      }
+    });
+  } catch (error) {
+    console.error('Erreur admin login as apporteur:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors de la connexion',
       error: error.message
     });
   }

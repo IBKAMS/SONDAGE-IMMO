@@ -129,18 +129,27 @@ exports.createApporteur = async (req, res) => {
     }
 
     // Vérifier si l'email existe déjà
-    const existingApporteur = await ApporteurAffaires.findOne({ email });
-    if (existingApporteur) {
+    const existingEmail = await ApporteurAffaires.findOne({ email });
+    if (existingEmail) {
       return res.status(400).json({
         success: false,
         message: 'Un apporteur avec cet email existe déjà'
       });
     }
 
+    // Vérifier si le téléphone existe déjà
+    const existingTelephone = await ApporteurAffaires.findOne({ telephone });
+    if (existingTelephone) {
+      return res.status(400).json({
+        success: false,
+        message: 'Un apporteur avec ce numéro de téléphone existe déjà'
+      });
+    }
+
     // Générer un code unique
     const code = await ApporteurAffaires.generateUniqueCode();
 
-    // Créer l'apporteur
+    // Créer l'apporteur avec le mot de passe initial stocké en clair pour l'admin
     const apporteur = await ApporteurAffaires.create({
       code,
       nom,
@@ -149,6 +158,8 @@ exports.createApporteur = async (req, res) => {
       telephone,
       pays,
       password,
+      motDePasseInitial: password, // Stocké en clair pour que l'admin puisse le voir
+      motDePasseModifie: false,
       tauxCommission: tauxCommission || 2
     });
 
@@ -164,7 +175,9 @@ exports.createApporteur = async (req, res) => {
         telephone: apporteur.telephone,
         pays: apporteur.pays,
         tauxCommission: apporteur.tauxCommission,
-        actif: apporteur.actif
+        actif: apporteur.actif,
+        motDePasseInitial: apporteur.motDePasseInitial,
+        motDePasseModifie: apporteur.motDePasseModifie
       }
     });
   } catch (error) {
@@ -204,6 +217,17 @@ exports.updateApporteur = async (req, res) => {
       }
     }
 
+    // Vérifier si le nouveau téléphone existe déjà (si changement de téléphone)
+    if (telephone && telephone !== apporteur.telephone) {
+      const existingTelephone = await ApporteurAffaires.findOne({ telephone });
+      if (existingTelephone) {
+        return res.status(400).json({
+          success: false,
+          message: 'Un apporteur avec ce numéro de téléphone existe déjà'
+        });
+      }
+    }
+
     // Mise à jour des champs
     if (nom) apporteur.nom = nom;
     if (prenom) apporteur.prenom = prenom;
@@ -213,7 +237,10 @@ exports.updateApporteur = async (req, res) => {
     if (tauxCommission !== undefined) apporteur.tauxCommission = tauxCommission;
     if (actif !== undefined) apporteur.actif = actif;
     if (notes !== undefined) apporteur.notes = notes;
-    if (password) apporteur.password = password;
+    if (password) {
+      apporteur.password = password;
+      apporteur.motDePasseInitial = password; // Stocker en clair pour l'admin
+    }
 
     await apporteur.save();
 
@@ -230,7 +257,9 @@ exports.updateApporteur = async (req, res) => {
         pays: apporteur.pays,
         tauxCommission: apporteur.tauxCommission,
         actif: apporteur.actif,
-        notes: apporteur.notes
+        notes: apporteur.notes,
+        motDePasseInitial: apporteur.motDePasseInitial,
+        motDePasseModifie: apporteur.motDePasseModifie
       }
     });
   } catch (error) {

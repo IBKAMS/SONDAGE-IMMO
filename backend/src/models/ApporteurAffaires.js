@@ -35,7 +35,9 @@ const apporteurAffairesSchema = new mongoose.Schema({
   telephone: {
     type: String,
     required: [true, 'Le téléphone est requis'],
-    trim: true
+    trim: true,
+    unique: true,
+    index: true
   },
   pays: {
     type: String,
@@ -49,6 +51,18 @@ const apporteurAffairesSchema = new mongoose.Schema({
     required: [true, 'Le mot de passe est requis'],
     minlength: [6, 'Le mot de passe doit contenir au moins 6 caractères'],
     select: false // Ne pas renvoyer le mot de passe par défaut
+  },
+
+  // Mot de passe initial (visible par admin, effacé quand l'apporteur le change)
+  motDePasseInitial: {
+    type: String,
+    default: null
+  },
+
+  // Indique si l'apporteur a changé son mot de passe
+  motDePasseModifie: {
+    type: Boolean,
+    default: false
   },
 
   // Configuration commission

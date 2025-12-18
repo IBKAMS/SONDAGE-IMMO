@@ -1,24 +1,34 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   FaUsers, FaUserPlus, FaEdit, FaTrash, FaSearch,
   FaEye, FaToggleOn, FaToggleOff, FaCopy, FaCheck,
   FaSync, FaTimes, FaUserTie, FaChartLine, FaMoneyBillWave,
-  FaEnvelope, FaPhone, FaGlobe, FaPercent, FaKey
+  FaEnvelope, FaPhone, FaGlobe, FaPercent, FaKey, FaLock,
+  FaSignInAlt, FaEyeSlash
 } from 'react-icons/fa';
+import { useAuth } from '../context/AuthContext';
 import API_URL from '../config';
 import './ApporteursGestion.css';
 
 const ApporteursGestion = () => {
+  const navigate = useNavigate();
+  const { loginAsApporteur, user } = useAuth();
+
   const [apporteurs, setApporteurs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [showModal, setShowModal] = useState(false);
   const [showProspectsModal, setShowProspectsModal] = useState(false);
+  const [showAccessModal, setShowAccessModal] = useState(false);
   const [selectedApporteur, setSelectedApporteur] = useState(null);
   const [prospects, setProspects] = useState([]);
   const [copiedCode, setCopiedCode] = useState(null);
+  const [visiblePasswords, setVisiblePasswords] = useState({});
+  const [adminPassword, setAdminPassword] = useState('');
+  const [accessError, setAccessError] = useState('');
   const [formData, setFormData] = useState({
     nom: '',
     prenom: '',
@@ -26,10 +36,12 @@ const ApporteursGestion = () => {
     telephone: '',
     pays: 'Côte d\'Ivoire',
     password: '',
+    confirmPassword: '',
     tauxCommission: 2
   });
   const [formErrors, setFormErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
+  const [showFormPassword, setShowFormPassword] = useState(false);
 
   useEffect(() => {
     fetchApporteurs();
@@ -81,6 +93,7 @@ const ApporteursGestion = () => {
         telephone: apporteur.telephone || '',
         pays: apporteur.pays || 'Côte d\'Ivoire',
         password: '',
+        confirmPassword: '',
         tauxCommission: apporteur.tauxCommission || 2
       });
     } else {
@@ -92,10 +105,12 @@ const ApporteursGestion = () => {
         telephone: '',
         pays: 'Côte d\'Ivoire',
         password: '',
+        confirmPassword: '',
         tauxCommission: 2
       });
     }
     setFormErrors({});
+    setShowFormPassword(false);
     setShowModal(true);
   };
 
@@ -119,6 +134,10 @@ const ApporteursGestion = () => {
     } else if (formData.password && formData.password.length < 6) {
       errors.password = 'Le mot de passe doit contenir au moins 6 caractères';
     }
+    // Vérification de la confirmation du mot de passe (seulement si un mot de passe est saisi)
+    if (formData.password && formData.password !== formData.confirmPassword) {
+      errors.confirmPassword = 'Les mots de passe ne correspondent pas';
+    }
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -137,6 +156,8 @@ const ApporteursGestion = () => {
       const method = selectedApporteur ? 'PUT' : 'POST';
 
       const dataToSend = { ...formData };
+      // Supprimer confirmPassword avant l'envoi
+      delete dataToSend.confirmPassword;
       if (!dataToSend.password) {
         delete dataToSend.password;
       }
@@ -244,6 +265,44 @@ const ApporteursGestion = () => {
     navigator.clipboard.writeText(code);
     setCopiedCode(code);
     setTimeout(() => setCopiedCode(null), 2000);
+  };
+
+  const togglePasswordVisibility = (apporteurId) => {
+    setVisiblePasswords(prev => ({
+      ...prev,
+      [apporteurId]: !prev[apporteurId]
+    }));
+  };
+
+  const handleOpenAccessModal = (apporteur) => {
+    setSelectedApporteur(apporteur);
+    setAdminPassword('');
+    setAccessError('');
+    setShowAccessModal(true);
+  };
+
+  const handleAccessDashboard = async () => {
+    if (!adminPassword) {
+      setAccessError('Veuillez entrer votre mot de passe admin');
+      return;
+    }
+
+    try {
+      const result = await loginAsApporteur(
+        selectedApporteur.email,
+        user.email,
+        adminPassword
+      );
+
+      if (result.success) {
+        setShowAccessModal(false);
+        navigate('/apporteur-dashboard');
+      } else {
+        setAccessError(result.message || 'Erreur de connexion');
+      }
+    } catch (error) {
+      setAccessError('Erreur lors de l\'accès au dashboard');
+    }
   };
 
   const formatCurrency = (amount) => {
@@ -381,6 +440,7 @@ const ApporteursGestion = () => {
               <th>Code</th>
               <th>Nom Complet</th>
               <th>Contact</th>
+              <th>Mot de passe</th>
               <th>Pays</th>
               <th>Commission</th>
               <th>Statistiques</th>
@@ -391,7 +451,7 @@ const ApporteursGestion = () => {
           <tbody>
             {filteredApporteurs.length === 0 ? (
               <tr>
-                <td colSpan="8" className="empty-state">
+                <td colSpan="9" className="empty-state">
                   <FaUsers className="empty-icon" />
                   <p>Aucun apporteur trouvé</p>
                 </td>
@@ -421,6 +481,30 @@ const ApporteursGestion = () => {
                       <span><FaEnvelope /> {apporteur.email}</span>
                       {apporteur.telephone && (
                         <span><FaPhone /> {apporteur.telephone}</span>
+                      )}
+                    </div>
+                  </td>
+                  <td>
+                    <div className="password-cell">
+                      {apporteur.motDePasseInitial ? (
+                        <>
+                          <span className="password-value">
+                            {visiblePasswords[apporteur._id]
+                              ? apporteur.motDePasseInitial
+                              : '••••••••'}
+                          </span>
+                          <button
+                            className="btn-icon btn-toggle-password"
+                            onClick={() => togglePasswordVisibility(apporteur._id)}
+                            title={visiblePasswords[apporteur._id] ? 'Masquer' : 'Afficher'}
+                          >
+                            {visiblePasswords[apporteur._id] ? <FaEyeSlash /> : <FaEye />}
+                          </button>
+                        </>
+                      ) : (
+                        <span className="password-not-available">
+                          <FaLock /> Non disponible
+                        </span>
                       )}
                     </div>
                   </td>
@@ -456,6 +540,13 @@ const ApporteursGestion = () => {
                   </td>
                   <td>
                     <div className="actions-cell">
+                      <button
+                        className="btn-icon btn-access"
+                        onClick={() => handleOpenAccessModal(apporteur)}
+                        title="Accéder au dashboard"
+                      >
+                        <FaSignInAlt />
+                      </button>
                       <button
                         className="btn-icon btn-view"
                         onClick={() => handleViewProspects(apporteur)}
@@ -561,7 +652,7 @@ const ApporteursGestion = () => {
                   />
                 </div>
                 <div className="form-group">
-                  <label>Pays</label>
+                  <label><FaGlobe className="label-icon" /> Pays de résidence</label>
                   <select
                     value={formData.pays}
                     onChange={(e) => setFormData({ ...formData, pays: e.target.value })}
@@ -585,28 +676,54 @@ const ApporteursGestion = () => {
               <div className="form-row">
                 <div className="form-group">
                   <label>
-                    Mot de passe {selectedApporteur ? '(laisser vide pour ne pas changer)' : '*'}
+                    <FaLock className="label-icon" /> Mot de passe {selectedApporteur ? '(laisser vide pour ne pas changer)' : '*'}
                   </label>
-                  <input
-                    type="password"
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className={formErrors.password ? 'error' : ''}
-                    placeholder={selectedApporteur ? '••••••••' : ''}
-                  />
+                  <div className="password-input-container">
+                    <input
+                      type={showFormPassword ? "text" : "password"}
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      className={formErrors.password ? 'error' : ''}
+                      placeholder={selectedApporteur ? '••••••••' : 'Minimum 6 caractères'}
+                    />
+                    <button
+                      type="button"
+                      className="password-toggle-btn"
+                      onClick={() => setShowFormPassword(!showFormPassword)}
+                      title={showFormPassword ? 'Masquer' : 'Afficher'}
+                    >
+                      {showFormPassword ? <FaEyeSlash /> : <FaEye />}
+                    </button>
+                  </div>
                   {formErrors.password && <span className="error-message">{formErrors.password}</span>}
                 </div>
                 <div className="form-group">
-                  <label>Taux de Commission (%)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    step="0.5"
-                    value={formData.tauxCommission}
-                    onChange={(e) => setFormData({ ...formData, tauxCommission: parseFloat(e.target.value) })}
-                  />
+                  <label>
+                    <FaLock className="label-icon" /> Confirmer le mot de passe {!selectedApporteur && '*'}
+                  </label>
+                  <div className="password-input-container">
+                    <input
+                      type={showFormPassword ? "text" : "password"}
+                      value={formData.confirmPassword}
+                      onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                      className={formErrors.confirmPassword ? 'error' : ''}
+                      placeholder="Retapez le mot de passe"
+                    />
+                  </div>
+                  {formErrors.confirmPassword && <span className="error-message">{formErrors.confirmPassword}</span>}
                 </div>
+              </div>
+
+              <div className="form-group">
+                <label><FaPercent className="label-icon" /> Taux de Commission (%)</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.5"
+                  value={formData.tauxCommission}
+                  onChange={(e) => setFormData({ ...formData, tauxCommission: parseFloat(e.target.value) })}
+                />
               </div>
 
               {selectedApporteur && (
@@ -716,6 +833,76 @@ const ApporteursGestion = () => {
                   </tbody>
                 </table>
               )}
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Modal Access Dashboard */}
+      {showAccessModal && selectedApporteur && (
+        <div className="modal-overlay" onClick={() => setShowAccessModal(false)}>
+          <motion.div
+            className="modal-content modal-small"
+            onClick={(e) => e.stopPropagation()}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.2 }}
+          >
+            <div className="modal-header">
+              <h2>
+                <FaSignInAlt /> Accès Dashboard Apporteur
+              </h2>
+              <button className="btn-close" onClick={() => setShowAccessModal(false)}>
+                <FaTimes />
+              </button>
+            </div>
+
+            <div className="access-modal-content">
+              <div className="apporteur-info-box">
+                <p><strong>Apporteur :</strong> {selectedApporteur.prenom} {selectedApporteur.nom}</p>
+                <p><strong>Email :</strong> {selectedApporteur.email}</p>
+                {selectedApporteur.telephone && (
+                  <p><strong>Téléphone :</strong> {selectedApporteur.telephone}</p>
+                )}
+              </div>
+
+              <p className="access-description">
+                Pour accéder au dashboard de cet apporteur, veuillez entrer votre mot de passe administrateur.
+              </p>
+
+              {accessError && (
+                <div className="access-error">
+                  {accessError}
+                </div>
+              )}
+
+              <div className="form-group">
+                <label><FaLock /> Mot de passe Admin</label>
+                <input
+                  type="password"
+                  value={adminPassword}
+                  onChange={(e) => setAdminPassword(e.target.value)}
+                  placeholder="Entrez votre mot de passe admin"
+                  onKeyPress={(e) => e.key === 'Enter' && handleAccessDashboard()}
+                />
+              </div>
+
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => setShowAccessModal(false)}
+                >
+                  Annuler
+                </button>
+                <button
+                  type="button"
+                  className="btn-primary"
+                  onClick={handleAccessDashboard}
+                >
+                  <FaSignInAlt /> Accéder au Dashboard
+                </button>
+              </div>
             </div>
           </motion.div>
         </div>

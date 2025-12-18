@@ -47,76 +47,81 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Login function - essaie d'abord admin, puis apporteur
-  const login = async (email, password) => {
+  // identifier peut être un email ou un numéro de téléphone
+  const login = async (identifier, password) => {
     try {
-      // D'abord essayer la connexion admin
+      // Déterminer si c'est un email
+      const isEmail = identifier.includes('@');
+
+      // D'abord essayer la connexion admin (seulement si c'est un email)
+      if (isEmail) {
+        try {
+          const adminResponse = await axios.post(`${API_URL}/api/auth/login`, {
+            email: identifier,
+            password
+          });
+
+          if (adminResponse.data.success) {
+            const { token: authToken, admin } = adminResponse.data;
+
+            // Store in localStorage
+            localStorage.setItem('token', authToken);
+            localStorage.setItem('user', JSON.stringify(admin));
+            localStorage.setItem('userType', 'admin');
+
+            // Update state
+            setToken(authToken);
+            setUser(admin);
+            setUserType('admin');
+
+            // Set axios default header
+            axios.defaults.headers.common['Authorization'] = `Bearer ${authToken}`;
+
+            return { success: true, userType: 'admin' };
+          }
+        } catch (adminError) {
+          // Si l'admin échoue, on continue avec apporteur
+          if (!adminError.response || adminError.response.status !== 401) {
+            throw adminError;
+          }
+        }
+      }
+
+      // Essayer la connexion apporteur (email ou téléphone)
       try {
-        const adminResponse = await axios.post(`${API_URL}/api/auth/login`, {
-          email,
+        const apporteurResponse = await axios.post(`${API_URL}/api/apporteur/login`, {
+          identifier,
           password
         });
 
-        if (adminResponse.data.success) {
-          const { token: authToken, admin } = adminResponse.data;
+        if (apporteurResponse.data.success) {
+          const { token: authToken, apporteur } = apporteurResponse.data;
 
           // Store in localStorage
           localStorage.setItem('token', authToken);
-          localStorage.setItem('user', JSON.stringify(admin));
-          localStorage.setItem('userType', 'admin');
+          localStorage.setItem('user', JSON.stringify(apporteur));
+          localStorage.setItem('userType', 'apporteur');
 
           // Update state
           setToken(authToken);
-          setUser(admin);
-          setUserType('admin');
+          setUser(apporteur);
+          setUserType('apporteur');
 
           // Set axios default header
           axios.defaults.headers.common['Authorization'] = `Bearer ${authToken}`;
 
-          return { success: true, userType: 'admin' };
+          return { success: true, userType: 'apporteur' };
         }
-      } catch (adminError) {
-        // Si l'admin échoue avec 401, essayer apporteur
-        if (adminError.response && adminError.response.status === 401) {
-          // Essayer la connexion apporteur
-          try {
-            const apporteurResponse = await axios.post(`${API_URL}/api/apporteur/login`, {
-              email,
-              password
-            });
-
-            if (apporteurResponse.data.success) {
-              const { token: authToken, apporteur } = apporteurResponse.data;
-
-              // Store in localStorage
-              localStorage.setItem('token', authToken);
-              localStorage.setItem('user', JSON.stringify(apporteur));
-              localStorage.setItem('userType', 'apporteur');
-
-              // Update state
-              setToken(authToken);
-              setUser(apporteur);
-              setUserType('apporteur');
-
-              // Set axios default header
-              axios.defaults.headers.common['Authorization'] = `Bearer ${authToken}`;
-
-              return { success: true, userType: 'apporteur' };
-            }
-          } catch (apporteurError) {
-            // Les deux ont échoué
-            return {
-              success: false,
-              message: 'Email ou mot de passe incorrect'
-            };
-          }
-        } else {
-          throw adminError;
-        }
+      } catch (apporteurError) {
+        return {
+          success: false,
+          message: 'Identifiants incorrects'
+        };
       }
 
       return {
         success: false,
-        message: 'Email ou mot de passe incorrect'
+        message: 'Identifiants incorrects'
       };
     } catch (error) {
       console.error('Login error:', error);
@@ -125,7 +130,7 @@ export const AuthProvider = ({ children }) => {
       if (error.response) {
         return {
           success: false,
-          message: error.response.data.message || 'Email ou mot de passe incorrect'
+          message: error.response.data.message || 'Identifiants incorrects'
         };
       } else if (error.request) {
         return {
@@ -141,12 +146,55 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Admin se connecte en tant qu'apporteur
+  const loginAsApporteur = async (apporteurIdentifier, adminEmail, adminPassword) => {
+    try {
+      const response = await axios.post(`${API_URL}/api/apporteur/admin-login-as`, {
+        apporteurIdentifier,
+        adminEmail,
+        adminPassword
+      });
+
+      if (response.data.success) {
+        const { token: authToken, apporteur, isImpersonation, adminName } = response.data;
+
+        // Store in localStorage
+        localStorage.setItem('token', authToken);
+        localStorage.setItem('user', JSON.stringify({ ...apporteur, isImpersonation, adminName }));
+        localStorage.setItem('userType', 'apporteur');
+        localStorage.setItem('isImpersonation', 'true');
+
+        // Update state
+        setToken(authToken);
+        setUser({ ...apporteur, isImpersonation, adminName });
+        setUserType('apporteur');
+
+        // Set axios default header
+        axios.defaults.headers.common['Authorization'] = `Bearer ${authToken}`;
+
+        return { success: true, userType: 'apporteur', isImpersonation: true };
+      }
+
+      return {
+        success: false,
+        message: response.data.message || 'Erreur de connexion'
+      };
+    } catch (error) {
+      console.error('Login as apporteur error:', error);
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Erreur lors de la connexion'
+      };
+    }
+  };
+
   // Logout function
   const logout = () => {
     // Clear localStorage
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     localStorage.removeItem('userType');
+    localStorage.removeItem('isImpersonation');
 
     // Clear state
     setToken(null);
@@ -163,11 +211,13 @@ export const AuthProvider = ({ children }) => {
     userType,
     loading,
     login,
+    loginAsApporteur,
     logout,
     checkAuth,
     isAuthenticated: !!token && !!user,
     isAdmin: userType === 'admin',
-    isApporteur: userType === 'apporteur'
+    isApporteur: userType === 'apporteur',
+    isImpersonation: user?.isImpersonation || false
   };
 
   return (
