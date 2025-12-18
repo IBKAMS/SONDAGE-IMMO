@@ -22,6 +22,36 @@ const Logements = () => {
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
+  // Protection contre le téléchargement des PDF
+  useEffect(() => {
+    if (!selectedPlan) return;
+
+    const handleKeyDown = (e) => {
+      // Bloquer Ctrl+S, Ctrl+P, Ctrl+Shift+S
+      if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S' || e.key === 'p' || e.key === 'P')) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
+    };
+
+    const handleContextMenu = (e) => {
+      // Bloquer le clic droit sur la zone du PDF
+      if (e.target.closest('.pdf-viewer-content')) {
+        e.preventDefault();
+        return false;
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('contextmenu', handleContextMenu);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('contextmenu', handleContextMenu);
+    };
+  }, [selectedPlan]);
+
   const [filters, setFilters] = useState({
     type: 'tous',
     prixMin: '',
@@ -556,10 +586,13 @@ const Logements = () => {
                     </div>
                   </div>
                   <div className="pdf-viewer-content">
+                    {/* Overlay transparent pour bloquer clic droit et interactions directes */}
+                    <div className="pdf-protection-overlay"></div>
                     <iframe
-                      src={`/plans/${selectedPlan}.pdf`}
+                      src={`/plans/${selectedPlan}.pdf#toolbar=0&navpanes=0&scrollbar=1&view=FitH`}
                       title={`Plan ${selectedPlan}`}
                       className="pdf-iframe"
+                      onContextMenu={(e) => e.preventDefault()}
                     />
                   </div>
                 </motion.div>
