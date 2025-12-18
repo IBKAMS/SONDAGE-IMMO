@@ -113,11 +113,8 @@ exports.viewPlan = async (req, res) => {
       return res.status(404).json({ error: 'Plan non trouvé' });
     }
 
-    // Extraire le public_id sans l'extension .pdf si présente
-    let publicId = plan.cloudinaryId;
-    if (publicId.endsWith('.pdf')) {
-      publicId = publicId.slice(0, -4);
-    }
+    // Pour les fichiers raw, le public_id INCLUT l'extension
+    const publicId = plan.cloudinaryId;
     console.log('Public ID utilisé:', publicId);
 
     // Utiliser l'API Admin pour obtenir les détails du fichier avec une URL fraîche
