@@ -117,15 +117,13 @@ exports.viewPlan = async (req, res) => {
     const publicId = plan.cloudinaryId;
     console.log('Public ID utilisé:', publicId);
 
-    // Générer une URL signée (valide 1 heure) pour contourner la restriction 401
-    const signedUrl = cloudinary.url(publicId, {
+    // Utiliser private_download_url pour générer une URL de téléchargement authentifiée
+    const signedUrl = cloudinary.utils.private_download_url(publicId, '', {
       resource_type: 'raw',
-      sign_url: true,
-      secure: true,
-      type: 'upload'
+      expires_at: Math.floor(Date.now() / 1000) + 3600 // expire dans 1 heure
     });
 
-    console.log('URL signée générée:', signedUrl);
+    console.log('URL privée générée:', signedUrl);
 
     // Headers pour permettre l'affichage dans iframe
     res.setHeader('Content-Type', 'application/pdf');
