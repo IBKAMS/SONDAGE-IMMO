@@ -8,7 +8,7 @@
   position: relative;
   height: 50vh;
   min-height: 400px;
-  background: linear-gradient(135deg, #5865F2 0%, #8B5FBD 50%, #C850C0 100%);
+  background: linear-gradient(135deg, #6B0F75 0%, #82128E 50%, #9C1AAB 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -82,7 +82,7 @@
 }
 
 .conclusion-section {
-  background: linear-gradient(135deg, #5865F2 0%, #8B5FBD 50%, #C850C0 100%);
+  background: linear-gradient(135deg, #6B0F75 0%, #82128E 50%, #9C1AAB 100%);
   color: var(--white);
 }
 
@@ -162,9 +162,9 @@
 .deficit-box,
 .caracteristiques-box,
 .demande-box {
-  background: linear-gradient(135deg, rgba(88, 101, 242, 0.05) 0%, rgba(200, 80, 192, 0.05) 100%);
+  background: linear-gradient(135deg, rgba(88, 101, 242, 0.05) 0%, rgba(156, 26, 171, 0.05) 100%);
   padding: var(--spacing-xl);
-  border-left: 5px solid #5865F2;
+  border-left: 5px solid #6B0F75;
   border-radius: var(--radius-lg);
   margin: var(--spacing-xl) 0;
 }
@@ -174,7 +174,7 @@
 .deficit-box h3,
 .caracteristiques-box h3,
 .demande-box h3 {
-  color: #5865F2;
+  color: #6B0F75;
   font-size: 1.5rem;
   margin-bottom: var(--spacing-md);
   margin-top: 0;
@@ -216,7 +216,7 @@
   text-align: center;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
   transition: all var(--transition-normal);
-  border-top: 5px solid #5865F2;
+  border-top: 5px solid #6B0F75;
 }
 
 .stat-card-eco:hover {
@@ -226,7 +226,7 @@
 
 .stat-card-eco h3 {
   font-size: 3rem;
-  color: #5865F2;
+  color: #6B0F75;
   margin-bottom: var(--spacing-md);
   font-weight: 900;
 }
@@ -269,7 +269,7 @@
   left: 10%;
   right: 10%;
   height: 3px;
-  background: linear-gradient(90deg, #5865F2 0%, #8B5FBD 50%, #C850C0 100%);
+  background: linear-gradient(90deg, #6B0F75 0%, #82128E 50%, #9C1AAB 100%);
   z-index: 0;
 }
 
@@ -292,7 +292,7 @@
 .timeline-item .year {
   font-size: 1.1rem;
   font-weight: 700;
-  color: #5865F2;
+  color: #6B0F75;
 }
 
 .timeline-item .value {
@@ -327,7 +327,7 @@
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
   transition: all var(--transition-normal);
-  border-left: 4px solid #5865F2;
+  border-left: 4px solid #6B0F75;
 }
 
 .atout-card:hover {
@@ -404,7 +404,7 @@
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
   transition: all var(--transition-normal);
-  border-top: 4px solid #5865F2;
+  border-top: 4px solid #6B0F75;
 }
 
 .pestel-card:hover {
@@ -414,7 +414,7 @@
 
 .pestel-card h3 {
   font-size: 1.4rem;
-  color: #5865F2;
+  color: #6B0F75;
   margin-bottom: var(--spacing-lg);
   font-weight: 700;
 }
@@ -572,14 +572,14 @@
 }
 
 .prix-row.header {
-  background: linear-gradient(135deg, #5865F2 0%, #8B5FBD 100%);
+  background: linear-gradient(135deg, #6B0F75 0%, #82128E 100%);
   color: var(--white);
   font-weight: 700;
   font-size: 1.1rem;
 }
 
 .prix-row.header:hover {
-  background: linear-gradient(135deg, #5865F2 0%, #8B5FBD 100%);
+  background: linear-gradient(135deg, #6B0F75 0%, #82128E 100%);
 }
 
 .prix-row.highlighted {
@@ -635,8 +635,8 @@
 }
 
 .loyer-item.highlighted {
-  background: linear-gradient(135deg, rgba(88, 101, 242, 0.1) 0%, rgba(200, 80, 192, 0.1) 100%);
-  border-left: 5px solid #5865F2;
+  background: linear-gradient(135deg, rgba(88, 101, 242, 0.1) 0%, rgba(156, 26, 171, 0.1) 100%);
+  border-left: 5px solid #6B0F75;
 }
 
 .loyer-item .type {
@@ -681,7 +681,7 @@
   text-align: center;
   box-shadow: var(--shadow-md);
   transition: all var(--transition-normal);
-  border-top: 4px solid #5865F2;
+  border-top: 4px solid #6B0F75;
 }
 
 .cout-card:hover {
@@ -690,7 +690,7 @@
 }
 
 .cout-card.highlighted {
-  background: linear-gradient(135deg, rgba(88, 101, 242, 0.1) 0%, rgba(200, 80, 192, 0.1) 100%);
+  background: linear-gradient(135deg, rgba(88, 101, 242, 0.1) 0%, rgba(156, 26, 171, 0.1) 100%);
   border-top-color: #FF5722;
   border-top-width: 5px;
 }
@@ -811,7 +811,7 @@
   position: relative;
   width: 100%;
   padding-top: 56.25%; /* 16:9 Aspect Ratio */
-  background: linear-gradient(135deg, #27AE60 0%, #3498DB 50%, #8B5FBD 100%);
+  background: linear-gradient(135deg, #27AE60 0%, #3498DB 50%, #82128E 100%);
   overflow: hidden;
 }
 

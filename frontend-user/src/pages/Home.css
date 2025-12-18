@@ -7,7 +7,7 @@
   position: relative;
   height: 85vh;
   min-height: 600px;
-  background: linear-gradient(135deg, #5865F2 0%, #8B5FBD 50%, #C850C0 100%);
+  background: linear-gradient(135deg, #6B0F75 0%, #82128E 50%, #9C1AAB 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -132,7 +132,7 @@
 
 .stat-icon {
   font-size: 3.5rem;
-  color: #5865F2;
+  color: #6B0F75;
   margin-bottom: var(--spacing-lg);
   filter: drop-shadow(0 4px 8px rgba(88, 101, 242, 0.3));
   transition: all var(--transition-normal);
@@ -140,7 +140,7 @@
 
 .stat-card:hover .stat-icon {
   transform: scale(1.1) rotateY(10deg);
-  color: #8B5FBD;
+  color: #82128E;
 }
 
 .stat-card h3 {
@@ -208,7 +208,7 @@
 
 /* CTA Section */
 .cta-section {
-  background: linear-gradient(135deg, #5865F2 0%, #8B5FBD 50%, #C850C0 100%);
+  background: linear-gradient(135deg, #6B0F75 0%, #82128E 50%, #9C1AAB 100%);
   padding: var(--spacing-xxl) 0;
 }
 
