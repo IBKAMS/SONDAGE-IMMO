@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FaUpload, FaCheckCircle, FaVideo, FaPlay, FaTimes, FaDraftingCompass, FaImage, FaHome, FaBuilding } from 'react-icons/fa';
+import { FaUpload, FaCheckCircle, FaVideo, FaPlay, FaTimes, FaDraftingCompass, FaImage, FaHome, FaBuilding, FaFilePdf } from 'react-icons/fa';
 import API_URL from '../config';
 import { useCloudinaryWidget } from '../hooks/useCloudinaryWidget';
 import './Videos.css';
@@ -27,6 +27,11 @@ const Videos = () => {
     'projet-architecte-2': { file: null, name: '', url: '' },
     'projet-architecte-3': { file: null, name: '', url: '' },
     'projet-architecte-4': { file: null, name: '', url: '' }
+  });
+  const [plansArchitecturaux, setPlansArchitecturaux] = useState({
+    'villa-duplex-4p': { file: null, name: '', url: '' },
+    'villa-duplex-5p': { file: null, name: '', url: '' },
+    'villa-triplex-8p': { file: null, name: '', url: '' }
   });
   const [loading, setLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({});
@@ -61,6 +66,12 @@ const Videos = () => {
     'projet-architecte-2': useRef(null),
     'projet-architecte-3': useRef(null),
     'projet-architecte-4': useRef(null)
+  };
+
+  const planInputRefs = {
+    'villa-duplex-4p': useRef(null),
+    'villa-duplex-5p': useRef(null),
+    'villa-triplex-8p': useRef(null)
   };
 
   // Charger les vidéos existantes au montage du composant
@@ -175,6 +186,34 @@ const Videos = () => {
       }
     };
     fetchArchitecteImages();
+  }, []);
+
+  // Charger les plans architecturaux existants au montage du composant
+  useEffect(() => {
+    const fetchPlans = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/plans-architecturaux`);
+        if (response.ok) {
+          const data = await response.json();
+          const updatedPlans = {};
+          Object.keys(data).forEach(type => {
+            if (data[type] && data[type].originalName && data[type].url) {
+              updatedPlans[type] = {
+                file: null,
+                name: data[type].originalName,
+                url: data[type].url
+              };
+            }
+          });
+          if (Object.keys(updatedPlans).length > 0) {
+            setPlansArchitecturaux(prev => ({ ...prev, ...updatedPlans }));
+          }
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement des plans architecturaux:', error);
+      }
+    };
+    fetchPlans();
   }, []);
 
   const handleFileSelect = (type) => (e) => {
@@ -387,6 +426,57 @@ const Videos = () => {
     }
 
     setArchitecteImages(prev => ({
+      ...prev,
+      [type]: { file: null, name: '', url: '' }
+    }));
+  };
+
+  // Fonctions pour les plans architecturaux PDF
+  const handlePlanSelect = (type) => (e) => {
+    const file = e.target.files[0];
+    if (file && file.type === 'application/pdf') {
+      const planUrl = URL.createObjectURL(file);
+      setPlansArchitecturaux(prev => ({
+        ...prev,
+        [type]: { file, name: file.name, url: planUrl }
+      }));
+    } else {
+      alert('Veuillez sélectionner un fichier PDF valide');
+    }
+  };
+
+  const triggerPlanInput = (type) => {
+    planInputRefs[type].current.click();
+  };
+
+  const removePlan = async (type) => {
+    const isUploadedPlan = plansArchitecturaux[type].url && plansArchitecturaux[type].url.startsWith('http');
+
+    if (isUploadedPlan) {
+      if (!window.confirm(`Voulez-vous vraiment supprimer ce plan ? Il ne sera plus visible dans la rubrique Logements du site utilisateur.`)) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_URL}/api/plans-architecturaux/${type}`, {
+          method: 'DELETE'
+        });
+
+        if (response.ok) {
+          console.log(`Plan ${type} supprimé du serveur`);
+        } else {
+          throw new Error('Erreur lors de la suppression');
+        }
+      } catch (error) {
+        console.error(`Erreur lors de la suppression du plan ${type}:`, error);
+        alert('Erreur lors de la suppression du plan');
+        return;
+      }
+    } else if (plansArchitecturaux[type].url) {
+      URL.revokeObjectURL(plansArchitecturaux[type].url);
+    }
+
+    setPlansArchitecturaux(prev => ({
       ...prev,
       [type]: { file: null, name: '', url: '' }
     }));
@@ -814,9 +904,72 @@ const Videos = () => {
       }
     }
 
+    // Upload des plans architecturaux PDF via Cloudinary
+    for (const [type, plan] of Object.entries(plansArchitecturaux)) {
+      if (plan.file) {
+        const uploadPlanPromise = (async () => {
+          try {
+            // Obtenir la signature Cloudinary
+            const signatureResponse = await fetch(`${API_URL}/api/upload/signature`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' }
+            });
+            const signatureData = await signatureResponse.json();
+            const { signature, timestamp, cloudName, apiKey, folder } = signatureData;
+
+            // Upload vers Cloudinary (raw pour les PDF)
+            const formData = new FormData();
+            formData.append('file', plan.file);
+            formData.append('api_key', apiKey);
+            formData.append('timestamp', timestamp);
+            formData.append('signature', signature);
+            formData.append('folder', folder + '/plans');
+
+            const cloudinaryResponse = await fetch(
+              `https://api.cloudinary.com/v1_1/${cloudName}/raw/upload`,
+              { method: 'POST', body: formData }
+            );
+            const cloudinaryData = await cloudinaryResponse.json();
+
+            if (cloudinaryData.secure_url) {
+              // Sauvegarder dans MongoDB
+              const saveResponse = await fetch(`${API_URL}/api/plans-architecturaux`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  type: type,
+                  url: cloudinaryData.secure_url,
+                  originalName: plan.file.name,
+                  size: plan.file.size,
+                  cloudinaryId: cloudinaryData.public_id
+                })
+              });
+
+              if (saveResponse.ok) {
+                console.log(`Plan ${type} uploadé avec succès`);
+                setPlansArchitecturaux(prev => ({
+                  ...prev,
+                  [type]: {
+                    file: null,
+                    name: plan.file.name,
+                    url: cloudinaryData.secure_url
+                  }
+                }));
+              }
+            }
+          } catch (error) {
+            console.error(`Erreur upload plan ${type}:`, error);
+            throw error;
+          }
+        })();
+
+        uploadPromises.push(uploadPlanPromise);
+      }
+    }
+
     try {
       await Promise.all(uploadPromises);
-      alert('Vidéos et images enregistrées avec succès !');
+      alert('Vidéos, images et plans enregistrés avec succès !');
     } catch (error) {
       alert('Erreur lors de l\'enregistrement des vidéos et images');
     } finally {
@@ -931,6 +1084,30 @@ const Videos = () => {
       description: 'Image du quatrième projet - Rubrique Architecte',
       icon: <FaDraftingCompass />,
       color: '#10B981'
+    }
+  ];
+
+  const planCards = [
+    {
+      type: 'villa-duplex-4p',
+      title: 'Plans Villa Duplex 4 Pièces',
+      description: 'Plans architecturaux de la Villa Duplex 4 pièces',
+      icon: <FaFilePdf />,
+      color: '#DC2626'
+    },
+    {
+      type: 'villa-duplex-5p',
+      title: 'Plans Villa Duplex 5 Pièces',
+      description: 'Plans architecturaux de la Villa Duplex 5 pièces',
+      icon: <FaFilePdf />,
+      color: '#EA580C'
+    },
+    {
+      type: 'villa-triplex-8p',
+      title: 'Plans Villa Triplex 8 Pièces',
+      description: 'Plans architecturaux de la Villa Triplex 8 pièces',
+      icon: <FaFilePdf />,
+      color: '#7C3AED'
     }
   ];
 
@@ -1247,6 +1424,87 @@ const Videos = () => {
                 disabled={!architecteImages[card.type].url}
               >
                 <FaUpload /> {architecteImages[card.type].url ? 'Remplacer' : 'Charger'}
+              </button>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      <div className="videos-header" style={{ marginTop: '3rem' }}>
+        <h2 style={{ fontSize: '1.5rem', margin: 0 }}>Plans Architecturaux des Villas</h2>
+        <p style={{ margin: '0.5rem 0 0 0' }}>Chargez les plans PDF de chaque type de villa - affichés dans la rubrique "Logements" du site utilisateur</p>
+      </div>
+
+      <div className="videos-container">
+        {planCards.map((card, index) => (
+          <motion.div
+            key={card.type}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: index * 0.1 }}
+            className="video-card"
+            style={{ '--card-color': card.color }}
+          >
+            <div className="video-card-header">
+              <div className="video-card-icon">{card.icon}</div>
+              <div className="video-card-title">
+                <h3>{card.title}</h3>
+                <p>{card.description}</p>
+              </div>
+            </div>
+
+            <div className="video-card-body">
+              {!plansArchitecturaux[card.type].url ? (
+                <div className="upload-zone" onClick={() => triggerPlanInput(card.type)}>
+                  <FaUpload className="upload-icon" />
+                  <p className="upload-text">Cliquez pour sélectionner un fichier PDF</p>
+                  <span className="upload-hint">Plans architecturaux au format PDF</span>
+                  <input
+                    ref={planInputRefs[card.type]}
+                    type="file"
+                    accept="application/pdf"
+                    onChange={handlePlanSelect(card.type)}
+                    style={{ display: 'none' }}
+                  />
+                </div>
+              ) : (
+                <div className="video-preview">
+                  <div className="pdf-preview" style={{
+                    width: '100%',
+                    height: '200px',
+                    backgroundColor: '#f3f4f6',
+                    borderRadius: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexDirection: 'column',
+                    gap: '10px'
+                  }}>
+                    <FaFilePdf style={{ fontSize: '48px', color: card.color }} />
+                    <span style={{ color: '#6b7280', fontSize: '14px' }}>Fichier PDF chargé</span>
+                  </div>
+                  <div className="video-info">
+                    <FaCheckCircle className="check-icon" />
+                    <span className="video-name">{plansArchitecturaux[card.type].name}</span>
+                    <button
+                      className="btn-remove"
+                      onClick={() => removePlan(card.type)}
+                      title="Supprimer le plan"
+                    >
+                      <FaTimes />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="video-card-footer">
+              <button
+                className="btn-upload-action"
+                onClick={() => triggerPlanInput(card.type)}
+                disabled={!plansArchitecturaux[card.type].url}
+              >
+                <FaUpload /> {plansArchitecturaux[card.type].url ? 'Remplacer' : 'Charger'}
               </button>
             </div>
           </motion.div>

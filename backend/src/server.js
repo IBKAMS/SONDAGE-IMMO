@@ -114,6 +114,7 @@ app.use('/api/option-achat-content', require('./routes/optionAchatContent'));
 app.use('/api/questionnaire-content', require('./routes/questionnaireContent'));
 app.use('/api/footer-content', require('./routes/footerContent'));
 app.use('/api/dashboard-stats', require('./routes/dashboardStats'));
+app.use('/api/plans-architecturaux', require('./routes/planArchitecturalRoutes'));
 
 // Route de test
 app.get('/api/health', (req, res) => {

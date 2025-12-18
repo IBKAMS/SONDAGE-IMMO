@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   FaBed, FaBath, FaRulerCombined, FaCar, FaMapMarkerAlt,
-  FaFilter, FaTimes, FaCheck
+  FaFilter, FaTimes, FaCheck, FaFilePdf, FaChevronLeft, FaChevronRight, FaExpand, FaCompress
 } from 'react-icons/fa';
 import API_URL from '../config';
 import './Logements.css';
@@ -18,6 +18,9 @@ const Logements = () => {
   const [imagesLoaded, setImagesLoaded] = useState(false);
   const [content, setContent] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [plansArchitecturaux, setPlansArchitecturaux] = useState({});
+  const [selectedPlan, setSelectedPlan] = useState(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const [filters, setFilters] = useState({
     type: 'tous',
@@ -84,6 +87,13 @@ const Logements = () => {
             }
           });
           setApiImages(formattedImages);
+        }
+
+        // Charger les plans architecturaux
+        const plansResponse = await fetch(`${API_URL}/api/plans-architecturaux`);
+        if (plansResponse.ok) {
+          const plansData = await plansResponse.json();
+          setPlansArchitecturaux(plansData);
         }
       } catch (error) {
         console.error('Erreur lors du chargement des données:', error);
@@ -442,6 +452,129 @@ const Logements = () => {
           </motion.div>
         )}
       </div>
+
+      {/* Section Plans Architecturaux */}
+      {(plansArchitecturaux['villa-duplex-4p'] || plansArchitecturaux['villa-duplex-5p'] || plansArchitecturaux['villa-triplex-8p']) && (
+        <section className="section plans-section">
+          <div className="container">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="plans-header"
+            >
+              <h2>Plans Architecturaux</h2>
+              <p>Découvrez les plans détaillés de chaque type de villa</p>
+            </motion.div>
+
+            <div className="plans-grid">
+              {plansArchitecturaux['villa-duplex-4p'] && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: 0.1 }}
+                  className={`plan-card ${selectedPlan === 'villa-duplex-4p' ? 'active' : ''}`}
+                  onClick={() => setSelectedPlan('villa-duplex-4p')}
+                >
+                  <div className="plan-icon">
+                    <FaFilePdf />
+                  </div>
+                  <h3>Villa Duplex 4 Pièces</h3>
+                  <p>Plans architecturaux complets</p>
+                  <button className="btn-view-plan">
+                    Voir les plans
+                  </button>
+                </motion.div>
+              )}
+
+              {plansArchitecturaux['villa-duplex-5p'] && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                  className={`plan-card ${selectedPlan === 'villa-duplex-5p' ? 'active' : ''}`}
+                  onClick={() => setSelectedPlan('villa-duplex-5p')}
+                >
+                  <div className="plan-icon">
+                    <FaFilePdf />
+                  </div>
+                  <h3>Villa Duplex 5 Pièces</h3>
+                  <p>Plans architecturaux complets</p>
+                  <button className="btn-view-plan">
+                    Voir les plans
+                  </button>
+                </motion.div>
+              )}
+
+              {plansArchitecturaux['villa-triplex-8p'] && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: 0.3 }}
+                  className={`plan-card ${selectedPlan === 'villa-triplex-8p' ? 'active' : ''}`}
+                  onClick={() => setSelectedPlan('villa-triplex-8p')}
+                >
+                  <div className="plan-icon">
+                    <FaFilePdf />
+                  </div>
+                  <h3>Villa Triplex 8 Pièces</h3>
+                  <p>Plans architecturaux complets</p>
+                  <button className="btn-view-plan">
+                    Voir les plans
+                  </button>
+                </motion.div>
+              )}
+            </div>
+
+            {/* Viewer PDF */}
+            <AnimatePresence>
+              {selectedPlan && plansArchitecturaux[selectedPlan] && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className={`pdf-viewer-container ${isFullscreen ? 'fullscreen' : ''}`}
+                >
+                  <div className="pdf-viewer-header">
+                    <h3>{plansArchitecturaux[selectedPlan].titre || `Plans ${selectedPlan}`}</h3>
+                    <div className="pdf-viewer-controls">
+                      <button
+                        className="btn-fullscreen"
+                        onClick={() => setIsFullscreen(!isFullscreen)}
+                        title={isFullscreen ? 'Quitter le plein écran' : 'Plein écran'}
+                      >
+                        {isFullscreen ? <FaCompress /> : <FaExpand />}
+                      </button>
+                      <button
+                        className="btn-close-viewer"
+                        onClick={() => {
+                          setSelectedPlan(null);
+                          setIsFullscreen(false);
+                        }}
+                        title="Fermer"
+                      >
+                        <FaTimes />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="pdf-viewer-content">
+                    <iframe
+                      src={`${plansArchitecturaux[selectedPlan].url}#toolbar=0&navpanes=0&scrollbar=1&view=FitH`}
+                      title={`Plan ${selectedPlan}`}
+                      className="pdf-iframe"
+                    />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </section>
+      )}
 
       {/* Call to Action */}
       <section className="section cta-section">
