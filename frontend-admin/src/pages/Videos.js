@@ -915,21 +915,25 @@ const Videos = () => {
               headers: { 'Content-Type': 'application/json' }
             });
             const signatureData = await signatureResponse.json();
-            const { signature, timestamp, cloudName, apiKey, folder } = signatureData;
+            const { signature, timestamp, cloudName, apiKey, folder, source } = signatureData;
 
             // Upload vers Cloudinary (raw pour les PDF)
+            // IMPORTANT: Le folder doit correspondre exactement à celui utilisé dans la signature
             const formData = new FormData();
             formData.append('file', plan.file);
             formData.append('api_key', apiKey);
             formData.append('timestamp', timestamp);
             formData.append('signature', signature);
-            formData.append('folder', folder + '/plans');
+            formData.append('folder', folder);
+            formData.append('source', source);
 
             const cloudinaryResponse = await fetch(
               `https://api.cloudinary.com/v1_1/${cloudName}/raw/upload`,
               { method: 'POST', body: formData }
             );
             const cloudinaryData = await cloudinaryResponse.json();
+
+            console.log('Cloudinary response for plan:', cloudinaryData);
 
             if (cloudinaryData.secure_url) {
               // Sauvegarder dans MongoDB
@@ -945,6 +949,9 @@ const Videos = () => {
                 })
               });
 
+              const saveData = await saveResponse.json();
+              console.log('MongoDB save response:', saveData);
+
               if (saveResponse.ok) {
                 console.log(`Plan ${type} uploadé avec succès`);
                 setPlansArchitecturaux(prev => ({
@@ -955,7 +962,12 @@ const Videos = () => {
                     url: cloudinaryData.secure_url
                   }
                 }));
+              } else {
+                console.error('Erreur sauvegarde MongoDB:', saveData);
               }
+            } else {
+              console.error('Erreur Cloudinary:', cloudinaryData);
+              throw new Error(cloudinaryData.error?.message || 'Erreur upload Cloudinary');
             }
           } catch (error) {
             console.error(`Erreur upload plan ${type}:`, error);
