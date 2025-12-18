@@ -87,7 +87,9 @@ exports.viewPlan = async (req, res) => {
     if (result && result.secure_url) {
       // Headers pour permettre l'affichage dans iframe
       res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `inline; filename="${plan.originalName}"`);
+      // Encoder le nom de fichier pour éviter les erreurs avec les caractères spéciaux (accents, etc.)
+      const safeFilename = encodeURIComponent(plan.originalName).replace(/'/g, '%27');
+      res.setHeader('Content-Disposition', `inline; filename*=UTF-8''${safeFilename}`);
       res.setHeader('Access-Control-Allow-Origin', '*');
       res.setHeader('X-Frame-Options', 'ALLOWALL');
       res.setHeader('Content-Security-Policy', "frame-ancestors *");
