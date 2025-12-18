@@ -34,9 +34,14 @@ const Architecte = () => {
           if (videoData && videoData.url) {
             // Si l'URL commence par http/https, c'est une URL complète (Cloudinary)
             // Sinon, c'est une URL relative et on ajoute API_URL
-            const url = videoData.url.startsWith('http')
+            let url = videoData.url.startsWith('http')
               ? videoData.url
               : `${API_URL}${videoData.url}`;
+            // Ajouter transformation vc_h264 pour assurer la compatibilité navigateur
+            // (convertit H.265/HEVC en H.264 qui est supporté par tous les navigateurs)
+            if (url.includes('cloudinary.com') && url.includes('/upload/')) {
+              url = url.replace('/upload/', '/upload/vc_h264/');
+            }
             setVideoUrl(url);
           }
         }

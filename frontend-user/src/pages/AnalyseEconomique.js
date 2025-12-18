@@ -20,7 +20,13 @@ const AnalyseEconomique = () => {
           // Vérifier que data et data.url existent
           if (data && data.url) {
             // URL Cloudinary complète, pas besoin d'ajouter API_URL
-            setVideoUrl(data.url);
+            // Ajouter transformation vc_h264 pour assurer la compatibilité navigateur
+            // (convertit H.265/HEVC en H.264 qui est supporté par tous les navigateurs)
+            let url = data.url;
+            if (url.includes('cloudinary.com') && url.includes('/upload/')) {
+              url = url.replace('/upload/', '/upload/vc_h264/');
+            }
+            setVideoUrl(url);
           }
         }
       } catch (error) {
