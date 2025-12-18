@@ -453,86 +453,79 @@ const Logements = () => {
         )}
       </div>
 
-      {/* Section Plans Architecturaux */}
-      {(plansArchitecturaux['villa-duplex-4p'] || plansArchitecturaux['villa-duplex-5p'] || plansArchitecturaux['villa-triplex-8p']) && (
-        <section className="section plans-section">
-          <div className="container">
+      {/* Section Plans Architecturaux - Fichiers PDF locaux */}
+      <section className="section plans-section">
+        <div className="container">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="plans-header"
+          >
+            <h2>Plans Architecturaux</h2>
+            <p>Découvrez les plans détaillés de chaque type de villa</p>
+          </motion.div>
+
+          <div className="plans-grid">
             <motion.div
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-              className="plans-header"
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className={`plan-card ${selectedPlan === 'villa-duplex-4p' ? 'active' : ''}`}
+              onClick={() => setSelectedPlan('villa-duplex-4p')}
             >
-              <h2>Plans Architecturaux</h2>
-              <p>Découvrez les plans détaillés de chaque type de villa</p>
+              <div className="plan-icon">
+                <FaFilePdf />
+              </div>
+              <h3>Villa Duplex 4 Pièces</h3>
+              <p>Plans architecturaux complets</p>
+              <button className="btn-view-plan">
+                Voir les plans
+              </button>
             </motion.div>
 
-            <div className="plans-grid">
-              {plansArchitecturaux['villa-duplex-4p'] && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: 0.1 }}
-                  className={`plan-card ${selectedPlan === 'villa-duplex-4p' ? 'active' : ''}`}
-                  onClick={() => setSelectedPlan('villa-duplex-4p')}
-                >
-                  <div className="plan-icon">
-                    <FaFilePdf />
-                  </div>
-                  <h3>Villa Duplex 4 Pièces</h3>
-                  <p>Plans architecturaux complets</p>
-                  <button className="btn-view-plan">
-                    Voir les plans
-                  </button>
-                </motion.div>
-              )}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className={`plan-card ${selectedPlan === 'villa-duplex-5p' ? 'active' : ''}`}
+              onClick={() => setSelectedPlan('villa-duplex-5p')}
+            >
+              <div className="plan-icon">
+                <FaFilePdf />
+              </div>
+              <h3>Villa Duplex 5 Pièces</h3>
+              <p>Plans architecturaux complets</p>
+              <button className="btn-view-plan">
+                Voir les plans
+              </button>
+            </motion.div>
 
-              {plansArchitecturaux['villa-duplex-5p'] && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: 0.2 }}
-                  className={`plan-card ${selectedPlan === 'villa-duplex-5p' ? 'active' : ''}`}
-                  onClick={() => setSelectedPlan('villa-duplex-5p')}
-                >
-                  <div className="plan-icon">
-                    <FaFilePdf />
-                  </div>
-                  <h3>Villa Duplex 5 Pièces</h3>
-                  <p>Plans architecturaux complets</p>
-                  <button className="btn-view-plan">
-                    Voir les plans
-                  </button>
-                </motion.div>
-              )}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className={`plan-card ${selectedPlan === 'villa-triplex-8p' ? 'active' : ''}`}
+              onClick={() => setSelectedPlan('villa-triplex-8p')}
+            >
+              <div className="plan-icon">
+                <FaFilePdf />
+              </div>
+              <h3>Villa Triplex 8 Pièces</h3>
+              <p>Plans architecturaux complets</p>
+              <button className="btn-view-plan">
+                Voir les plans
+              </button>
+            </motion.div>
+          </div>
 
-              {plansArchitecturaux['villa-triplex-8p'] && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: 0.3 }}
-                  className={`plan-card ${selectedPlan === 'villa-triplex-8p' ? 'active' : ''}`}
-                  onClick={() => setSelectedPlan('villa-triplex-8p')}
-                >
-                  <div className="plan-icon">
-                    <FaFilePdf />
-                  </div>
-                  <h3>Villa Triplex 8 Pièces</h3>
-                  <p>Plans architecturaux complets</p>
-                  <button className="btn-view-plan">
-                    Voir les plans
-                  </button>
-                </motion.div>
-              )}
-            </div>
-
-            {/* Viewer PDF */}
-            <AnimatePresence>
-              {selectedPlan && plansArchitecturaux[selectedPlan] && (
+          {/* Viewer PDF */}
+          <AnimatePresence>
+            {selectedPlan && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
@@ -541,7 +534,7 @@ const Logements = () => {
                   className={`pdf-viewer-container ${isFullscreen ? 'fullscreen' : ''}`}
                 >
                   <div className="pdf-viewer-header">
-                    <h3>{plansArchitecturaux[selectedPlan].titre || `Plans ${selectedPlan}`}</h3>
+                    <h3>Plans {selectedPlan.replace('villa-', 'Villa ').replace('-', ' ').replace('4p', '4 Pièces').replace('5p', '5 Pièces').replace('8p', '8 Pièces')}</h3>
                     <div className="pdf-viewer-controls">
                       <button
                         className="btn-fullscreen"
@@ -564,7 +557,7 @@ const Logements = () => {
                   </div>
                   <div className="pdf-viewer-content">
                     <iframe
-                      src={`${API_URL}/api/plans-architecturaux/view/${selectedPlan}`}
+                      src={`/plans/${selectedPlan}.pdf`}
                       title={`Plan ${selectedPlan}`}
                       className="pdf-iframe"
                     />
@@ -572,9 +565,8 @@ const Logements = () => {
                 </motion.div>
               )}
             </AnimatePresence>
-          </div>
-        </section>
-      )}
+        </div>
+      </section>
 
       {/* Call to Action */}
       <section className="section cta-section">
