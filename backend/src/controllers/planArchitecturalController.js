@@ -107,18 +107,28 @@ exports.viewPlan = async (req, res) => {
     console.log('viewPlan appelé pour type:', type);
 
     const plan = await PlanArchitectural.findOne({ type });
-    console.log('Plan trouvé:', plan ? { type: plan.type, url: plan.url, cloudinaryId: plan.cloudinaryId } : 'null');
+    console.log('Plan trouvé:', plan ? { type: plan.type, cloudinaryId: plan.cloudinaryId } : 'null');
 
-    if (!plan) {
+    if (!plan || !plan.cloudinaryId) {
       return res.status(404).json({ error: 'Plan non trouvé' });
     }
 
-    // Utiliser directement l'URL stockée (qui est l'URL Cloudinary)
-    const pdfUrl = plan.url;
-    console.log('URL PDF à récupérer:', pdfUrl);
+    // Extraire le public_id sans l'extension .pdf si présente
+    let publicId = plan.cloudinaryId;
+    if (publicId.endsWith('.pdf')) {
+      publicId = publicId.slice(0, -4);
+    }
+    console.log('Public ID utilisé:', publicId);
 
-    if (!pdfUrl) {
-      return res.status(404).json({ error: 'URL du plan non disponible' });
+    // Utiliser l'API Admin pour obtenir les détails du fichier avec une URL fraîche
+    const resourceInfo = await cloudinary.api.resource(publicId, {
+      resource_type: 'raw'
+    });
+
+    console.log('Resource info:', resourceInfo ? { secure_url: resourceInfo.secure_url } : 'null');
+
+    if (!resourceInfo || !resourceInfo.secure_url) {
+      return res.status(404).json({ error: 'Fichier non trouvé sur Cloudinary' });
     }
 
     // Headers pour permettre l'affichage dans iframe
@@ -144,7 +154,9 @@ exports.viewPlan = async (req, res) => {
 
         if (pdfResponse.statusCode !== 200) {
           console.error('Erreur HTTP:', pdfResponse.statusCode);
-          res.status(pdfResponse.statusCode).json({ error: `Erreur HTTP ${pdfResponse.statusCode}` });
+          if (!res.headersSent) {
+            res.status(pdfResponse.statusCode).json({ error: `Erreur HTTP ${pdfResponse.statusCode}` });
+          }
           return;
         }
 
@@ -157,12 +169,12 @@ exports.viewPlan = async (req, res) => {
       });
     };
 
-    fetchPdf(pdfUrl);
+    fetchPdf(resourceInfo.secure_url);
 
   } catch (error) {
     console.error('Erreur viewPlan:', error);
     if (!res.headersSent) {
-      res.status(500).json({ error: 'Erreur lors de la visualisation du plan' });
+      res.status(500).json({ error: 'Erreur lors de la visualisation du plan: ' + error.message });
     }
   }
 };
