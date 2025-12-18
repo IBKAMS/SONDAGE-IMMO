@@ -108,37 +108,49 @@ exports.viewPlan = async (req, res) => {
     console.log('viewPlan appelé pour type:', type);
 
     const plan = await PlanArchitectural.findOne({ type });
-    console.log('Plan trouvé:', plan ? { type: plan.type, cloudinaryId: plan.cloudinaryId, url: plan.url } : 'null');
+    console.log('Plan trouvé:', plan ? {
+      type: plan.type,
+      cloudinaryId: plan.cloudinaryId,
+      url: plan.url
+    } : 'null');
 
     if (!plan) {
       return res.status(404).json({ error: 'Plan non trouvé' });
     }
 
-    let pdfUrl;
+    // Le public_id complet (inclut déjà .pdf pour les fichiers raw)
+    const publicId = plan.cloudinaryId;
+    console.log('Public ID complet:', publicId);
 
-    // Essayer d'abord avec resource_type 'image' (Cloudinary gère mieux les PDF comme images)
-    if (plan.cloudinaryId) {
-      // Retirer l'extension .pdf du public_id pour le type image
-      let publicId = plan.cloudinaryId;
-      if (publicId.endsWith('.pdf')) {
-        publicId = publicId.slice(0, -4);
+    // Liste des resource_types à essayer dans l'ordre
+    // Le fichier a été uploadé dans /videos/ donc essayer 'raw' d'abord
+    const resourceTypes = ['raw', 'video', 'image'];
+
+    // Générer les URLs pour chaque type
+    const urls = resourceTypes.map(resType => {
+      // Pour 'raw', garder le public_id complet avec .pdf
+      // Pour 'image'/'video', retirer .pdf car c'est le format
+      let pid = publicId;
+      let format = '';
+
+      if (resType !== 'raw' && pid.endsWith('.pdf')) {
+        pid = pid.slice(0, -4);
+        format = 'pdf';
       }
 
-      // Générer URL signée avec resource_type 'image' et format 'pdf'
-      pdfUrl = cloudinary.url(publicId + '.pdf', {
-        resource_type: 'image',
+      const url = cloudinary.url(pid, {
+        resource_type: resType,
         type: 'upload',
         sign_url: true,
-        secure: true
+        secure: true,
+        ...(format && { format })
       });
 
-      console.log('URL signée (type image):', pdfUrl);
-    } else if (plan.url) {
-      pdfUrl = plan.url;
-      console.log('URL stockée utilisée:', pdfUrl);
-    } else {
-      return res.status(404).json({ error: 'Aucune URL disponible pour ce plan' });
-    }
+      return { resType, url };
+    });
+
+    console.log('URLs générées:');
+    urls.forEach(u => console.log(`  ${u.resType}: ${u.url}`));
 
     // Headers pour permettre l'affichage dans iframe
     res.setHeader('Content-Type', 'application/pdf');
@@ -149,44 +161,61 @@ exports.viewPlan = async (req, res) => {
     res.setHeader('Content-Security-Policy', "frame-ancestors *");
     res.removeHeader('X-Content-Type-Options');
 
-    // Fonction pour suivre les redirections
-    const fetchPdf = (url) => {
-      https.get(url, (pdfResponse) => {
-        console.log('Réponse PDF status:', pdfResponse.statusCode);
+    // Index pour suivre quel type on essaie
+    let urlIndex = 0;
 
-        // Si 401 avec type image, essayer avec type raw
-        if (pdfResponse.statusCode === 401 && url.includes('/image/upload/')) {
-          console.log('401 avec image, tentative avec raw...');
-          const rawUrl = url.replace('/image/upload/', '/raw/upload/');
-          fetchPdf(rawUrl);
+    // Fonction pour essayer les URLs une par une
+    const tryNextUrl = () => {
+      if (urlIndex >= urls.length) {
+        console.error('Toutes les URLs ont échoué');
+        if (!res.headersSent) {
+          res.status(404).json({ error: 'Fichier PDF non trouvé sur Cloudinary' });
+        }
+        return;
+      }
+
+      const { resType, url } = urls[urlIndex];
+      console.log(`Tentative ${urlIndex + 1}/${urls.length} avec ${resType}: ${url}`);
+
+      https.get(url, (pdfResponse) => {
+        console.log(`Réponse ${resType}: ${pdfResponse.statusCode}`);
+
+        // Si erreur 4xx, essayer le type suivant
+        if (pdfResponse.statusCode === 401 || pdfResponse.statusCode === 404) {
+          urlIndex++;
+          tryNextUrl();
           return;
         }
 
-        // Gérer les redirections (301, 302, 303, 307, 308)
+        // Gérer les redirections
         if (pdfResponse.statusCode >= 300 && pdfResponse.statusCode < 400 && pdfResponse.headers.location) {
           console.log('Redirection vers:', pdfResponse.headers.location);
-          fetchPdf(pdfResponse.headers.location);
+          https.get(pdfResponse.headers.location, (redirectResponse) => {
+            if (redirectResponse.statusCode === 200) {
+              redirectResponse.pipe(res);
+            } else {
+              urlIndex++;
+              tryNextUrl();
+            }
+          });
           return;
         }
 
-        if (pdfResponse.statusCode !== 200) {
-          console.error('Erreur HTTP:', pdfResponse.statusCode);
-          if (!res.headersSent) {
-            res.status(pdfResponse.statusCode).json({ error: `Erreur HTTP ${pdfResponse.statusCode}` });
-          }
-          return;
+        if (pdfResponse.statusCode === 200) {
+          console.log(`Succès avec ${resType}!`);
+          pdfResponse.pipe(res);
+        } else {
+          urlIndex++;
+          tryNextUrl();
         }
-
-        pdfResponse.pipe(res);
       }).on('error', (err) => {
-        console.error('Erreur téléchargement PDF:', err);
-        if (!res.headersSent) {
-          res.status(500).json({ error: 'Erreur lors du téléchargement du PDF' });
-        }
+        console.error(`Erreur avec ${resType}:`, err.message);
+        urlIndex++;
+        tryNextUrl();
       });
     };
 
-    fetchPdf(pdfUrl);
+    tryNextUrl();
 
   } catch (error) {
     console.error('Erreur viewPlan:', error);
