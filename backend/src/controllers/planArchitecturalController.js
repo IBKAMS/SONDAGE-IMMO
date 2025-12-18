@@ -1,11 +1,12 @@
 const PlanArchitectural = require('../models/PlanArchitectural');
 const cloudinary = require('cloudinary').v2;
 
-// Configuration Cloudinary
+// Configuration Cloudinary avec secure activé
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+  secure: true
 });
 
 // Titres des plans par type
@@ -107,23 +108,37 @@ exports.viewPlan = async (req, res) => {
     console.log('viewPlan appelé pour type:', type);
 
     const plan = await PlanArchitectural.findOne({ type });
-    console.log('Plan trouvé:', plan ? { type: plan.type, cloudinaryId: plan.cloudinaryId } : 'null');
+    console.log('Plan trouvé:', plan ? { type: plan.type, cloudinaryId: plan.cloudinaryId, url: plan.url } : 'null');
 
-    if (!plan || !plan.cloudinaryId) {
+    if (!plan) {
       return res.status(404).json({ error: 'Plan non trouvé' });
     }
 
-    // Pour les fichiers raw, le public_id INCLUT l'extension
-    const publicId = plan.cloudinaryId;
-    console.log('Public ID utilisé:', publicId);
+    let pdfUrl;
 
-    // Utiliser private_download_url pour générer une URL de téléchargement authentifiée
-    const signedUrl = cloudinary.utils.private_download_url(publicId, '', {
-      resource_type: 'raw',
-      expires_at: Math.floor(Date.now() / 1000) + 3600 // expire dans 1 heure
-    });
+    // Essayer d'abord avec resource_type 'image' (Cloudinary gère mieux les PDF comme images)
+    if (plan.cloudinaryId) {
+      // Retirer l'extension .pdf du public_id pour le type image
+      let publicId = plan.cloudinaryId;
+      if (publicId.endsWith('.pdf')) {
+        publicId = publicId.slice(0, -4);
+      }
 
-    console.log('URL privée générée:', signedUrl);
+      // Générer URL signée avec resource_type 'image' et format 'pdf'
+      pdfUrl = cloudinary.url(publicId + '.pdf', {
+        resource_type: 'image',
+        type: 'upload',
+        sign_url: true,
+        secure: true
+      });
+
+      console.log('URL signée (type image):', pdfUrl);
+    } else if (plan.url) {
+      pdfUrl = plan.url;
+      console.log('URL stockée utilisée:', pdfUrl);
+    } else {
+      return res.status(404).json({ error: 'Aucune URL disponible pour ce plan' });
+    }
 
     // Headers pour permettre l'affichage dans iframe
     res.setHeader('Content-Type', 'application/pdf');
@@ -138,6 +153,14 @@ exports.viewPlan = async (req, res) => {
     const fetchPdf = (url) => {
       https.get(url, (pdfResponse) => {
         console.log('Réponse PDF status:', pdfResponse.statusCode);
+
+        // Si 401 avec type image, essayer avec type raw
+        if (pdfResponse.statusCode === 401 && url.includes('/image/upload/')) {
+          console.log('401 avec image, tentative avec raw...');
+          const rawUrl = url.replace('/image/upload/', '/raw/upload/');
+          fetchPdf(rawUrl);
+          return;
+        }
 
         // Gérer les redirections (301, 302, 303, 307, 308)
         if (pdfResponse.statusCode >= 300 && pdfResponse.statusCode < 400 && pdfResponse.headers.location) {
@@ -163,7 +186,7 @@ exports.viewPlan = async (req, res) => {
       });
     };
 
-    fetchPdf(signedUrl);
+    fetchPdf(pdfUrl);
 
   } catch (error) {
     console.error('Erreur viewPlan:', error);
