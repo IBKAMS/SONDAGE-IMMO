@@ -8,7 +8,7 @@
   position: relative;
   height: 50vh;
   min-height: 400px;
-  background: linear-gradient(135deg, #6B0F75 0%, #82128E 50%, #9C1AAB 100%);
+  background: linear-gradient(135deg, #0080FF 0%, #A020F0 50%, #E040FB 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -62,19 +62,19 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-lg);
-  background: linear-gradient(135deg, rgba(107, 15, 117, 0.1) 0%, rgba(156, 26, 171, 0.1) 100%);
+  background: linear-gradient(135deg, rgba(0, 128, 255, 0.1) 0%, rgba(224, 64, 251, 0.1) 100%);
   padding: var(--spacing-xl);
   border-radius: var(--radius-lg);
-  border-left: 4px solid #6B0F75;
+  border-left: 4px solid #0080FF;
   margin: var(--spacing-xxl) auto var(--spacing-xxl);
   position: relative;
   z-index: 10;
-  box-shadow: 0 8px 24px rgba(107, 15, 117, 0.15);
+  box-shadow: 0 8px 24px rgba(0, 128, 255, 0.15);
 }
 
 .info-icon {
   font-size: 3rem;
-  color: #6B0F75;
+  color: #0080FF;
   flex-shrink: 0;
 }
 
@@ -105,7 +105,7 @@
   position: relative;
   width: 100%;
   padding-top: 56.25%; /* 16:9 Aspect Ratio */
-  background: linear-gradient(135deg, #6B0F75 0%, #82128E 50%, #9C1AAB 100%);
+  background: linear-gradient(135deg, #0080FF 0%, #A020F0 50%, #E040FB 100%);
   overflow: hidden;
 }
 
@@ -129,14 +129,14 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: rgba(107, 15, 117, 0.3);
+  background: rgba(0, 128, 255, 0.3);
   z-index: 2;
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .video-overlay:hover {
-  background: rgba(107, 15, 117, 0.4);
+  background: rgba(0, 128, 255, 0.4);
 }
 
 .video-overlay:hover .play-button {
@@ -153,7 +153,7 @@
   align-items: center;
   justify-content: center;
   font-size: 2.5rem;
-  color: #6B0F75;
+  color: #0080FF;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   transition: all 0.3s ease;
   animation: pulse-play 2s ease-in-out infinite;
@@ -219,7 +219,7 @@
 
 .feature:hover {
   transform: translateY(-5px);
-  box-shadow: 0 8px 24px rgba(107, 15, 117, 0.2);
+  box-shadow: 0 8px 24px rgba(0, 128, 255, 0.2);
 }
 
 .feature-icon {
@@ -264,12 +264,12 @@
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, #6B0F75 0%, #82128E 50%, #9C1AAB 100%);
+  background: linear-gradient(90deg, #0080FF 0%, #A020F0 50%, #E040FB 100%);
 }
 
 .info-card:hover {
   transform: translateY(-8px);
-  box-shadow: 0 16px 40px rgba(107, 15, 117, 0.2);
+  box-shadow: 0 16px 40px rgba(0, 128, 255, 0.2);
 }
 
 .card-icon {
@@ -290,12 +290,12 @@
 
 /* CTA Box */
 .cta-box {
-  background: linear-gradient(135deg, #6B0F75 0%, #82128E 100%);
+  background: linear-gradient(135deg, #0080FF 0%, #A020F0 100%);
   padding: var(--spacing-xxl);
   border-radius: var(--radius-lg);
   text-align: center;
   color: var(--white);
-  box-shadow: 0 12px 40px rgba(107, 15, 117, 0.3);
+  box-shadow: 0 12px 40px rgba(0, 128, 255, 0.3);
   margin-bottom: var(--spacing-xxl);
 }
 

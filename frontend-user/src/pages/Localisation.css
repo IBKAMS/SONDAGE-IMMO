@@ -8,7 +8,7 @@
   position: relative;
   height: 50vh;
   min-height: 400px;
-  background: linear-gradient(135deg, #6B0F75 0%, #82128E 50%, #9C1AAB 100%);
+  background: linear-gradient(135deg, #0080FF 0%, #A020F0 50%, #E040FB 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -79,7 +79,7 @@
 
 .info-icon-large {
   font-size: 4rem;
-  color: #6B0F75;
+  color: #0080FF;
   margin-bottom: var(--spacing-lg);
 }
 
@@ -180,14 +180,14 @@
   justify-content: center;
   cursor: pointer;
   font-size: 1.3rem;
-  color: #6B0F75;
+  color: #0080FF;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   transition: all 0.3s ease;
   z-index: 10;
 }
 
 .carousel-nav:hover {
-  background: #6B0F75;
+  background: #0080FF;
   color: white;
   transform: translateY(-50%) scale(1.1);
 }
@@ -227,17 +227,17 @@
 }
 
 .carousel-thumbnail:hover {
-  border-color: #82128E;
+  border-color: #A020F0;
   transform: scale(1.05);
 }
 
 .carousel-thumbnail.active {
-  border-color: #6B0F75;
-  box-shadow: 0 2px 8px rgba(107, 15, 117, 0.4);
+  border-color: #0080FF;
+  box-shadow: 0 2px 8px rgba(0, 128, 255, 0.4);
 }
 
 .map-link-bottom {
-  background: linear-gradient(135deg, #6B0F75 0%, #82128E 100%);
+  background: linear-gradient(135deg, #0080FF 0%, #A020F0 100%);
   padding: var(--spacing-md);
   text-align: center;
   border-radius: 0 0 var(--radius-lg) var(--radius-lg);
@@ -267,7 +267,7 @@
 }
 
 .map-search-link .text-link {
-  color: #6B0F75;
+  color: #0080FF;
   text-decoration: none;
   font-size: 1.1rem;
   font-weight: 600;
@@ -278,7 +278,7 @@
 }
 
 .map-search-link .text-link:hover {
-  color: #9C1AAB;
+  color: #E040FB;
   transform: translateY(-2px);
 }
 
@@ -353,7 +353,7 @@
 
 .map-info-card h3 {
   font-size: 1.3rem;
-  color: #6B0F75;
+  color: #0080FF;
   margin-bottom: var(--spacing-md);
   display: flex;
   align-items: center;
@@ -397,13 +397,13 @@
 
 .avantage-card:hover {
   transform: translateY(-8px);
-  box-shadow: 0 16px 40px rgba(107, 15, 117, 0.2);
-  border-color: #6B0F75;
+  box-shadow: 0 16px 40px rgba(0, 128, 255, 0.2);
+  border-color: #0080FF;
 }
 
 .avantage-icon {
   font-size: 3.5rem;
-  color: #6B0F75;
+  color: #0080FF;
   margin-bottom: var(--spacing-md);
 }
 
@@ -453,17 +453,17 @@
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, #6B0F75 0%, #9C1AAB 100%);
+  background: linear-gradient(90deg, #0080FF 0%, #E040FB 100%);
 }
 
 .acces-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 16px 40px rgba(107, 15, 117, 0.15);
+  box-shadow: 0 16px 40px rgba(0, 128, 255, 0.15);
 }
 
 .acces-icon {
   font-size: 3rem;
-  color: #6B0F75;
+  color: #0080FF;
   margin-bottom: var(--spacing-md);
 }
 
@@ -485,12 +485,12 @@
 }
 
 .cta-localisation .cta-box {
-  background: linear-gradient(135deg, #6B0F75 0%, #82128E 100%);
+  background: linear-gradient(135deg, #0080FF 0%, #A020F0 100%);
   padding: var(--spacing-xxl);
   border-radius: var(--radius-lg);
   text-align: center;
   color: var(--white);
-  box-shadow: 0 12px 40px rgba(107, 15, 117, 0.3);
+  box-shadow: 0 12px 40px rgba(0, 128, 255, 0.3);
 }
 
 .cta-localisation h2 {
@@ -513,7 +513,7 @@
   font-size: 1.2rem;
   font-weight: 600;
   background: var(--white);
-  color: #6B0F75;
+  color: #0080FF;
 }
 
 .cta-localisation .btn-large:hover {
