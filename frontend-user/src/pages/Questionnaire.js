@@ -36,12 +36,11 @@ const Questionnaire = () => {
     anciennete: '',
 
     // Étape 3: Budget et financement
+    modeFinancement: '',
     budgetTotal: 120000000,
     apportPersonnel: 30000000,
     capaciteMensuelle: 500000,
-    besoinFinancement: '',
     pourcentageReservation: '',
-    pretPayerCashAvecReduction: '',
     delaiObtentionPret: '',
     banquePreferee: '',
 
@@ -299,7 +298,7 @@ const Questionnaire = () => {
           options: ['CDI', 'CDD', 'Temporaire', 'Entrepreneur'],
           required: true
         },
-        { name: 'employeur', label: 'Employeur', type: 'text' },
+        { name: 'employeur', label: 'Employeur', type: 'text', required: true },
         {
           name: 'anciennete',
           label: 'Ancienneté (années)',
@@ -381,6 +380,18 @@ const Questionnaire = () => {
       icon: "💰",
       questions: [
         {
+          name: 'modeFinancement',
+          label: 'Comment comptez-vous financer l\'achat de votre villa ?',
+          type: 'radio',
+          options: [
+            'Paiement Comptant (Réduction de 5%, priorité sur le choix du logement)',
+            'Échelonnement Promoteur (Apport 30%, solde échelonné sans intérêts)',
+            'Financement Bancaire (Taux préférentiels, jusqu\'à 20 ans de crédit)'
+          ],
+          tooltip: 'Choisissez la solution de financement qui vous convient le mieux',
+          required: true
+        },
+        {
           name: 'budgetTotal',
           label: 'Budget total (FCFA)',
           type: 'range',
@@ -392,12 +403,12 @@ const Questionnaire = () => {
         },
         {
           name: 'apportPersonnel',
-          label: 'Apport personnel (FCFA)',
+          label: 'Apport personnel disponible (FCFA)',
           type: 'range',
           min: 0,
           max: 100000000,
           step: 1000000,
-          tooltip: 'La somme d\'argent dont vous disposez immédiatement pour financer l\'achat (épargne, vente d\'un bien, aide familiale, etc.). Généralement entre 20% et 30% du prix.',
+          tooltip: 'La somme d\'argent dont vous disposez immédiatement pour financer l\'achat (épargne, vente d\'un bien, aide familiale, etc.).',
           required: true
         },
         {
@@ -407,44 +418,29 @@ const Questionnaire = () => {
           min: 100000,
           max: 3000000,
           step: 50000,
-          tooltip: 'Le montant maximum que vous pouvez consacrer chaque mois au remboursement de votre prêt immobilier. En général, il ne doit pas dépasser 33% de vos revenus mensuels.',
+          tooltip: 'Le montant maximum que vous pouvez consacrer chaque mois au remboursement. En général, il ne doit pas dépasser 33% de vos revenus mensuels.',
           required: true
-        },
-        {
-          name: 'besoinFinancement',
-          label: 'Besoin de financement',
-          type: 'radio',
-          options: ['Oui, déjà approuvé', 'Oui, en cours', 'Oui, à démarrer', 'Non, paiement comptant'],
-          tooltip: 'Indiquez si vous avez besoin d\'un crédit immobilier pour financer votre achat et à quel stade en est votre demande.'
         },
         {
           name: 'pourcentageReservation',
           label: 'Pourcentage pour la réservation',
           type: 'select',
           options: ['20%', '25%', '30%', '35%', '40%', '50%', '60%', '70%', '80%', '90%', '100%'],
-          tooltip: 'Quel pourcentage du prix total êtes-vous prêt à verser pour réserver votre logement ? Ce montant servira d\'acompte et sera déduit du prix final.',
-          required: true
-        },
-        {
-          name: 'pretPayerCashAvecReduction',
-          label: 'Avec une réduction de 5%, seriez-vous prêt à payer comptant (cash) ?',
-          type: 'radio',
-          options: ['Oui', 'Non', 'À étudier'],
-          tooltip: 'Nous proposons une réduction de 5% sur le prix total pour tout paiement comptant. Cette offre vous intéresse-t-elle ?',
+          tooltip: 'Quel pourcentage du prix total êtes-vous prêt à verser pour réserver votre logement ?',
           required: true
         },
         {
           name: 'delaiObtentionPret',
-          label: 'Délai d\'obtention du prêt',
+          label: 'Délai d\'obtention du prêt (si financement bancaire)',
           type: 'select',
           options: ['Déjà obtenu', '1-3 mois', '3-6 mois', '6-12 mois', 'Non concerné'],
-          tooltip: 'Le temps estimé avant d\'obtenir l\'accord de financement de votre banque. Cela nous aide à planifier votre projet d\'achat.'
+          tooltip: 'Le temps estimé avant d\'obtenir l\'accord de financement de votre banque.'
         },
         {
           name: 'banquePreferee',
           label: 'Banque partenaire préférée',
           type: 'text',
-          tooltip: 'Si vous avez déjà une banque en tête ou avec laquelle vous travaillez habituellement (SGCI, BICICI, Ecobank, BOA, etc.)'
+          tooltip: 'Si vous avez déjà une banque en tête (SGCI, BICICI, Ecobank, BOA, etc.)'
         }
       ]
     },
@@ -870,10 +866,11 @@ const Questionnaire = () => {
       budget: {
         globalBudget: parseInt(data.budgetTotal) || 0,
         monthlyCapacity: parseInt(data.capaciteMensuelle) || 0,
-        financingMode: data.besoinFinancement || '',
+        financingMode: data.modeFinancement || '',
         downPaymentAvailable: parseInt(data.apportPersonnel) || 0,
         reservationPercentage: data.pourcentageReservation || '',
-        willingToPayCashWithDiscount: data.pretPayerCashAvecReduction || ''
+        loanDelay: data.delaiObtentionPret || '',
+        preferredBank: data.banquePreferee || ''
       },
 
       // CRITÈRES D'IMPORTANCE (sur échelle 1-10 dans le frontend, convertir en 1-5)
@@ -1349,7 +1346,7 @@ const Questionnaire = () => {
               <h2>Questionnaire Soumis avec Succès !</h2>
 
               <p className="success-message">
-                Merci pour votre intérêt. Notre équipe vous contactera dans les 24h.
+                Merci pour votre intérêt. Notre équipe vous contactera dans les MEILLEURS DÉLAIS.
               </p>
 
               {submissionResult?.numeroDossier && (
