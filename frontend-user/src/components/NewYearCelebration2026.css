@@ -227,96 +227,244 @@
 }
 
 /* ============================================
-   Compte à Rebours
+   Compte à Rebours - Design Premium
    ============================================ */
 
 .countdown-widget {
   position: fixed;
   top: 80px;
   right: 20px;
-  background: linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(50, 0, 80, 0.9) 100%);
-  padding: 15px 20px;
-  border-radius: 20px;
+  background: linear-gradient(145deg,
+    rgba(20, 0, 40, 0.95) 0%,
+    rgba(60, 0, 100, 0.9) 50%,
+    rgba(20, 0, 40, 0.95) 100%
+  );
+  padding: 20px 25px 25px;
+  border-radius: 24px;
   pointer-events: auto;
-  border: 2px solid rgba(255, 215, 0, 0.3);
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3),
-              inset 0 0 30px rgba(255, 215, 0, 0.1);
-  backdrop-filter: blur(10px);
-  animation: slideIn 0.8s ease-out;
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.5),
+    0 0 100px rgba(160, 32, 240, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 0 40px rgba(255, 215, 0, 0.05);
+  backdrop-filter: blur(20px);
+  animation: countdownSlideIn 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-@keyframes slideIn {
+@keyframes countdownSlideIn {
   from {
-    transform: translateX(100px);
+    transform: translateX(150px) scale(0.8);
     opacity: 0;
   }
   to {
-    transform: translateX(0);
+    transform: translateX(0) scale(1);
     opacity: 1;
   }
 }
 
 .countdown-title {
   text-align: center;
-  color: #FFD700;
-  font-size: 0.85rem;
-  font-weight: 600;
-  margin-bottom: 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  margin-bottom: 15px;
   text-transform: uppercase;
-  letter-spacing: 2px;
+  letter-spacing: 4px;
+  background: linear-gradient(90deg, #FFD700, #FFA500, #FFD700);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: titleShimmer 3s linear infinite;
+}
+
+@keyframes titleShimmer {
+  0% { background-position: 0% center; }
+  100% { background-position: 200% center; }
 }
 
 .countdown-icon {
-  margin-right: 5px;
+  margin-right: 8px;
+  font-size: 1rem;
 }
 
 .countdown-timer {
   display: flex;
   align-items: center;
-  gap: 5px;
+  justify-content: center;
+  gap: 8px;
 }
 
 .countdown-item {
   text-align: center;
+  position: relative;
 }
 
 .countdown-value {
-  display: block;
-  font-size: 1.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 70px;
+  font-size: 2rem;
   font-weight: 900;
   color: #FFFFFF;
-  text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
-  font-family: 'Courier New', monospace;
-  min-width: 50px;
+  font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: linear-gradient(180deg,
+    rgba(255, 255, 255, 0.15) 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    rgba(0, 0, 0, 0.2) 50%,
+    rgba(0, 0, 0, 0.3) 100%
+  );
+  border-radius: 12px;
+  position: relative;
+  box-shadow:
+    0 8px 20px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 215, 0, 0.1);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Ligne centrale style flip clock */
+.countdown-value::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(0, 0, 0, 0.4) 10%,
+    rgba(0, 0, 0, 0.4) 90%,
+    transparent
+  );
+}
+
+/* Reflet lumineux */
+.countdown-value::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 10%;
+  right: 10%;
+  height: 30%;
+  background: linear-gradient(180deg,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  border-radius: 8px 8px 50% 50%;
+}
+
+.countdown-item:nth-child(1) .countdown-value {
+  background: linear-gradient(180deg,
+    rgba(255, 215, 0, 0.2) 0%,
+    rgba(255, 140, 0, 0.1) 50%,
+    rgba(0, 0, 0, 0.2) 50%,
+    rgba(0, 0, 0, 0.3) 100%
+  );
+  border-color: rgba(255, 215, 0, 0.3);
 }
 
 .countdown-seconds {
-  color: #FFD700;
-  animation: secondsPulse 1s ease-in-out infinite;
+  color: #FFD700 !important;
+  animation: secondsGlow 1s ease-in-out infinite;
+  background: linear-gradient(180deg,
+    rgba(255, 215, 0, 0.25) 0%,
+    rgba(255, 140, 0, 0.15) 50%,
+    rgba(255, 100, 0, 0.1) 50%,
+    rgba(0, 0, 0, 0.3) 100%
+  ) !important;
+  border-color: rgba(255, 215, 0, 0.4) !important;
 }
 
-@keyframes secondsPulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
+@keyframes secondsGlow {
+  0%, 100% {
+    box-shadow:
+      0 8px 20px rgba(0, 0, 0, 0.4),
+      0 0 30px rgba(255, 215, 0, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+  50% {
+    box-shadow:
+      0 8px 20px rgba(0, 0, 0, 0.4),
+      0 0 50px rgba(255, 215, 0, 0.4),
+      0 0 80px rgba(255, 140, 0, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
 }
 
 .countdown-label {
-  font-size: 0.65rem;
-  color: rgba(255, 255, 255, 0.7);
+  display: block;
+  margin-top: 8px;
+  font-size: 0.6rem;
+  color: rgba(255, 255, 255, 0.6);
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 2px;
+  font-weight: 600;
 }
 
 .countdown-separator {
-  font-size: 1.5rem;
+  font-size: 2rem;
   color: #FFD700;
-  font-weight: bold;
-  animation: separatorBlink 1s step-end infinite;
+  font-weight: 300;
+  text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+  animation: separatorPulse 1s ease-in-out infinite;
+  margin-top: -15px;
 }
 
-@keyframes separatorBlink {
-  0%, 50% { opacity: 1; }
-  51%, 100% { opacity: 0.3; }
+@keyframes separatorPulse {
+  0%, 100% {
+    opacity: 1;
+    text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+  }
+  50% {
+    opacity: 0.4;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
+  }
+}
+
+/* Anneau lumineux autour du widget */
+.countdown-widget::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg,
+    #FFD700,
+    #FF8C00,
+    #A855F7,
+    #FFD700
+  );
+  background-size: 300% 300%;
+  border-radius: 26px;
+  z-index: -1;
+  animation: borderGlow 4s ease-in-out infinite;
+  opacity: 0.5;
+}
+
+@keyframes borderGlow {
+  0%, 100% { background-position: 0% 50%; opacity: 0.3; }
+  50% { background-position: 100% 50%; opacity: 0.6; }
+}
+
+/* Effet de particules flottantes dans le widget */
+.countdown-widget::after {
+  content: '✨';
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 0.8rem;
+  animation: floatSparkle 3s ease-in-out infinite;
+  opacity: 0.7;
+}
+
+@keyframes floatSparkle {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-5px) rotate(20deg); }
 }
 
 /* ============================================
