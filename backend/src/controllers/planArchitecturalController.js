@@ -67,6 +67,37 @@ exports.getPlanByType = async (req, res) => {
   }
 };
 
+// Debug endpoint pour vérifier les données
+exports.debugPlan = async (req, res) => {
+  try {
+    const { type } = req.params;
+    console.log('DEBUG: debugPlan appelé pour type:', type);
+
+    const plan = await PlanArchitectural.findOne({ type });
+
+    if (!plan) {
+      return res.json({
+        status: 'not_found',
+        message: 'Aucun plan trouvé pour ce type',
+        type: type
+      });
+    }
+
+    res.json({
+      status: 'found',
+      type: plan.type,
+      url: plan.url,
+      cloudinaryId: plan.cloudinaryId,
+      originalName: plan.originalName,
+      hasUrl: !!plan.url,
+      hasCloudinaryId: !!plan.cloudinaryId
+    });
+  } catch (error) {
+    console.error('Erreur debugPlan:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 // Proxy pour visualiser un PDF (contourne les restrictions Cloudinary)
 exports.viewPlan = async (req, res) => {
   const https = require('https');
