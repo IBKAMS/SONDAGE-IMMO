@@ -67,6 +67,47 @@ exports.getPlanByType = async (req, res) => {
   }
 };
 
+// Proxy pour visualiser un PDF (contourne les restrictions Cloudinary)
+exports.viewPlan = async (req, res) => {
+  try {
+    const { type } = req.params;
+    const plan = await PlanArchitectural.findOne({ type });
+
+    if (!plan || !plan.cloudinaryId) {
+      return res.status(404).json({ error: 'Plan non trouvé' });
+    }
+
+    // Utiliser l'API Admin de Cloudinary pour obtenir le fichier
+    // Cela contourne les restrictions d'accès public
+    const result = await cloudinary.api.resource(plan.cloudinaryId, {
+      resource_type: 'raw'
+    });
+
+    if (result && result.secure_url) {
+      // Télécharger le PDF et le renvoyer au client
+      const https = require('https');
+
+      // Ajouter les headers pour permettre l'affichage dans iframe
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `inline; filename="${plan.originalName}"`);
+      res.setHeader('Access-Control-Allow-Origin', '*');
+
+      // Proxy le fichier
+      https.get(result.secure_url, (pdfResponse) => {
+        pdfResponse.pipe(res);
+      }).on('error', (err) => {
+        console.error('Erreur téléchargement PDF:', err);
+        res.status(500).json({ error: 'Erreur lors du téléchargement du PDF' });
+      });
+    } else {
+      res.status(404).json({ error: 'Fichier non trouvé sur Cloudinary' });
+    }
+  } catch (error) {
+    console.error('Erreur viewPlan:', error);
+    res.status(500).json({ error: 'Erreur lors de la visualisation du plan' });
+  }
+};
+
 // Upload ou mise à jour d'un plan
 exports.uploadPlan = async (req, res) => {
   try {

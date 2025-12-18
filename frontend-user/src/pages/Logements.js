@@ -564,7 +564,7 @@ const Logements = () => {
                   </div>
                   <div className="pdf-viewer-content">
                     <iframe
-                      src={`${plansArchitecturaux[selectedPlan].url}#toolbar=0&navpanes=0&scrollbar=1&view=FitH`}
+                      src={`${API_URL}/api/plans-architecturaux/view/${selectedPlan}`}
                       title={`Plan ${selectedPlan}`}
                       className="pdf-iframe"
                     />

@@ -5,6 +5,9 @@ const planArchitecturalController = require('../controllers/planArchitecturalCon
 // GET /api/plans-architecturaux - Récupérer tous les plans
 router.get('/', planArchitecturalController.getAllPlans);
 
+// GET /api/plans-architecturaux/view/:type - Proxy pour visualiser un PDF
+router.get('/view/:type', planArchitecturalController.viewPlan);
+
 // GET /api/plans-architecturaux/:type - Récupérer un plan par type
 router.get('/:type', planArchitecturalController.getPlanByType);
 
