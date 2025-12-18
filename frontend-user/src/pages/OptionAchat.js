@@ -37,14 +37,6 @@ const OptionAchat = () => {
     navigate('/questionnaire');
   };
 
-  const handleSkipCode = () => {
-    setShowCodeModal(false);
-    // Supprimer tout code précédemment stocké
-    sessionStorage.removeItem('codeApporteur');
-    sessionStorage.removeItem('apporteurInfo');
-    navigate('/questionnaire');
-  };
-
   const handleCloseModal = () => {
     setShowCodeModal(false);
   };
@@ -540,12 +532,11 @@ const OptionAchat = () => {
         </div>
       </section>
 
-      {/* Modal Code Apporteur */}
+      {/* Modal Code d'accès */}
       <CodeApporteurModal
         isOpen={showCodeModal}
         onClose={handleCloseModal}
         onValidate={handleCodeValidated}
-        onSkip={handleSkipCode}
       />
     </div>
   );

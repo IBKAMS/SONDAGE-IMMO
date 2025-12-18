@@ -4,7 +4,7 @@ import { FaLock, FaShieldAlt, FaCheckCircle, FaTimesCircle, FaSpinner } from 're
 import API_URL from '../config';
 import './CodeApporteurModal.css';
 
-const CodeApporteurModal = ({ isOpen, onClose, onValidate, onSkip }) => {
+const CodeApporteurModal = ({ isOpen, onClose, onValidate }) => {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -21,7 +21,7 @@ const CodeApporteurModal = ({ isOpen, onClose, onValidate, onSkip }) => {
 
   const validateCode = async () => {
     if (!code || code.length < 5) {
-      setError('Le code doit contenir au moins 5 caractères');
+      setError('Veuillez entrer votre code d\'accès (5 caractères minimum)');
       return;
     }
 
@@ -63,10 +63,6 @@ const CodeApporteurModal = ({ isOpen, onClose, onValidate, onSkip }) => {
     }
   };
 
-  const handleSkip = () => {
-    onSkip();
-  };
-
   if (!isOpen) return null;
 
   return (
@@ -102,14 +98,13 @@ const CodeApporteurModal = ({ isOpen, onClose, onValidate, onSkip }) => {
             <div className="security-notice">
               <FaLock className="notice-icon" />
               <p>
-                Si vous avez été recommandé par un apporteur d'affaires,
-                veuillez entrer son code ci-dessous. Sinon, vous pouvez
-                continuer sans code.
+                Pour accéder au questionnaire, veuillez entrer le code
+                de recommandation qui vous a été communiqué.
               </p>
             </div>
 
             <div className="code-input-container">
-              <label htmlFor="codeApporteur">Code Apporteur (optionnel)</label>
+              <label htmlFor="codeApporteur">Code d'accès *</label>
               <div className="code-input-wrapper">
                 <input
                   type="text"
@@ -153,7 +148,7 @@ const CodeApporteurModal = ({ isOpen, onClose, onValidate, onSkip }) => {
               >
                 <FaCheckCircle />
                 <span>
-                  Code validé ! Apporteur: <strong>{validatedApporteur.prenom} {validatedApporteur.nom}</strong>
+                  Code validé ! Accès au questionnaire autorisé.
                 </span>
               </motion.div>
             )}
@@ -178,14 +173,6 @@ const CodeApporteurModal = ({ isOpen, onClose, onValidate, onSkip }) => {
               ) : (
                 'Valider le code'
               )}
-            </button>
-
-            <button
-              className="btn-skip"
-              onClick={handleSkip}
-              disabled={loading}
-            >
-              Continuer sans code
             </button>
           </div>
 
