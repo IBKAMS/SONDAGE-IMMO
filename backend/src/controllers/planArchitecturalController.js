@@ -117,16 +117,15 @@ exports.viewPlan = async (req, res) => {
     const publicId = plan.cloudinaryId;
     console.log('Public ID utilisé:', publicId);
 
-    // Utiliser l'API Admin pour obtenir les détails du fichier avec une URL fraîche
-    const resourceInfo = await cloudinary.api.resource(publicId, {
-      resource_type: 'raw'
+    // Générer une URL signée (valide 1 heure) pour contourner la restriction 401
+    const signedUrl = cloudinary.url(publicId, {
+      resource_type: 'raw',
+      sign_url: true,
+      secure: true,
+      type: 'upload'
     });
 
-    console.log('Resource info:', resourceInfo ? { secure_url: resourceInfo.secure_url } : 'null');
-
-    if (!resourceInfo || !resourceInfo.secure_url) {
-      return res.status(404).json({ error: 'Fichier non trouvé sur Cloudinary' });
-    }
+    console.log('URL signée générée:', signedUrl);
 
     // Headers pour permettre l'affichage dans iframe
     res.setHeader('Content-Type', 'application/pdf');
@@ -166,7 +165,7 @@ exports.viewPlan = async (req, res) => {
       });
     };
 
-    fetchPdf(resourceInfo.secure_url);
+    fetchPdf(signedUrl);
 
   } catch (error) {
     console.error('Erreur viewPlan:', error);
