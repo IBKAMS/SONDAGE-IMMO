@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { FaVideo, FaChartBar, FaTachometerAlt, FaBars, FaTimes, FaHome, FaFileAlt, FaBuilding, FaDraftingCompass, FaCube, FaMapMarkerAlt, FaChartLine, FaMoneyBillWave, FaClipboardList, FaSignOutAlt, FaUser } from 'react-icons/fa';
+import { FaVideo, FaChartBar, FaTachometerAlt, FaBars, FaTimes, FaHome, FaFileAlt, FaBuilding, FaDraftingCompass, FaCube, FaMapMarkerAlt, FaChartLine, FaMoneyBillWave, FaClipboardList, FaSignOutAlt, FaUser, FaUserTie } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import './Navbar.css';
 
@@ -8,7 +8,7 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, isAdmin, isApporteur, userType } = useAuth();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -28,12 +28,42 @@ const Navbar = () => {
     navigate('/login');
   };
 
+  // Menu items for admin users
+  const adminMenuItems = [
+    { path: '/dashboard', icon: <FaTachometerAlt />, label: 'Tableau de bord' },
+    { path: '/videos', icon: <FaVideo />, label: 'Vidéos/Images' },
+    { path: '/analytics', icon: <FaChartBar />, label: 'Analyses' },
+    { path: '/apporteurs', icon: <FaUserTie />, label: 'Apporteurs' },
+    { path: '/accueil', icon: <FaHome />, label: 'Accueil' },
+    { path: '/presentation', icon: <FaFileAlt />, label: 'Présentation' },
+    { path: '/promoteur', icon: <FaBuilding />, label: 'Promoteur' },
+    { path: '/architecte', icon: <FaDraftingCompass />, label: 'Architecte' },
+    { path: '/logements', icon: <FaHome />, label: 'Logements' },
+    { path: '/logements-gestion', icon: <FaHome />, label: 'Gestion Logements' },
+    { path: '/visite3d', icon: <FaCube />, label: 'Visite 3D' },
+    { path: '/localisation', icon: <FaMapMarkerAlt />, label: 'Localisation' },
+    { path: '/analyse-economique', icon: <FaChartLine />, label: 'Analyse Économique' },
+    { path: '/option-achat', icon: <FaMoneyBillWave />, label: 'Option d\'Achat' },
+    { path: '/questionnaire', icon: <FaClipboardList />, label: 'Questionnaire' },
+  ];
+
+  // Menu items for apporteur users (limited view)
+  const apporteurMenuItems = [
+    { path: '/apporteur-dashboard', icon: <FaTachometerAlt />, label: 'Mon Tableau de bord' },
+  ];
+
+  // Select menu items based on user type
+  const menuItems = isApporteur ? apporteurMenuItems : adminMenuItems;
+
+  // Logo link based on user type
+  const logoLink = isApporteur ? '/apporteur-dashboard' : '/dashboard';
+
   return (
     <nav className="navbar">
       <div className="navbar-container">
-        <Link to="/dashboard" className="navbar-logo" onClick={closeMenu}>
+        <Link to={logoLink} className="navbar-logo" onClick={closeMenu}>
           <span className="logo-icon">🏠</span>
-          <span className="logo-text">ADMIN</span>
+          <span className="logo-text">{isApporteur ? 'APPORTEUR' : 'ADMIN'}</span>
         </Link>
 
         <div className="menu-icon" onClick={toggleMenu}>
@@ -41,167 +71,29 @@ const Navbar = () => {
         </div>
 
         <ul className={isMenuOpen ? 'nav-menu active' : 'nav-menu'}>
-          <li className="nav-item">
-            <Link
-              to="/dashboard"
-              className={`nav-link ${isActive('/dashboard')}`}
-              onClick={closeMenu}
-            >
-              <FaTachometerAlt className="nav-icon" />
-              <span>Tableau de bord</span>
-            </Link>
-          </li>
-
-          <li className="nav-item">
-            <Link
-              to="/videos"
-              className={`nav-link ${isActive('/videos')}`}
-              onClick={closeMenu}
-            >
-              <FaVideo className="nav-icon" />
-              <span>Vidéos/Images</span>
-            </Link>
-          </li>
-
-          <li className="nav-item">
-            <Link
-              to="/analytics"
-              className={`nav-link ${isActive('/analytics')}`}
-              onClick={closeMenu}
-            >
-              <FaChartBar className="nav-icon" />
-              <span>Analyses</span>
-            </Link>
-          </li>
-
-          <li className="nav-item">
-            <Link
-              to="/accueil"
-              className={`nav-link ${isActive('/accueil')}`}
-              onClick={closeMenu}
-            >
-              <FaHome className="nav-icon" />
-              <span>Accueil</span>
-            </Link>
-          </li>
-
-          <li className="nav-item">
-            <Link
-              to="/presentation"
-              className={`nav-link ${isActive('/presentation')}`}
-              onClick={closeMenu}
-            >
-              <FaFileAlt className="nav-icon" />
-              <span>Présentation</span>
-            </Link>
-          </li>
-
-          <li className="nav-item">
-            <Link
-              to="/promoteur"
-              className={`nav-link ${isActive('/promoteur')}`}
-              onClick={closeMenu}
-            >
-              <FaBuilding className="nav-icon" />
-              <span>Promoteur</span>
-            </Link>
-          </li>
-
-          <li className="nav-item">
-            <Link
-              to="/architecte"
-              className={`nav-link ${isActive('/architecte')}`}
-              onClick={closeMenu}
-            >
-              <FaDraftingCompass className="nav-icon" />
-              <span>Architecte</span>
-            </Link>
-          </li>
-
-          <li className="nav-item">
-            <Link
-              to="/logements"
-              className={`nav-link ${isActive('/logements')}`}
-              onClick={closeMenu}
-            >
-              <FaHome className="nav-icon" />
-              <span>Logements</span>
-            </Link>
-          </li>
-
-          <li className="nav-item">
-            <Link
-              to="/logements-gestion"
-              className={`nav-link ${isActive('/logements-gestion')}`}
-              onClick={closeMenu}
-            >
-              <FaHome className="nav-icon" />
-              <span>Gestion Logements</span>
-            </Link>
-          </li>
-
-          <li className="nav-item">
-            <Link
-              to="/visite3d"
-              className={`nav-link ${isActive('/visite3d')}`}
-              onClick={closeMenu}
-            >
-              <FaCube className="nav-icon" />
-              <span>Visite 3D</span>
-            </Link>
-          </li>
-
-          <li className="nav-item">
-            <Link
-              to="/localisation"
-              className={`nav-link ${isActive('/localisation')}`}
-              onClick={closeMenu}
-            >
-              <FaMapMarkerAlt className="nav-icon" />
-              <span>Localisation</span>
-            </Link>
-          </li>
-
-          <li className="nav-item">
-            <Link
-              to="/analyse-economique"
-              className={`nav-link ${isActive('/analyse-economique')}`}
-              onClick={closeMenu}
-            >
-              <FaChartLine className="nav-icon" />
-              <span>Analyse Économique</span>
-            </Link>
-          </li>
-
-          <li className="nav-item">
-            <Link
-              to="/option-achat"
-              className={`nav-link ${isActive('/option-achat')}`}
-              onClick={closeMenu}
-            >
-              <FaMoneyBillWave className="nav-icon" />
-              <span>Option d'Achat</span>
-            </Link>
-          </li>
-
-          <li className="nav-item">
-            <Link
-              to="/questionnaire"
-              className={`nav-link ${isActive('/questionnaire')}`}
-              onClick={closeMenu}
-            >
-              <FaClipboardList className="nav-icon" />
-              <span>Questionnaire</span>
-            </Link>
-          </li>
+          {menuItems.map((item) => (
+            <li className="nav-item" key={item.path}>
+              <Link
+                to={item.path}
+                className={`nav-link ${isActive(item.path)}`}
+                onClick={closeMenu}
+              >
+                <span className="nav-icon">{item.icon}</span>
+                <span>{item.label}</span>
+              </Link>
+            </li>
+          ))}
 
           {/* User Info and Logout */}
           <li className="nav-item nav-user">
             <div className="user-info">
               <FaUser className="user-icon" />
               <span className="user-name">
-                {user ? `${user.prenom || ''} ${user.nom || ''}`.trim() || user.email : 'Admin'}
+                {user ? `${user.prenom || ''} ${user.nom || ''}`.trim() || user.email : 'Utilisateur'}
               </span>
+              {isApporteur && user?.code && (
+                <span className="user-code">Code: {user.code}</span>
+              )}
             </div>
           </li>
 

@@ -14,6 +14,7 @@ import {
   FaQuestionCircle
 } from 'react-icons/fa';
 import API_URL from '../config';
+import CodeApporteurModal from '../components/CodeApporteurModal';
 import './OptionAchat.css';
 
 const OptionAchat = () => {
@@ -21,6 +22,32 @@ const OptionAchat = () => {
   const [activeQuestion, setActiveQuestion] = useState(null);
   const [content, setContent] = useState(null);
   const [logements, setLogements] = useState([]);
+  const [showCodeModal, setShowCodeModal] = useState(false);
+
+  // Gestion du modal code apporteur
+  const handleStartQuestionnaire = () => {
+    setShowCodeModal(true);
+  };
+
+  const handleCodeValidated = (code, apporteur) => {
+    setShowCodeModal(false);
+    // Stocker le code en sessionStorage pour le récupérer dans le questionnaire
+    sessionStorage.setItem('codeApporteur', code);
+    sessionStorage.setItem('apporteurInfo', JSON.stringify(apporteur));
+    navigate('/questionnaire');
+  };
+
+  const handleSkipCode = () => {
+    setShowCodeModal(false);
+    // Supprimer tout code précédemment stocké
+    sessionStorage.removeItem('codeApporteur');
+    sessionStorage.removeItem('apporteurInfo');
+    navigate('/questionnaire');
+  };
+
+  const handleCloseModal = () => {
+    setShowCodeModal(false);
+  };
 
   useEffect(() => {
     const fetchContent = async () => {
@@ -321,7 +348,7 @@ const OptionAchat = () => {
             </p>
             <button
               className="btn btn-primary btn-large"
-              onClick={() => navigate('/questionnaire')}
+              onClick={handleStartQuestionnaire}
             >
               {content?.ctaSection?.buttonText || "Commencer le Questionnaire"}
             </button>
@@ -512,6 +539,14 @@ const OptionAchat = () => {
           </div>
         </div>
       </section>
+
+      {/* Modal Code Apporteur */}
+      <CodeApporteurModal
+        isOpen={showCodeModal}
+        onClose={handleCloseModal}
+        onValidate={handleCodeValidated}
+        onSkip={handleSkipCode}
+      />
     </div>
   );
 };

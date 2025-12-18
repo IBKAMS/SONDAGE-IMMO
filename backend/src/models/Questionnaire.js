@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const Counter = require('./Counter');
 
 const questionnaireSchema = new mongoose.Schema({
   projet_id: {
@@ -9,6 +10,41 @@ const questionnaireSchema = new mongoose.Schema({
   logement_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Logement'
+  },
+
+  // Apporteur d'affaires
+  codeApporteur: {
+    type: String,
+    default: null,
+    uppercase: true,
+    index: true
+  },
+  apporteur_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'ApporteurAffaires',
+    default: null
+  },
+  numeroDossier: {
+    type: String,
+    unique: true,
+    sparse: true // Permet plusieurs valeurs null
+  },
+
+  // Commission tracking
+  commission: {
+    montant: {
+      type: Number,
+      default: 0
+    },
+    statut: {
+      type: String,
+      enum: ['non_applicable', 'en_attente', 'validee', 'payee'],
+      default: 'non_applicable'
+    },
+    datePaiement: {
+      type: Date,
+      default: null
+    }
   },
 
   // Informations de contact
@@ -139,7 +175,7 @@ const questionnaireSchema = new mongoose.Schema({
   // Statut
   statut: {
     type: String,
-    enum: ['nouveau', 'en_cours', 'contacté', 'visité', 'converti', 'perdu'],
+    enum: ['nouveau', 'en_cours', 'contacté', 'visité', 'converti', 'perdu', 'commission_payee'],
     default: 'nouveau'
   },
 
@@ -170,9 +206,27 @@ questionnaireSchema.index({ email: 1 });
 questionnaireSchema.index({ telephone: 1 });
 questionnaireSchema.index({ date_soumission: -1 });
 
-// Calcul automatique du score d'intérêt
-questionnaireSchema.pre('save', function(next) {
+// Calcul automatique du score d'intérêt et génération numéro de dossier
+questionnaireSchema.pre('save', async function(next) {
   if (this.isNew) {
+    // Génération du numéro de dossier
+    try {
+      const year = new Date().getFullYear();
+
+      if (this.codeApporteur) {
+        // Avec code apporteur: CODE-ANNEE-SEQUENCE (ex: ABC12-2026-001)
+        const seq = await Counter.getNextSequence(`dossier_${this.codeApporteur}_${year}`);
+        this.numeroDossier = `${this.codeApporteur}-${year}-${String(seq).padStart(3, '0')}`;
+      } else {
+        // Sans code (organique): ORG-ANNEE-SEQUENCE (ex: ORG-2026-001)
+        const seq = await Counter.getNextSequence(`dossier_organic_${year}`);
+        this.numeroDossier = `ORG-${year}-${String(seq).padStart(3, '0')}`;
+      }
+    } catch (error) {
+      console.error('Erreur génération numéro dossier:', error);
+    }
+
+    // Calcul du score d'intérêt
     let score = 0;
 
     // Budget compatible (+30 points)

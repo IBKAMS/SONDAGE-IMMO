@@ -1440,6 +1440,8 @@ const Analytics = () => {
             <thead>
               <tr>
                 <th>Date</th>
+                <th>N° Dossier</th>
+                <th>Code Apporteur</th>
                 <th>Nom</th>
                 <th>Email</th>
                 <th>Téléphone</th>
@@ -1454,6 +1456,16 @@ const Analytics = () => {
               {responses.slice(0, 10).map((response, index) => (
                 <tr key={index}>
                   <td>{response.createdAt ? new Date(response.createdAt).toLocaleDateString() : 'N/A'}</td>
+                  <td>
+                    <span className="dossier-number">{response.numeroDossier || '-'}</span>
+                  </td>
+                  <td>
+                    {response.codeApporteur ? (
+                      <span className="code-apporteur">{response.codeApporteur}</span>
+                    ) : (
+                      <span className="code-organic">Organique</span>
+                    )}
+                  </td>
                   <td>{response.nom} {response.prenom}</td>
                   <td>{response.email}</td>
                   <td>{response.telephone}</td>

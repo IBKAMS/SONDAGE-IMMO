@@ -416,6 +416,37 @@
   font-size: 0.85rem;
 }
 
+/* Dossier Number and Code Apporteur styles */
+.dossier-number {
+  font-family: 'Fira Code', 'Consolas', monospace;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #4F46E5;
+  background: rgba(79, 70, 229, 0.1);
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.code-apporteur {
+  font-family: 'Fira Code', 'Consolas', monospace;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #7C3AED;
+  background: rgba(124, 58, 237, 0.1);
+  padding: 4px 8px;
+  border-radius: 4px;
+  letter-spacing: 1px;
+}
+
+.code-organic {
+  font-size: 0.8rem;
+  color: #6B7280;
+  background: rgba(107, 114, 128, 0.1);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-style: italic;
+}
+
 .btn-view-detail {
   padding: var(--spacing-xs) var(--spacing-sm);
   background: var(--primary-color);

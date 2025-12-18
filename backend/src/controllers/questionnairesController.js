@@ -1,11 +1,12 @@
 const Questionnaire = require('../models/Questionnaire');
+const ApporteurAffaires = require('../models/ApporteurAffaires');
 
 // @desc    Soumettre un questionnaire (public)
 // @route   POST /api/questionnaires/submit
 // @access  Public
 exports.submitQuestionnaire = async (req, res) => {
   try {
-    const { nom, prenom, email, telephone } = req.body;
+    const { nom, prenom, email, telephone, codeApporteur } = req.body;
 
     // Vérifier si un questionnaire existe déjà avec les mêmes informations
     // Condition: (nom + prénom) ET (email OU telephone)
@@ -30,13 +31,34 @@ exports.submitQuestionnaire = async (req, res) => {
       });
     }
 
-    const questionnaire = await Questionnaire.create(req.body);
+    // Préparer les données du questionnaire
+    const questionnaireData = { ...req.body };
+
+    // Si un code apporteur est fourni, valider et lier à l'apporteur
+    if (codeApporteur) {
+      const apporteur = await ApporteurAffaires.findOne({
+        code: codeApporteur.toUpperCase(),
+        actif: true
+      });
+
+      if (apporteur) {
+        questionnaireData.codeApporteur = codeApporteur.toUpperCase();
+        questionnaireData.apporteur_id = apporteur._id;
+
+        // Mettre à jour les statistiques de l'apporteur
+        apporteur.statistiques.prospectsReferes += 1;
+        await apporteur.save();
+      }
+    }
+
+    const questionnaire = await Questionnaire.create(questionnaireData);
 
     res.status(201).json({
       success: true,
       message: 'Questionnaire soumis avec succès',
       data: {
         id: questionnaire._id,
+        numeroDossier: questionnaire.numeroDossier,
         score_interet: questionnaire.score_interet,
         qualification: questionnaire.qualification
       }

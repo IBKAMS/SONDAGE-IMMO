@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { FaCheckCircle, FaFileAlt, FaCopy, FaHome } from 'react-icons/fa';
 import API_URL from '../config';
 import './Questionnaire.css';
 
@@ -10,6 +11,9 @@ const Questionnaire = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [steps, setSteps] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [submissionResult, setSubmissionResult] = useState(null);
+  const [copiedDossier, setCopiedDossier] = useState(false);
   const [formData, setFormData] = useState({
     logementId: logementId || '',
     // Étape 1: Informations personnelles
@@ -931,31 +935,61 @@ const Questionnaire = () => {
       // Transformer les données avant l'envoi
       const transformedData = transformDataForBackend(formData);
 
+      // Récupérer le code apporteur du sessionStorage
+      const codeApporteur = sessionStorage.getItem('codeApporteur');
+      if (codeApporteur) {
+        transformedData.codeApporteur = codeApporteur;
+      }
+
       const response = await fetch(`${API_URL}/api/questionnaires/submit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(transformedData)
       });
 
+      const responseData = await response.json();
+
       if (response.ok) {
-        alert('Questionnaire soumis avec succès! Nous vous contacterons bientôt.');
-        // Redirection vers la page Option d'Achat
-        navigate('/option-achat');
+        // Nettoyer le sessionStorage
+        sessionStorage.removeItem('codeApporteur');
+        sessionStorage.removeItem('apporteurInfo');
+
+        // Stocker le résultat et afficher le modal de succès
+        setSubmissionResult({
+          numeroDossier: responseData.data?.numeroDossier || responseData.numeroDossier,
+          scoreInteret: responseData.data?.score_interet || responseData.score_interet,
+          qualification: responseData.data?.qualification || responseData.qualification
+        });
+        setShowSuccessModal(true);
       } else {
-        const errorData = await response.json();
-        console.error('Erreur backend:', errorData);
+        console.error('Erreur backend:', responseData);
 
         // Afficher le message spécifique du backend (notamment pour les doublons)
-        if (errorData.duplicate) {
-          alert(errorData.message || 'Vous avez déjà rempli ce questionnaire. Merci pour votre intérêt !');
+        if (responseData.duplicate) {
+          alert(responseData.message || 'Vous avez déjà rempli ce questionnaire. Merci pour votre intérêt !');
         } else {
-          alert(errorData.message || 'Erreur lors de la soumission. Veuillez réessayer.');
+          alert(responseData.message || 'Erreur lors de la soumission. Veuillez réessayer.');
         }
       }
     } catch (error) {
       console.error('Erreur:', error);
       alert('Erreur de connexion. Veuillez réessayer.');
     }
+  };
+
+  // Copier le numéro de dossier
+  const handleCopyDossier = () => {
+    if (submissionResult?.numeroDossier) {
+      navigator.clipboard.writeText(submissionResult.numeroDossier);
+      setCopiedDossier(true);
+      setTimeout(() => setCopiedDossier(false), 2000);
+    }
+  };
+
+  // Fermer le modal de succès et naviguer
+  const handleCloseSuccessModal = () => {
+    setShowSuccessModal(false);
+    navigate('/option-achat');
   };
 
   const progress = ((currentStep + 1) / steps.length) * 100;
@@ -1291,6 +1325,68 @@ const Questionnaire = () => {
           </div>
         </form>
       </div>
+
+      {/* Modal de Succès avec Numéro de Dossier */}
+      <AnimatePresence>
+        {showSuccessModal && (
+          <motion.div
+            className="success-modal-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="success-modal"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ type: 'spring', damping: 25 }}
+            >
+              <div className="success-modal-icon">
+                <FaCheckCircle />
+              </div>
+
+              <h2>Questionnaire Soumis avec Succès !</h2>
+
+              <p className="success-message">
+                Merci pour votre intérêt. Notre équipe vous contactera dans les 24h.
+              </p>
+
+              {submissionResult?.numeroDossier && (
+                <div className="dossier-section">
+                  <p className="dossier-label">
+                    <FaFileAlt /> Votre Numéro de Dossier
+                  </p>
+                  <div className="dossier-number-container">
+                    <span className="dossier-number">
+                      {submissionResult.numeroDossier}
+                    </span>
+                    <button
+                      className="copy-btn"
+                      onClick={handleCopyDossier}
+                      title="Copier"
+                    >
+                      <FaCopy />
+                      {copiedDossier && <span className="copied-text">Copié !</span>}
+                    </button>
+                  </div>
+                  <p className="dossier-info">
+                    Conservez ce numéro précieusement. Il vous sera demandé
+                    pour le suivi de votre dossier.
+                  </p>
+                </div>
+              )}
+
+              <button
+                className="btn btn-primary btn-large"
+                onClick={handleCloseSuccessModal}
+              >
+                <FaHome /> Retour à l'accueil
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

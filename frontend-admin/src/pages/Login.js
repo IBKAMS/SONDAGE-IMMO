@@ -12,15 +12,20 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, userType } = useAuth();
   const navigate = useNavigate();
 
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/dashboard');
+      // Rediriger vers le dashboard approprié selon le type d'utilisateur
+      if (userType === 'apporteur') {
+        navigate('/apporteur-dashboard');
+      } else {
+        navigate('/dashboard');
+      }
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, userType, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -45,8 +50,12 @@ const Login = () => {
       const result = await login(email, password);
 
       if (result.success) {
-        // Redirect to dashboard
-        navigate('/dashboard');
+        // Rediriger vers le dashboard approprié selon le type d'utilisateur
+        if (result.userType === 'apporteur') {
+          navigate('/apporteur-dashboard');
+        } else {
+          navigate('/dashboard');
+        }
       } else {
         setError(result.message || 'Erreur de connexion');
       }

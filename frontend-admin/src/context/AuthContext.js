@@ -15,6 +15,7 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
+  const [userType, setUserType] = useState(null); // 'admin' ou 'apporteur'
   const [loading, setLoading] = useState(true);
 
   // Check authentication on mount
@@ -27,10 +28,12 @@ export const AuthProvider = ({ children }) => {
     try {
       const storedToken = localStorage.getItem('token');
       const storedUser = localStorage.getItem('user');
+      const storedUserType = localStorage.getItem('userType');
 
       if (storedToken && storedUser) {
         setToken(storedToken);
         setUser(JSON.parse(storedUser));
+        setUserType(storedUserType || 'admin');
 
         // Set axios default header
         axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
@@ -43,53 +46,93 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Login function
+  // Login function - essaie d'abord admin, puis apporteur
   const login = async (email, password) => {
     try {
-      const response = await axios.post(`${API_URL}/api/auth/login`, {
-        email,
-        password
-      });
+      // D'abord essayer la connexion admin
+      try {
+        const adminResponse = await axios.post(`${API_URL}/api/auth/login`, {
+          email,
+          password
+        });
 
-      if (response.data.success) {
-        const { token: authToken, admin } = response.data;
+        if (adminResponse.data.success) {
+          const { token: authToken, admin } = adminResponse.data;
 
-        // Store in localStorage
-        localStorage.setItem('token', authToken);
-        localStorage.setItem('user', JSON.stringify(admin));
+          // Store in localStorage
+          localStorage.setItem('token', authToken);
+          localStorage.setItem('user', JSON.stringify(admin));
+          localStorage.setItem('userType', 'admin');
 
-        // Update state
-        setToken(authToken);
-        setUser(admin);
+          // Update state
+          setToken(authToken);
+          setUser(admin);
+          setUserType('admin');
 
-        // Set axios default header
-        axios.defaults.headers.common['Authorization'] = `Bearer ${authToken}`;
+          // Set axios default header
+          axios.defaults.headers.common['Authorization'] = `Bearer ${authToken}`;
 
-        return { success: true };
-      } else {
-        return {
-          success: false,
-          message: response.data.message || 'Erreur de connexion'
-        };
+          return { success: true, userType: 'admin' };
+        }
+      } catch (adminError) {
+        // Si l'admin échoue avec 401, essayer apporteur
+        if (adminError.response && adminError.response.status === 401) {
+          // Essayer la connexion apporteur
+          try {
+            const apporteurResponse = await axios.post(`${API_URL}/api/apporteur/login`, {
+              email,
+              password
+            });
+
+            if (apporteurResponse.data.success) {
+              const { token: authToken, apporteur } = apporteurResponse.data;
+
+              // Store in localStorage
+              localStorage.setItem('token', authToken);
+              localStorage.setItem('user', JSON.stringify(apporteur));
+              localStorage.setItem('userType', 'apporteur');
+
+              // Update state
+              setToken(authToken);
+              setUser(apporteur);
+              setUserType('apporteur');
+
+              // Set axios default header
+              axios.defaults.headers.common['Authorization'] = `Bearer ${authToken}`;
+
+              return { success: true, userType: 'apporteur' };
+            }
+          } catch (apporteurError) {
+            // Les deux ont échoué
+            return {
+              success: false,
+              message: 'Email ou mot de passe incorrect'
+            };
+          }
+        } else {
+          throw adminError;
+        }
       }
+
+      return {
+        success: false,
+        message: 'Email ou mot de passe incorrect'
+      };
     } catch (error) {
       console.error('Login error:', error);
 
       // Handle different error scenarios
       if (error.response) {
-        // Server responded with error
         return {
           success: false,
           message: error.response.data.message || 'Email ou mot de passe incorrect'
         };
       } else if (error.request) {
-        // Request made but no response
         return {
           success: false,
           message: 'Impossible de se connecter au serveur'
         };
       } else {
-        // Something else happened
         return {
           success: false,
           message: 'Une erreur est survenue'
@@ -103,10 +146,12 @@ export const AuthProvider = ({ children }) => {
     // Clear localStorage
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('userType');
 
     // Clear state
     setToken(null);
     setUser(null);
+    setUserType(null);
 
     // Remove axios default header
     delete axios.defaults.headers.common['Authorization'];
@@ -115,11 +160,14 @@ export const AuthProvider = ({ children }) => {
   const value = {
     user,
     token,
+    userType,
     loading,
     login,
     logout,
     checkAuth,
-    isAuthenticated: !!token && !!user
+    isAuthenticated: !!token && !!user,
+    isAdmin: userType === 'admin',
+    isApporteur: userType === 'apporteur'
   };
 
   return (
