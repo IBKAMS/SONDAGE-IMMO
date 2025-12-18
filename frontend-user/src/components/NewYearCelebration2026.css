@@ -1,0 +1,541 @@
+/* ============================================
+   New Year 2026 - Célébration Spectaculaire
+   ============================================ */
+
+.new-year-2026 {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 9999;
+  overflow: hidden;
+}
+
+/* ============================================
+   Message de Bienvenue Animé
+   ============================================ */
+
+.welcome-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg,
+    rgba(130, 18, 142, 0.98) 0%,
+    rgba(30, 0, 50, 0.99) 50%,
+    rgba(0, 20, 60, 0.98) 100%
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  pointer-events: auto;
+  cursor: pointer;
+  animation: welcomeFadeIn 1s ease-out;
+}
+
+@keyframes welcomeFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.welcome-content {
+  text-align: center;
+  animation: welcomeScale 0.8s ease-out 0.3s both;
+}
+
+@keyframes welcomeScale {
+  from {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.welcome-year {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 30px;
+}
+
+.welcome-year .digit {
+  font-size: 8rem;
+  font-weight: 900;
+  color: transparent;
+  background: linear-gradient(180deg, #FFD700 0%, #FF8C00 50%, #FF4500 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  text-shadow: 0 0 60px rgba(255, 215, 0, 0.5);
+  animation: digitBounce 0.6s ease-out backwards, digitGlow 2s ease-in-out infinite alternate;
+}
+
+.welcome-year .digit:nth-child(1) { animation-delay: 0.5s, 0s; }
+.welcome-year .digit:nth-child(2) { animation-delay: 0.7s, 0.5s; }
+.welcome-year .digit:nth-child(3) { animation-delay: 0.9s, 1s; }
+.welcome-year .digit:nth-child(4) { animation-delay: 1.1s, 1.5s; }
+
+@keyframes digitBounce {
+  0% {
+    transform: translateY(-100px) rotateX(90deg);
+    opacity: 0;
+  }
+  60% {
+    transform: translateY(20px) rotateX(-10deg);
+  }
+  100% {
+    transform: translateY(0) rotateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes digitGlow {
+  from {
+    filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.5));
+  }
+  to {
+    filter: drop-shadow(0 0 40px rgba(255, 215, 0, 0.8)) drop-shadow(0 0 60px rgba(255, 140, 0, 0.6));
+  }
+}
+
+.welcome-title {
+  font-size: 3rem;
+  color: #FFFFFF;
+  margin-bottom: 15px;
+  animation: titleSlide 0.8s ease-out 1.3s both;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes titleSlide {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.welcome-subtitle {
+  font-size: 1.5rem;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 30px;
+  animation: titleSlide 0.8s ease-out 1.5s both;
+}
+
+.welcome-house {
+  font-size: 5rem;
+  animation: houseFloat 3s ease-in-out infinite, titleSlide 0.8s ease-out 1.7s both;
+}
+
+@keyframes houseFloat {
+  0%, 100% {
+    transform: translateY(0) rotate(-5deg);
+  }
+  50% {
+    transform: translateY(-20px) rotate(5deg);
+  }
+}
+
+.click-hint {
+  display: block;
+  margin-top: 40px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.9rem;
+  animation: pulse 2s ease-in-out infinite, titleSlide 0.8s ease-out 2s both;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+/* ============================================
+   Feux d'Artifice
+   ============================================ */
+
+.firework {
+  position: fixed;
+  width: var(--fw-size);
+  height: var(--fw-size);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.firework-particle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  background: var(--fw-color);
+  border-radius: 50%;
+  transform-origin: center;
+  animation: explode 1.5s ease-out forwards;
+  box-shadow: 0 0 10px var(--fw-color), 0 0 20px var(--fw-color);
+}
+
+.firework-particle {
+  --angle: calc(var(--i) * 30deg);
+  animation-delay: calc(var(--i) * 0.02s);
+}
+
+@keyframes explode {
+  0% {
+    transform: translate(-50%, -50%) rotate(var(--angle)) translateY(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(var(--angle)) translateY(calc(var(--fw-size) / 2)) scale(0);
+    opacity: 0;
+  }
+}
+
+/* ============================================
+   Sparkle Trail (Curseur)
+   ============================================ */
+
+.cursor-sparkle {
+  position: fixed;
+  pointer-events: none;
+  background: radial-gradient(circle, #FFD700 0%, transparent 70%);
+  border-radius: 50%;
+  animation: sparkleOut 0.5s ease-out forwards;
+  z-index: 9998;
+}
+
+@keyframes sparkleOut {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0);
+    opacity: 0;
+  }
+}
+
+/* ============================================
+   Compte à Rebours
+   ============================================ */
+
+.countdown-widget {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(50, 0, 80, 0.9) 100%);
+  padding: 15px 20px;
+  border-radius: 20px;
+  pointer-events: auto;
+  border: 2px solid rgba(255, 215, 0, 0.3);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3),
+              inset 0 0 30px rgba(255, 215, 0, 0.1);
+  backdrop-filter: blur(10px);
+  animation: slideIn 0.8s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.countdown-title {
+  text-align: center;
+  color: #FFD700;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.countdown-icon {
+  margin-right: 5px;
+}
+
+.countdown-timer {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.countdown-item {
+  text-align: center;
+}
+
+.countdown-value {
+  display: block;
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: #FFFFFF;
+  text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+  font-family: 'Courier New', monospace;
+  min-width: 50px;
+}
+
+.countdown-seconds {
+  color: #FFD700;
+  animation: secondsPulse 1s ease-in-out infinite;
+}
+
+@keyframes secondsPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.countdown-label {
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.countdown-separator {
+  font-size: 1.5rem;
+  color: #FFD700;
+  font-weight: bold;
+  animation: separatorBlink 1s step-end infinite;
+}
+
+@keyframes separatorBlink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0.3; }
+}
+
+/* ============================================
+   Badge Flottant Amélioré
+   ============================================ */
+
+.floating-badge {
+  position: fixed;
+  bottom: 100px;
+  right: 20px;
+  pointer-events: auto;
+  animation: floatBadge 4s ease-in-out infinite;
+  z-index: 9997;
+}
+
+@keyframes floatBadge {
+  0%, 100% {
+    transform: translateY(0) rotate(-2deg);
+  }
+  50% {
+    transform: translateY(-15px) rotate(2deg);
+  }
+}
+
+.badge-glow {
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  right: -10px;
+  bottom: -10px;
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.4) 0%, transparent 70%);
+  border-radius: 30px;
+  animation: glowPulse 2s ease-in-out infinite;
+}
+
+@keyframes glowPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.8;
+  }
+}
+
+.badge-content {
+  position: relative;
+  background: linear-gradient(135deg, #FFD700 0%, #FF8C00 50%, #FF4500 100%);
+  padding: 12px 20px;
+  border-radius: 25px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 8px 30px rgba(255, 140, 0, 0.5);
+}
+
+.badge-emoji {
+  font-size: 1.5rem;
+  animation: emojiWiggle 2s ease-in-out infinite;
+}
+
+.badge-emoji:last-child {
+  animation-delay: 0.5s;
+}
+
+@keyframes emojiWiggle {
+  0%, 100% { transform: rotate(-10deg); }
+  50% { transform: rotate(10deg); }
+}
+
+.badge-text {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #000;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3);
+}
+
+/* ============================================
+   Étoiles de Fond
+   ============================================ */
+
+.stars-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 9990;
+}
+
+.star {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: #FFD700;
+  border-radius: 50%;
+  animation: twinkle 2s ease-in-out infinite;
+  box-shadow: 0 0 10px #FFD700, 0 0 20px #FFD700;
+}
+
+@keyframes twinkle {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+/* ============================================
+   Ruban Doré Défilant
+   ============================================ */
+
+.golden-ribbon {
+  position: fixed;
+  top: 60px;
+  left: 0;
+  right: 0;
+  background: linear-gradient(90deg,
+    #B8860B 0%,
+    #FFD700 25%,
+    #FFA500 50%,
+    #FFD700 75%,
+    #B8860B 100%
+  );
+  background-size: 200% 100%;
+  animation: ribbonShimmer 3s linear infinite;
+  padding: 8px 0;
+  pointer-events: auto;
+  z-index: 9996;
+  box-shadow: 0 4px 20px rgba(255, 215, 0, 0.4);
+  overflow: hidden;
+}
+
+@keyframes ribbonShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.ribbon-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  animation: ribbonScroll 20s linear infinite;
+  white-space: nowrap;
+}
+
+@keyframes ribbonScroll {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+.ribbon-content span {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #000;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+}
+
+/* ============================================
+   Responsive
+   ============================================ */
+
+@media (max-width: 768px) {
+  .welcome-year .digit {
+    font-size: 4rem;
+  }
+
+  .welcome-title {
+    font-size: 2rem;
+  }
+
+  .welcome-subtitle {
+    font-size: 1.1rem;
+  }
+
+  .welcome-house {
+    font-size: 3rem;
+  }
+
+  .countdown-widget {
+    top: auto;
+    bottom: 20px;
+    right: 10px;
+    left: 10px;
+    padding: 10px 15px;
+  }
+
+  .countdown-value {
+    font-size: 1.3rem;
+    min-width: 35px;
+  }
+
+  .floating-badge {
+    display: none;
+  }
+
+  .golden-ribbon {
+    padding: 6px 0;
+  }
+
+  .ribbon-content span {
+    font-size: 0.75rem;
+  }
+
+  .firework {
+    display: none;
+  }
+
+  .cursor-sparkle {
+    display: none;
+  }
+
+  .star:nth-child(n+15) {
+    display: none;
+  }
+}

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FaHome, FaBuilding, FaMapMarkedAlt, FaChartLine } from 'react-icons/fa';
 import API_URL from '../config';
-import NewYearCelebration from '../components/NewYearCelebration';
+import NewYearCelebration2026 from '../components/NewYearCelebration2026';
 import './Home.css';
 
 const Home = () => {
@@ -39,8 +39,8 @@ const Home = () => {
 
   return (
     <div className="home-page">
-      {/* Célébration Nouvel An 2026 */}
-      <NewYearCelebration />
+      {/* Célébration Nouvel An 2026 - Version Spectaculaire */}
+      <NewYearCelebration2026 />
 
       {/* Hero Section */}
       <section className="home-hero">
