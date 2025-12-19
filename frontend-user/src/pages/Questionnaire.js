@@ -1346,7 +1346,7 @@ const Questionnaire = () => {
               <h2>Questionnaire Soumis avec Succès !</h2>
 
               <p className="success-message">
-                Merci pour votre intérêt. Notre équipe vous contactera dans les MEILLEURS DÉLAIS.
+                Merci pour votre intérêt. Notre équipe vous contactera dans les meilleurs délais.
               </p>
 
               {submissionResult?.numeroDossier && (
