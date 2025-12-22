@@ -7,7 +7,8 @@ const {
   updateQuestionnaire,
   deleteQuestionnaire,
   addNote,
-  updateStatut
+  updateStatut,
+  updateEtapeDossier
 } = require('../controllers/questionnairesController');
 
 // Routes publiques
@@ -20,5 +21,6 @@ router.get('/:id', getQuestionnaire);
 router.put('/:id', updateQuestionnaire);
 router.post('/:id/notes', addNote);
 router.put('/:id/statut', updateStatut);
+router.put('/:id/etape', updateEtapeDossier);
 
 module.exports = router;

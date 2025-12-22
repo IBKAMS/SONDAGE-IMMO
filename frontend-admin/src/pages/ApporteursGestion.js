@@ -6,11 +6,24 @@ import {
   FaEye, FaToggleOn, FaToggleOff, FaCopy, FaCheck,
   FaSync, FaTimes, FaUserTie, FaChartLine, FaMoneyBillWave,
   FaEnvelope, FaPhone, FaGlobe, FaPercent, FaKey, FaLock,
-  FaSignInAlt, FaEyeSlash
+  FaSignInAlt, FaEyeSlash, FaRoad, FaClipboardList, FaPhoneAlt,
+  FaSearchLocation, FaClipboardCheck, FaFileSignature, FaHardHat, FaHome
 } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import API_URL from '../config';
 import './ApporteursGestion.css';
+
+// Définition des étapes du dossier
+const ETAPES_DOSSIER = [
+  { id: 'dossier_cree', label: 'Dossier créé', icon: FaClipboardList },
+  { id: 'contact_etabli', label: 'Contact établi', icon: FaPhoneAlt },
+  { id: 'visite_effectuee', label: 'Visite effectuée', icon: FaSearchLocation },
+  { id: 'reservation', label: 'Réservation', icon: FaClipboardCheck },
+  { id: 'financement_valide', label: 'Financement validé', icon: FaMoneyBillWave },
+  { id: 'signature_notaire', label: 'Signature notaire', icon: FaFileSignature },
+  { id: 'construction', label: 'Construction', icon: FaHardHat },
+  { id: 'remise_cles', label: 'Remise des clés', icon: FaHome }
+];
 
 const ApporteursGestion = () => {
   const navigate = useNavigate();
@@ -42,6 +55,7 @@ const ApporteursGestion = () => {
   const [formErrors, setFormErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [showFormPassword, setShowFormPassword] = useState(false);
+  const [updatingEtape, setUpdatingEtape] = useState(null);
 
   useEffect(() => {
     fetchApporteurs();
@@ -303,6 +317,47 @@ const ApporteursGestion = () => {
     } catch (error) {
       setAccessError('Erreur lors de l\'accès au dashboard');
     }
+  };
+
+  const handleUpdateEtape = async (prospectId, newEtape) => {
+    setUpdatingEtape(prospectId);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/questionnaires/${prospectId}/etape`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ etapeDossier: newEtape })
+      });
+
+      if (response.ok) {
+        // Rafraîchir la liste des prospects
+        if (selectedApporteur) {
+          await fetchProspects(selectedApporteur._id);
+        }
+        // Rafraîchir aussi les apporteurs pour les stats
+        await fetchApporteurs();
+      } else {
+        const error = await response.json();
+        alert(error.message || 'Erreur lors de la mise à jour de l\'étape');
+      }
+    } catch (error) {
+      console.error('Erreur:', error);
+      alert('Erreur lors de la mise à jour de l\'étape');
+    } finally {
+      setUpdatingEtape(null);
+    }
+  };
+
+  const getEtapeLabel = (etapeId) => {
+    const etape = ETAPES_DOSSIER.find(e => e.id === etapeId);
+    return etape ? etape.label : 'Dossier créé';
+  };
+
+  const getEtapeIndex = (etapeId) => {
+    return ETAPES_DOSSIER.findIndex(e => e.id === etapeId);
   };
 
   const formatCurrency = (amount) => {
@@ -799,37 +854,66 @@ const ApporteursGestion = () => {
                       <th>Contact</th>
                       <th>Date</th>
                       <th>Statut</th>
+                      <th><FaRoad /> Étape Dossier</th>
                       <th>Commission</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {prospects.map((prospect) => (
-                      <tr key={prospect._id}>
-                        <td>
-                          <span className="dossier-number">{prospect.numeroDossier || '-'}</span>
-                        </td>
-                        <td>{prospect.prenom} {prospect.nom}</td>
-                        <td>
-                          <div className="prospect-contact">
-                            <span>{prospect.email}</span>
-                            <span>{prospect.telephone}</span>
-                          </div>
-                        </td>
-                        <td>{new Date(prospect.date_soumission).toLocaleDateString('fr-FR')}</td>
-                        <td>
-                          <span className={`status-badge status-${prospect.statut}`}>
-                            {prospect.statut}
-                          </span>
-                        </td>
-                        <td>
-                          <span className={`commission-status status-${prospect.commission?.statut || 'non_applicable'}`}>
-                            {prospect.commission?.statut === 'payee'
-                              ? formatCurrency(prospect.commission?.montant || 0)
-                              : prospect.commission?.statut || 'N/A'}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
+                    {prospects.map((prospect) => {
+                      const currentEtapeIndex = getEtapeIndex(prospect.etapeDossier || 'dossier_cree');
+                      return (
+                        <tr key={prospect._id}>
+                          <td>
+                            <span className="dossier-number">{prospect.numeroDossier || '-'}</span>
+                          </td>
+                          <td>{prospect.prenom} {prospect.nom}</td>
+                          <td>
+                            <div className="prospect-contact">
+                              <span>{prospect.email}</span>
+                              <span>{prospect.telephone}</span>
+                            </div>
+                          </td>
+                          <td>{new Date(prospect.date_soumission).toLocaleDateString('fr-FR')}</td>
+                          <td>
+                            <span className={`status-badge status-${prospect.statut}`}>
+                              {prospect.statut}
+                            </span>
+                          </td>
+                          <td>
+                            <div className="etape-selector-container">
+                              <select
+                                className={`etape-select etape-${currentEtapeIndex >= 3 ? 'advanced' : currentEtapeIndex >= 1 ? 'progress' : 'start'}`}
+                                value={prospect.etapeDossier || 'dossier_cree'}
+                                onChange={(e) => handleUpdateEtape(prospect._id, e.target.value)}
+                                disabled={updatingEtape === prospect._id}
+                              >
+                                {ETAPES_DOSSIER.map((etape, index) => (
+                                  <option key={etape.id} value={etape.id}>
+                                    {index + 1}. {etape.label}
+                                  </option>
+                                ))}
+                              </select>
+                              {updatingEtape === prospect._id && (
+                                <FaSync className="etape-loading" />
+                              )}
+                              <div className="etape-progress-bar">
+                                <div
+                                  className="etape-progress-fill"
+                                  style={{ width: `${((currentEtapeIndex + 1) / ETAPES_DOSSIER.length) * 100}%` }}
+                                />
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <span className={`commission-status status-${prospect.commission?.statut || 'non_applicable'}`}>
+                              {prospect.commission?.statut === 'payee'
+                                ? formatCurrency(prospect.commission?.montant || 0)
+                                : prospect.commission?.statut || 'N/A'}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               )}

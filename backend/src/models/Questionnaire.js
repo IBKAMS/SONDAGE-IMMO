@@ -179,6 +179,37 @@ const questionnaireSchema = new mongoose.Schema({
     default: 'nouveau'
   },
 
+  // Étape du dossier (suivi progression)
+  etapeDossier: {
+    type: String,
+    enum: [
+      'dossier_cree',        // 1. Dossier créé (questionnaire soumis)
+      'contact_etabli',      // 2. Contact établi
+      'visite_effectuee',    // 3. Visite effectuée
+      'reservation',         // 4. Réservation confirmée
+      'financement_valide',  // 5. Financement validé
+      'signature_notaire',   // 6. Signature chez le notaire
+      'construction',        // 7. Construction en cours
+      'remise_cles'          // 8. Remise des clés
+    ],
+    default: 'dossier_cree'
+  },
+  dateEtape: {
+    type: Date,
+    default: Date.now
+  },
+  historiqueEtapes: [{
+    etape: String,
+    date: {
+      type: Date,
+      default: Date.now
+    },
+    modifiePar: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Admin'
+    }
+  }],
+
   // Notes et suivi
   notes: [{
     auteur: {

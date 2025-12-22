@@ -4,11 +4,25 @@ import {
   FaUsers, FaMoneyBillWave, FaChartLine, FaCalendarAlt,
   FaSync, FaEye, FaCopy, FaCheck, FaUserTie, FaClipboardList,
   FaPhoneAlt, FaEnvelope, FaHome, FaPercentage, FaInfoCircle,
-  FaExclamationTriangle, FaCog, FaLock, FaTimes, FaEyeSlash
+  FaExclamationTriangle, FaCog, FaLock, FaTimes, FaEyeSlash,
+  FaRoad, FaKey, FaFileSignature, FaHardHat, FaHandshake,
+  FaSearchLocation, FaClipboardCheck
 } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import API_URL from '../config';
 import './ApporteurDashboard.css';
+
+// Définition des étapes du dossier
+const ETAPES_DOSSIER = [
+  { id: 'dossier_cree', label: 'Dossier créé', icon: FaClipboardList, description: 'Questionnaire enregistré' },
+  { id: 'contact_etabli', label: 'Contact établi', icon: FaPhoneAlt, description: 'Premier contact réalisé' },
+  { id: 'visite_effectuee', label: 'Visite effectuée', icon: FaSearchLocation, description: 'Visite du projet réalisée' },
+  { id: 'reservation', label: 'Réservation', icon: FaClipboardCheck, description: 'Réservation confirmée' },
+  { id: 'financement_valide', label: 'Financement validé', icon: FaMoneyBillWave, description: 'Financement approuvé' },
+  { id: 'signature_notaire', label: 'Signature notaire', icon: FaFileSignature, description: 'Acte signé chez le notaire' },
+  { id: 'construction', label: 'Construction', icon: FaHardHat, description: 'Construction en cours' },
+  { id: 'remise_cles', label: 'Remise des clés', icon: FaKey, description: 'Propriétaire !' }
+];
 
 const ApporteurDashboard = () => {
   const { user } = useAuth();
@@ -345,6 +359,12 @@ const ApporteurDashboard = () => {
           <FaClipboardList /> Mes Prospects ({prospects.length})
         </button>
         <button
+          className={`tab-btn ${activeTab === 'suivi' ? 'active' : ''}`}
+          onClick={() => setActiveTab('suivi')}
+        >
+          <FaRoad /> Suivi Dossiers
+        </button>
+        <button
           className={`tab-btn ${activeTab === 'commissions' ? 'active' : ''}`}
           onClick={() => setActiveTab('commissions')}
         >
@@ -428,6 +448,122 @@ const ApporteurDashboard = () => {
                     </div>
                   </motion.div>
                 ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'suivi' && (
+          <div className="suivi-section">
+            <h3 className="suivi-title">
+              <FaRoad /> Suivi de vos Dossiers
+            </h3>
+            <p className="suivi-subtitle">
+              Suivez l'avancement de chaque dossier vers la remise des clés
+            </p>
+
+            {prospects.length === 0 ? (
+              <div className="empty-state">
+                <FaRoad className="empty-icon" />
+                <h3>Aucun dossier à suivre</h3>
+                <p>Les dossiers de vos prospects apparaîtront ici</p>
+              </div>
+            ) : (
+              <div className="suivi-list">
+                {prospects.map((prospect) => {
+                  const etapeActuelle = prospect.etapeDossier || 'dossier_cree';
+                  const indexEtapeActuelle = ETAPES_DOSSIER.findIndex(e => e.id === etapeActuelle);
+
+                  return (
+                    <motion.div
+                      key={prospect._id}
+                      className="suivi-card"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <div className="suivi-card-header">
+                        <div className="suivi-client-info">
+                          <h4>{prospect.prenom} {prospect.nom}</h4>
+                          <span className="suivi-dossier-number">
+                            {prospect.numeroDossier || 'N° en attente'}
+                          </span>
+                        </div>
+                        <div className="suivi-date">
+                          <FaCalendarAlt />
+                          <span>Créé le {formatDate(prospect.date_soumission)}</span>
+                        </div>
+                      </div>
+
+                      {/* Timeline Progress */}
+                      <div className="timeline-container">
+                        <div className="timeline-track">
+                          {/* Progress Line */}
+                          <div
+                            className="timeline-progress"
+                            style={{
+                              width: `${((indexEtapeActuelle) / (ETAPES_DOSSIER.length - 1)) * 100}%`
+                            }}
+                          />
+
+                          {/* Étapes */}
+                          {ETAPES_DOSSIER.map((etape, index) => {
+                            const isCompleted = index < indexEtapeActuelle;
+                            const isCurrent = index === indexEtapeActuelle;
+                            const isPending = index > indexEtapeActuelle;
+                            const IconComponent = etape.icon;
+
+                            return (
+                              <div
+                                key={etape.id}
+                                className={`timeline-step ${isCompleted ? 'completed' : ''} ${isCurrent ? 'current' : ''} ${isPending ? 'pending' : ''}`}
+                                style={{ left: `${(index / (ETAPES_DOSSIER.length - 1)) * 100}%` }}
+                              >
+                                <div className={`step-marker ${isCurrent ? 'pulse' : ''}`}>
+                                  {isCompleted ? (
+                                    <FaCheck />
+                                  ) : (
+                                    <IconComponent />
+                                  )}
+                                </div>
+                                <div className="step-label">
+                                  <span className="step-title">{etape.label}</span>
+                                  {isCurrent && (
+                                    <span className="step-current-badge">En cours</span>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+
+                          {/* Maison au bout */}
+                          <div className="timeline-end-house">
+                            <FaHome />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Étape actuelle détail */}
+                      <div className="etape-actuelle-detail">
+                        <div className="etape-icon-container">
+                          {React.createElement(ETAPES_DOSSIER[indexEtapeActuelle]?.icon || FaClipboardList)}
+                        </div>
+                        <div className="etape-info">
+                          <span className="etape-label">Étape actuelle</span>
+                          <span className="etape-name">
+                            {ETAPES_DOSSIER[indexEtapeActuelle]?.label || 'Dossier créé'}
+                          </span>
+                          <span className="etape-description">
+                            {ETAPES_DOSSIER[indexEtapeActuelle]?.description || ''}
+                          </span>
+                        </div>
+                        <div className="etape-progress-text">
+                          {indexEtapeActuelle + 1} / {ETAPES_DOSSIER.length}
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
               </div>
             )}
           </div>

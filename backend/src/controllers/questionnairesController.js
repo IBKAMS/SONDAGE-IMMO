@@ -290,3 +290,85 @@ exports.updateStatut = async (req, res) => {
     });
   }
 };
+
+// @desc    Mettre à jour l'étape du dossier
+// @route   PUT /api/questionnaires/:id/etape
+// @access  Private (Admin)
+exports.updateEtapeDossier = async (req, res) => {
+  try {
+    const { etapeDossier } = req.body;
+
+    const etapesValides = [
+      'dossier_cree',
+      'contact_etabli',
+      'visite_effectuee',
+      'reservation',
+      'financement_valide',
+      'signature_notaire',
+      'construction',
+      'remise_cles'
+    ];
+
+    if (!etapesValides.includes(etapeDossier)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Étape de dossier invalide'
+      });
+    }
+
+    const questionnaire = await Questionnaire.findById(req.params.id);
+
+    if (!questionnaire) {
+      return res.status(404).json({
+        success: false,
+        message: 'Questionnaire non trouvé'
+      });
+    }
+
+    // Ajouter l'étape à l'historique
+    questionnaire.historiqueEtapes.push({
+      etape: etapeDossier,
+      date: new Date(),
+      modifiePar: req.admin ? req.admin._id : null
+    });
+
+    // Mettre à jour l'étape courante
+    questionnaire.etapeDossier = etapeDossier;
+    questionnaire.dateEtape = new Date();
+
+    // Si c'est une conversion (réservation ou plus), mettre à jour le statut
+    if (['reservation', 'financement_valide', 'signature_notaire', 'construction', 'remise_cles'].includes(etapeDossier)) {
+      questionnaire.statut = 'converti';
+
+      // Mettre à jour les stats de l'apporteur si applicable
+      if (questionnaire.apporteur_id) {
+        const ApporteurAffaires = require('../models/ApporteurAffaires');
+        const apporteur = await ApporteurAffaires.findById(questionnaire.apporteur_id);
+        if (apporteur && questionnaire.commission.statut === 'non_applicable') {
+          apporteur.statistiques.conversions += 1;
+          questionnaire.commission.statut = 'en_attente';
+          await apporteur.save();
+        }
+      }
+    }
+
+    await questionnaire.save();
+
+    res.json({
+      success: true,
+      message: 'Étape du dossier mise à jour',
+      data: {
+        etapeDossier: questionnaire.etapeDossier,
+        dateEtape: questionnaire.dateEtape,
+        historiqueEtapes: questionnaire.historiqueEtapes
+      }
+    });
+  } catch (error) {
+    console.error('Erreur mise à jour étape:', error);
+    res.status(400).json({
+      success: false,
+      message: 'Erreur lors de la mise à jour de l\'étape',
+      error: error.message
+    });
+  }
+};

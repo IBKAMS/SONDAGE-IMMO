@@ -977,6 +977,367 @@
   font-size: 1rem;
 }
 
+/* ==========================================
+   SUIVI DOSSIERS - TIMELINE STYLES
+   ========================================== */
+
+.suivi-section {
+  padding: var(--spacing-md) 0;
+}
+
+.suivi-title {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: 1.5rem;
+  color: var(--dark-color);
+  margin-bottom: var(--spacing-xs);
+}
+
+.suivi-title svg {
+  color: var(--primary-color);
+}
+
+.suivi-subtitle {
+  color: var(--text-light);
+  margin-bottom: var(--spacing-xl);
+  font-size: 1rem;
+}
+
+.suivi-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+}
+
+/* Suivi Card */
+.suivi-card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: var(--spacing-lg);
+  transition: all var(--transition-normal);
+}
+
+.suivi-card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-3px);
+}
+
+.suivi-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--spacing-lg);
+  padding-bottom: var(--spacing-md);
+  border-bottom: 1px solid var(--light-color);
+}
+
+.suivi-client-info h4 {
+  margin: 0 0 var(--spacing-xs) 0;
+  font-size: 1.2rem;
+  color: var(--dark-color);
+}
+
+.suivi-dossier-number {
+  font-family: 'Fira Code', monospace;
+  font-size: 0.9rem;
+  color: var(--primary-color);
+  font-weight: 600;
+  background: rgba(79, 70, 229, 0.1);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+}
+
+.suivi-date {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  color: var(--text-light);
+  font-size: 0.85rem;
+}
+
+/* Timeline Container */
+.timeline-container {
+  position: relative;
+  padding: var(--spacing-xl) var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+  overflow-x: auto;
+}
+
+.timeline-track {
+  position: relative;
+  height: 120px;
+  min-width: 800px;
+  background: var(--light-color);
+  border-radius: var(--radius-full);
+  height: 6px;
+  margin: 50px 0 60px 0;
+}
+
+/* Progress Line */
+.timeline-progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #10B981 0%, #059669 50%, #047857 100%);
+  border-radius: var(--radius-full);
+  transition: width 0.8s ease-out;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+}
+
+/* Timeline Step */
+.timeline-step {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 2;
+}
+
+/* Step Marker */
+.step-marker {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  transition: all var(--transition-normal);
+  background: var(--white);
+  border: 3px solid var(--light-color);
+  color: var(--text-light);
+  cursor: pointer;
+}
+
+.step-marker:hover {
+  transform: scale(1.1);
+}
+
+/* Completed Step */
+.timeline-step.completed .step-marker {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  border-color: #10B981;
+  color: var(--white);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+/* Current Step - with pulse animation */
+.timeline-step.current .step-marker {
+  background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+  border-color: #F59E0B;
+  color: var(--white);
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+}
+
+.step-marker.pulse {
+  animation: pulse-animation 2s ease-in-out infinite;
+}
+
+@keyframes pulse-animation {
+  0% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 15px rgba(245, 158, 11, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+  }
+}
+
+/* Scintillating Effect for current step */
+.timeline-step.current .step-marker::after {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  right: -5px;
+  bottom: -5px;
+  border-radius: 50%;
+  border: 2px solid #F59E0B;
+  animation: scintillate 1.5s ease-in-out infinite;
+}
+
+@keyframes scintillate {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.3;
+    transform: scale(1.15);
+  }
+}
+
+/* Pending Step */
+.timeline-step.pending .step-marker {
+  background: var(--white);
+  border-color: #D1D5DB;
+  color: #9CA3AF;
+}
+
+/* Step Label */
+.step-label {
+  position: absolute;
+  top: 55px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  white-space: nowrap;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.step-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-color);
+  max-width: 80px;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.timeline-step.completed .step-title {
+  color: #10B981;
+}
+
+.timeline-step.current .step-title {
+  color: #F59E0B;
+  font-weight: 700;
+}
+
+.timeline-step.pending .step-title {
+  color: #9CA3AF;
+}
+
+.step-current-badge {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--white);
+  background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  animation: badge-pulse 2s ease-in-out infinite;
+}
+
+@keyframes badge-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* House Icon at the End */
+.timeline-end-house {
+  position: absolute;
+  right: -30px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: var(--white);
+  box-shadow: 0 4px 20px rgba(124, 58, 237, 0.4);
+  border: 4px solid var(--white);
+}
+
+.timeline-end-house::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  right: -8px;
+  bottom: -8px;
+  border-radius: 50%;
+  border: 2px dashed rgba(124, 58, 237, 0.5);
+  animation: rotate-border 10s linear infinite;
+}
+
+@keyframes rotate-border {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Current Step Detail Box */
+.etape-actuelle-detail {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(217, 119, 6, 0.1) 100%);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--radius-lg);
+  border-left: 4px solid #F59E0B;
+}
+
+.etape-icon-container {
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  color: var(--white);
+  flex-shrink: 0;
+}
+
+.etape-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.etape-label {
+  font-size: 0.75rem;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.etape-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--dark-color);
+}
+
+.etape-description {
+  font-size: 0.85rem;
+  color: var(--text-light);
+}
+
+.etape-progress-text {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #F59E0B;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: rgba(245, 158, 11, 0.15);
+  border-radius: var(--radius-md);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .welcome-content {
@@ -1061,5 +1422,51 @@
 
   .modal-content {
     margin: var(--spacing-md);
+  }
+
+  /* Timeline Responsive */
+  .timeline-container {
+    padding: var(--spacing-md) 0;
+  }
+
+  .timeline-track {
+    min-width: 650px;
+    margin: 40px 0 80px 0;
+  }
+
+  .step-marker {
+    width: 36px;
+    height: 36px;
+    font-size: 0.9rem;
+  }
+
+  .step-label {
+    top: 45px;
+  }
+
+  .step-title {
+    font-size: 0.65rem;
+    max-width: 60px;
+  }
+
+  .timeline-end-house {
+    width: 50px;
+    height: 50px;
+    font-size: 1.2rem;
+    right: -25px;
+  }
+
+  .suivi-card-header {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+
+  .etape-actuelle-detail {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .etape-progress-text {
+    font-size: 1.2rem;
   }
 }
