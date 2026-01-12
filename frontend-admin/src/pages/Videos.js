@@ -1533,7 +1533,6 @@ const Videos = () => {
               <button
                 className="btn-upload-action"
                 onClick={() => triggerPlanInput(card.type)}
-                disabled={!plansArchitecturaux[card.type].url}
               >
                 <FaUpload /> {plansArchitecturaux[card.type].url ? 'Remplacer' : 'Charger'}
               </button>
