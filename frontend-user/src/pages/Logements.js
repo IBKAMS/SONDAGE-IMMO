@@ -617,7 +617,7 @@ const Logements = () => {
                     <iframe
                       src={
                         selectedPlan === 'plan-de-masse' && plansArchitecturaux['plan-de-masse']?.url
-                          ? `${plansArchitecturaux['plan-de-masse'].url}#toolbar=0&navpanes=0&scrollbar=1&view=FitH`
+                          ? `https://docs.google.com/viewer?url=${encodeURIComponent(plansArchitecturaux['plan-de-masse'].url)}&embedded=true`
                           : `/plans/${selectedPlan}.pdf#toolbar=0&navpanes=0&scrollbar=1&view=FitH`
                       }
                       title={`Plan ${selectedPlan}`}
