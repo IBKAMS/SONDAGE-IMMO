@@ -553,7 +553,7 @@ const Logements = () => {
             </motion.div>
 
             {/* Plan de Masse */}
-            {plansArchitecturaux['plan-de-masse'] && (
+            {plansArchitecturaux['plan-de-masse']?.url && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
