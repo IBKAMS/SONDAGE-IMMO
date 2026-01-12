@@ -614,16 +614,23 @@ const Logements = () => {
                   <div className="pdf-viewer-content">
                     {/* Overlay transparent pour bloquer clic droit et interactions directes */}
                     <div className="pdf-protection-overlay"></div>
-                    <iframe
-                      src={
-                        selectedPlan === 'plan-de-masse' && plansArchitecturaux['plan-de-masse']?.url
-                          ? `https://docs.google.com/viewer?url=${encodeURIComponent(plansArchitecturaux['plan-de-masse'].url)}&embedded=true`
-                          : `/plans/${selectedPlan}.pdf#toolbar=0&navpanes=0&scrollbar=1&view=FitH`
-                      }
-                      title={`Plan ${selectedPlan}`}
-                      className="pdf-iframe"
-                      onContextMenu={(e) => e.preventDefault()}
-                    />
+                    {selectedPlan === 'plan-de-masse' && plansArchitecturaux['plan-de-masse']?.url ? (
+                      <object
+                        data={`${plansArchitecturaux['plan-de-masse'].url}#toolbar=0&navpanes=0&scrollbar=1&view=FitH`}
+                        type="application/pdf"
+                        className="pdf-iframe"
+                        onContextMenu={(e) => e.preventDefault()}
+                      >
+                        <p>Impossible d'afficher le PDF. <a href={plansArchitecturaux['plan-de-masse'].url} target="_blank" rel="noopener noreferrer">Cliquez ici pour le télécharger</a></p>
+                      </object>
+                    ) : (
+                      <iframe
+                        src={`/plans/${selectedPlan}.pdf#toolbar=0&navpanes=0&scrollbar=1&view=FitH`}
+                        title={`Plan ${selectedPlan}`}
+                        className="pdf-iframe"
+                        onContextMenu={(e) => e.preventDefault()}
+                      />
+                    )}
                   </div>
                 </motion.div>
               )}

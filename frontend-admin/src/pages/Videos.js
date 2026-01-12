@@ -1484,18 +1484,19 @@ const Videos = () => {
             </div>
 
             <div className="video-card-body">
+              {/* Input toujours présent pour permettre le remplacement */}
+              <input
+                ref={planInputRefs[card.type]}
+                type="file"
+                accept="application/pdf"
+                onChange={handlePlanSelect(card.type)}
+                style={{ display: 'none' }}
+              />
               {!plansArchitecturaux[card.type].url ? (
                 <div className="upload-zone" onClick={() => triggerPlanInput(card.type)}>
                   <FaUpload className="upload-icon" />
                   <p className="upload-text">Cliquez pour sélectionner un fichier PDF</p>
                   <span className="upload-hint">Plans architecturaux au format PDF</span>
-                  <input
-                    ref={planInputRefs[card.type]}
-                    type="file"
-                    accept="application/pdf"
-                    onChange={handlePlanSelect(card.type)}
-                    style={{ display: 'none' }}
-                  />
                 </div>
               ) : (
                 <div className="video-preview">
