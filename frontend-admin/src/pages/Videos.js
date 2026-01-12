@@ -10,7 +10,8 @@ const Videos = () => {
     visite3d: { file: null, name: '', url: '' },
     promoteur: { file: null, name: '', url: '' },
     analyseEconomique: { file: null, name: '', url: '' },
-    architecte: { file: null, name: '', url: '' }
+    architecte: { file: null, name: '', url: '' },
+    presentation: { file: null, name: '', url: '' }
   });
   const [images, setImages] = useState({
     'villa-duplex-4p': { file: null, name: '', url: '' },
@@ -46,7 +47,8 @@ const Videos = () => {
     visite3d: useRef(null),
     promoteur: useRef(null),
     analyseEconomique: useRef(null),
-    architecte: useRef(null)
+    architecte: useRef(null),
+    presentation: useRef(null)
   };
 
   const imageInputRefs = {
@@ -990,6 +992,13 @@ const Videos = () => {
   };
 
   const videoCards = [
+    {
+      type: 'presentation',
+      title: 'Vidéo Présentation',
+      description: 'Chargez la vidéo de présentation du projet (affichée sur la page Présentation)',
+      icon: <FaPlay />,
+      color: '#E91E63'
+    },
     {
       type: 'visite3d',
       title: 'Vidéo 3D du Projet',

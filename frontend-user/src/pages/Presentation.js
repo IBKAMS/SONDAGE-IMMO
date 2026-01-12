@@ -1,14 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
+import { FaPlay } from 'react-icons/fa';
 import API_URL from '../config';
 import './Presentation.css';
 
 const Presentation = () => {
   const [content, setContent] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [videoUrl, setVideoUrl] = useState(null);
+  const [videoLoading, setVideoLoading] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const videoRef = useRef(null);
 
   useEffect(() => {
     fetchPresentationContent();
+    fetchPresentationVideo();
   }, []);
 
   const fetchPresentationContent = async () => {
@@ -22,6 +28,26 @@ const Presentation = () => {
       console.error('Erreur chargement contenu:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPresentationVideo = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/videos/presentation`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.url) {
+          let url = data.url;
+          if (url.includes('cloudinary.com') && url.includes('/upload/')) {
+            url = url.replace('/upload/', '/upload/vc_h264/');
+          }
+          setVideoUrl(url);
+        }
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement de la vidéo:', error);
+    } finally {
+      setVideoLoading(false);
     }
   };
 
@@ -66,6 +92,45 @@ const Presentation = () => {
               {content.project.description}
             </p>
           </motion.div>
+
+          {/* Section Vidéo de Présentation */}
+          {!videoLoading && videoUrl && (
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7 }}
+              className="video-presentation-section"
+            >
+              <div className="video-container">
+                <div className="video-wrapper">
+                  <video
+                    ref={videoRef}
+                    className="video-player"
+                    controls
+                    preload="metadata"
+                    onPlay={() => setIsPlaying(true)}
+                    onPause={() => setIsPlaying(false)}
+                  >
+                    <source src={videoUrl} type="video/mp4" />
+                    Votre navigateur ne supporte pas la lecture de vidéos.
+                  </video>
+
+                  {!isPlaying && (
+                    <div
+                      className="video-overlay"
+                      onClick={() => videoRef.current?.play()}
+                    >
+                      <div className="play-button">
+                        <FaPlay />
+                      </div>
+                      <p className="overlay-text">Regarder la vidéo de présentation</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )}
         </div>
       </section>
     </div>

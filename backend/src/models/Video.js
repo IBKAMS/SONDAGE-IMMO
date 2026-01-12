@@ -4,7 +4,7 @@ const videoSchema = new mongoose.Schema({
   type: {
     type: String,
     required: true,
-    enum: ['visite3d', 'promoteur', 'analyseEconomique', 'architecte'],
+    enum: ['visite3d', 'promoteur', 'analyseEconomique', 'architecte', 'presentation'],
     unique: true
   },
   filename: {

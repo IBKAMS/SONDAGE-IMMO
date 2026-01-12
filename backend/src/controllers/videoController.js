@@ -10,7 +10,7 @@ exports.uploadVideo = async (req, res) => {
       return res.status(400).json({ message: 'Aucun fichier vidéo fourni' });
     }
 
-    if (!type || !['visite3d', 'promoteur', 'analyseEconomique', 'architecte'].includes(type)) {
+    if (!type || !['visite3d', 'promoteur', 'analyseEconomique', 'architecte', 'presentation'].includes(type)) {
       return res.status(400).json({ message: 'Type de vidéo invalide' });
     }
 
@@ -87,7 +87,7 @@ exports.getVideoByType = async (req, res) => {
   try {
     const { type } = req.params;
 
-    if (!['visite3d', 'promoteur', 'analyseEconomique', 'architecte'].includes(type)) {
+    if (!['visite3d', 'promoteur', 'analyseEconomique', 'architecte', 'presentation'].includes(type)) {
       return res.status(400).json({ message: 'Type de vidéo invalide' });
     }
 
@@ -159,7 +159,7 @@ exports.saveDirectUpload = async (req, res) => {
       });
     }
 
-    if (!['visite3d', 'promoteur', 'analyseEconomique', 'architecte'].includes(type)) {
+    if (!['visite3d', 'promoteur', 'analyseEconomique', 'architecte', 'presentation'].includes(type)) {
       console.error('Type invalide:', type);
       return res.status(400).json({
         success: false,
