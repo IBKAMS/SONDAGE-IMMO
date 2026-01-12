@@ -551,6 +551,27 @@ const Logements = () => {
                 Voir les plans
               </button>
             </motion.div>
+
+            {/* Plan de Masse */}
+            {plansArchitecturaux['plan-de-masse'] && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.4 }}
+                className={`plan-card plan-de-masse-card ${selectedPlan === 'plan-de-masse' ? 'active' : ''}`}
+                onClick={() => setSelectedPlan('plan-de-masse')}
+              >
+                <div className="plan-icon">
+                  <FaFilePdf />
+                </div>
+                <h3>Plan de Masse</h3>
+                <p>Vue d'ensemble du projet</p>
+                <button className="btn-view-plan">
+                  Voir le plan
+                </button>
+              </motion.div>
+            )}
           </div>
 
           {/* Viewer PDF */}
@@ -564,7 +585,12 @@ const Logements = () => {
                   className={`pdf-viewer-container ${isFullscreen ? 'fullscreen' : ''}`}
                 >
                   <div className="pdf-viewer-header">
-                    <h3>Plans {selectedPlan.replace('villa-', 'Villa ').replace('-', ' ').replace('4p', '4 Pièces').replace('5p', '5 Pièces').replace('8p', '8 Pièces')}</h3>
+                    <h3>
+                      {selectedPlan === 'plan-de-masse'
+                        ? 'Plan de Masse'
+                        : `Plans ${selectedPlan.replace('villa-', 'Villa ').replace('-', ' ').replace('4p', '4 Pièces').replace('5p', '5 Pièces').replace('8p', '8 Pièces')}`
+                      }
+                    </h3>
                     <div className="pdf-viewer-controls">
                       <button
                         className="btn-fullscreen"
@@ -589,7 +615,11 @@ const Logements = () => {
                     {/* Overlay transparent pour bloquer clic droit et interactions directes */}
                     <div className="pdf-protection-overlay"></div>
                     <iframe
-                      src={`/plans/${selectedPlan}.pdf#toolbar=0&navpanes=0&scrollbar=1&view=FitH`}
+                      src={
+                        selectedPlan === 'plan-de-masse'
+                          ? `${API_URL}/api/plans-architecturaux/view/${selectedPlan}#toolbar=0&navpanes=0&scrollbar=1&view=FitH`
+                          : `/plans/${selectedPlan}.pdf#toolbar=0&navpanes=0&scrollbar=1&view=FitH`
+                      }
                       title={`Plan ${selectedPlan}`}
                       className="pdf-iframe"
                       onContextMenu={(e) => e.preventDefault()}

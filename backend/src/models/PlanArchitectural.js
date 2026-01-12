@@ -4,7 +4,7 @@ const planArchitecturalSchema = new mongoose.Schema({
   type: {
     type: String,
     required: true,
-    enum: ['villa-duplex-4p', 'villa-duplex-5p', 'villa-triplex-8p'],
+    enum: ['villa-duplex-4p', 'villa-duplex-5p', 'villa-triplex-8p', 'plan-de-masse'],
     unique: true
   },
   titre: {

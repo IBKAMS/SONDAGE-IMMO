@@ -13,7 +13,8 @@ cloudinary.config({
 const planTitres = {
   'villa-duplex-4p': 'Plans architecturaux Villa Duplex 4 pièces',
   'villa-duplex-5p': 'Plans architecturaux Villa Duplex 5 pièces',
-  'villa-triplex-8p': 'Plans architecturaux Villa Triplex 8 pièces'
+  'villa-triplex-8p': 'Plans architecturaux Villa Triplex 8 pièces',
+  'plan-de-masse': 'Plan de Masse des Logements'
 };
 
 // Récupérer tous les plans
@@ -25,7 +26,8 @@ exports.getAllPlans = async (req, res) => {
     const plansObject = {
       'villa-duplex-4p': null,
       'villa-duplex-5p': null,
-      'villa-triplex-8p': null
+      'villa-triplex-8p': null,
+      'plan-de-masse': null
     };
 
     plans.forEach(plan => {

@@ -32,7 +32,8 @@ const Videos = () => {
   const [plansArchitecturaux, setPlansArchitecturaux] = useState({
     'villa-duplex-4p': { file: null, name: '', url: '' },
     'villa-duplex-5p': { file: null, name: '', url: '' },
-    'villa-triplex-8p': { file: null, name: '', url: '' }
+    'villa-triplex-8p': { file: null, name: '', url: '' },
+    'plan-de-masse': { file: null, name: '', url: '' }
   });
   const [loading, setLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({});
@@ -73,7 +74,8 @@ const Videos = () => {
   const planInputRefs = {
     'villa-duplex-4p': useRef(null),
     'villa-duplex-5p': useRef(null),
-    'villa-triplex-8p': useRef(null)
+    'villa-triplex-8p': useRef(null),
+    'plan-de-masse': useRef(null)
   };
 
   // Charger les vidéos existantes au montage du composant
@@ -1129,6 +1131,13 @@ const Videos = () => {
       description: 'Plans architecturaux de la Villa Triplex 8 pièces',
       icon: <FaFilePdf />,
       color: '#7C3AED'
+    },
+    {
+      type: 'plan-de-masse',
+      title: 'Plan de Masse',
+      description: 'Plan de masse des logements - Affiché dans la rubrique Logements',
+      icon: <FaFilePdf />,
+      color: '#0891B2'
     }
   ];
 
