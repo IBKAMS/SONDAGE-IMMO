@@ -616,8 +616,8 @@ const Logements = () => {
                     <div className="pdf-protection-overlay"></div>
                     <iframe
                       src={
-                        selectedPlan === 'plan-de-masse'
-                          ? `${API_URL}/api/plans-architecturaux/view/${selectedPlan}#toolbar=0&navpanes=0&scrollbar=1&view=FitH`
+                        selectedPlan === 'plan-de-masse' && plansArchitecturaux['plan-de-masse']?.url
+                          ? `${plansArchitecturaux['plan-de-masse'].url}#toolbar=0&navpanes=0&scrollbar=1&view=FitH`
                           : `/plans/${selectedPlan}.pdf#toolbar=0&navpanes=0&scrollbar=1&view=FitH`
                       }
                       title={`Plan ${selectedPlan}`}
