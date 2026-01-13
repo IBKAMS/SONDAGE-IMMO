@@ -908,11 +908,22 @@ const Videos = () => {
       }
     }
 
-    // Upload des plans architecturaux PDF via Cloudinary
+    // Upload des plans architecturaux PDF via Cloudinary + stockage base64 dans MongoDB
     for (const [type, plan] of Object.entries(plansArchitecturaux)) {
       if (plan.file) {
         const uploadPlanPromise = (async () => {
           try {
+            // Lire le fichier comme base64 pour stockage MongoDB (contourne restrictions Cloudinary)
+            const fileBase64 = await new Promise((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = () => {
+                const base64 = reader.result.split(',')[1]; // Enlever le préfixe data:...
+                resolve(base64);
+              };
+              reader.onerror = reject;
+              reader.readAsDataURL(plan.file);
+            });
+
             // Obtenir la signature Cloudinary spécifique pour les PDFs
             const signatureResponse = await fetch(`${API_URL}/api/upload/signature-pdf`, {
               method: 'POST',
@@ -939,7 +950,7 @@ const Videos = () => {
             console.log('Cloudinary response for plan:', cloudinaryData);
 
             if (cloudinaryData.secure_url) {
-              // Sauvegarder dans MongoDB
+              // Sauvegarder dans MongoDB avec le base64
               const saveResponse = await fetch(`${API_URL}/api/plans-architecturaux`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -948,7 +959,8 @@ const Videos = () => {
                   url: cloudinaryData.secure_url,
                   originalName: plan.file.name,
                   size: plan.file.size,
-                  cloudinaryId: cloudinaryData.public_id
+                  cloudinaryId: cloudinaryData.public_id,
+                  pdfBase64: fileBase64  // Stockage base64 pour contourner restrictions Cloudinary
                 })
               });
 
@@ -956,7 +968,7 @@ const Videos = () => {
               console.log('MongoDB save response:', saveData);
 
               if (saveResponse.ok) {
-                console.log(`Plan ${type} uploadé avec succès`);
+                console.log(`Plan ${type} uploadé avec succès (avec base64)`);
                 setPlansArchitecturaux(prev => ({
                   ...prev,
                   [type]: {

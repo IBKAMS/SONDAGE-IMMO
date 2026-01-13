@@ -104,6 +104,7 @@ exports.debugPlan = async (req, res) => {
 // Proxy pour visualiser un PDF (contourne les restrictions Cloudinary)
 exports.viewPlan = async (req, res) => {
   const https = require('https');
+  const http = require('http');
 
   try {
     const { type } = req.params;
@@ -120,70 +121,74 @@ exports.viewPlan = async (req, res) => {
       return res.status(404).json({ error: 'Plan non trouvé' });
     }
 
-    // Utiliser l'API Admin Cloudinary pour télécharger le fichier
-    // Format: https://api_key:api_secret@api.cloudinary.com/v1_1/cloud_name/resources/raw/upload/public_id
+    // Si on a le PDF en base64, le servir directement
+    if (plan.pdfBase64) {
+      console.log('Serving PDF from base64 storage');
+      res.setHeader('Content-Type', 'application/pdf');
+      const safeFilename = encodeURIComponent(plan.originalName || 'plan.pdf').replace(/'/g, '%27');
+      res.setHeader('Content-Disposition', `inline; filename*=UTF-8''${safeFilename}`);
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('X-Frame-Options', 'ALLOWALL');
+      res.setHeader('Content-Security-Policy', "frame-ancestors *");
+
+      const pdfBuffer = Buffer.from(plan.pdfBase64, 'base64');
+      res.setHeader('Content-Length', pdfBuffer.length);
+      return res.send(pdfBuffer);
+    }
+
+    // Sinon, utiliser l'URL Cloudinary avec authentification Basic
     const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
     const apiKey = process.env.CLOUDINARY_API_KEY;
     const apiSecret = process.env.CLOUDINARY_API_SECRET;
 
-    // Générer URL avec Basic Auth pour l'API Admin
-    let pdfUrl;
+    // Essayer de télécharger via l'Admin API avec Basic Auth
     if (plan.cloudinaryId) {
-      // Construire l'URL de téléchargement via l'API
-      // Méthode 1: URL signée avec timestamp et signature
-      const timestamp = Math.floor(Date.now() / 1000);
-      const signature = require('crypto')
-        .createHash('sha1')
-        .update(`public_id=${plan.cloudinaryId}&timestamp=${timestamp}${apiSecret}`)
-        .digest('hex');
+      console.log('Tentative via Admin API avec Basic Auth...');
 
-      pdfUrl = `https://api.cloudinary.com/v1_1/${cloudName}/raw/download?public_id=${encodeURIComponent(plan.cloudinaryId)}&timestamp=${timestamp}&api_key=${apiKey}&signature=${signature}`;
-      console.log('URL API download générée');
-    } else {
-      pdfUrl = plan.url;
-      console.log('URL originale:', pdfUrl);
-    }
-
-    // Headers pour permettre l'affichage dans iframe
-    res.setHeader('Content-Type', 'application/pdf');
-    const safeFilename = encodeURIComponent(plan.originalName || 'plan.pdf').replace(/'/g, '%27');
-    res.setHeader('Content-Disposition', `inline; filename*=UTF-8''${safeFilename}`);
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('X-Frame-Options', 'ALLOWALL');
-    res.setHeader('Content-Security-Policy', "frame-ancestors *");
-    res.removeHeader('X-Content-Type-Options');
-
-    // Fetch le PDF
-    const fetchPdf = (url, isRetry = false) => {
-      console.log(`Tentative fetch${isRetry ? ' (retry)' : ''}:`, url.substring(0, 100) + '...');
-
-      https.get(url, (pdfResponse) => {
-        console.log(`Réponse${isRetry ? ' (retry)' : ''}:`, pdfResponse.statusCode);
-
-        if (pdfResponse.statusCode === 200) {
-          console.log('Succès! Streaming du PDF...');
-          pdfResponse.pipe(res);
-        } else if (pdfResponse.statusCode >= 300 && pdfResponse.statusCode < 400 && pdfResponse.headers.location) {
-          console.log('Redirection vers:', pdfResponse.headers.location);
-          fetchPdf(pdfResponse.headers.location, true);
-        } else if (!isRetry && plan.url) {
-          console.log('Échec, tentative URL originale');
-          fetchPdf(plan.url, true);
-        } else {
-          console.error('Erreur finale:', pdfResponse.statusCode);
-          if (!res.headersSent) {
-            res.status(pdfResponse.statusCode).json({ error: 'PDF inaccessible' });
-          }
+      const auth = Buffer.from(`${apiKey}:${apiSecret}`).toString('base64');
+      const options = {
+        hostname: 'api.cloudinary.com',
+        path: `/v1_1/${cloudName}/resources/raw/upload/${encodeURIComponent(plan.cloudinaryId)}`,
+        method: 'GET',
+        headers: {
+          'Authorization': `Basic ${auth}`
         }
-      }).on('error', (err) => {
-        console.error('Erreur fetch:', err.message);
-        if (!res.headersSent) {
-          res.status(500).json({ error: 'Erreur: ' + err.message });
+      };
+
+      const apiReq = https.request(options, (apiRes) => {
+        console.log('Admin API status:', apiRes.statusCode);
+
+        if (apiRes.statusCode === 200) {
+          // Lire la réponse JSON pour obtenir l'URL sécurisée
+          let data = '';
+          apiRes.on('data', chunk => { data += chunk; });
+          apiRes.on('end', () => {
+            try {
+              const resourceInfo = JSON.parse(data);
+              console.log('Resource info:', resourceInfo.secure_url);
+
+              // Maintenant télécharger le fichier avec l'URL secure
+              fetchAndStreamPdf(resourceInfo.secure_url, plan, res);
+            } catch (e) {
+              console.error('Erreur parsing Admin API:', e);
+              fetchAndStreamPdf(plan.url, plan, res);
+            }
+          });
+        } else {
+          console.log('Admin API failed, trying direct URL');
+          fetchAndStreamPdf(plan.url, plan, res);
         }
       });
-    };
 
-    fetchPdf(pdfUrl);
+      apiReq.on('error', (err) => {
+        console.error('Admin API error:', err.message);
+        fetchAndStreamPdf(plan.url, plan, res);
+      });
+
+      apiReq.end();
+    } else {
+      fetchAndStreamPdf(plan.url, plan, res);
+    }
 
   } catch (error) {
     console.error('Erreur viewPlan:', error);
@@ -193,10 +198,48 @@ exports.viewPlan = async (req, res) => {
   }
 };
 
+// Fonction helper pour télécharger et streamer le PDF
+function fetchAndStreamPdf(url, plan, res) {
+  const https = require('https');
+
+  // Headers pour permettre l'affichage dans iframe
+  res.setHeader('Content-Type', 'application/pdf');
+  const safeFilename = encodeURIComponent(plan.originalName || 'plan.pdf').replace(/'/g, '%27');
+  res.setHeader('Content-Disposition', `inline; filename*=UTF-8''${safeFilename}`);
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('X-Frame-Options', 'ALLOWALL');
+  res.setHeader('Content-Security-Policy', "frame-ancestors *");
+  res.removeHeader('X-Content-Type-Options');
+
+  console.log('Fetching PDF from:', url.substring(0, 80) + '...');
+
+  https.get(url, (pdfResponse) => {
+    console.log('PDF fetch status:', pdfResponse.statusCode);
+
+    if (pdfResponse.statusCode === 200) {
+      console.log('Streaming PDF...');
+      pdfResponse.pipe(res);
+    } else if (pdfResponse.statusCode >= 300 && pdfResponse.statusCode < 400 && pdfResponse.headers.location) {
+      console.log('Following redirect to:', pdfResponse.headers.location);
+      fetchAndStreamPdf(pdfResponse.headers.location, plan, res);
+    } else {
+      console.error('PDF fetch failed:', pdfResponse.statusCode);
+      if (!res.headersSent) {
+        res.status(pdfResponse.statusCode).json({ error: 'PDF inaccessible depuis Cloudinary' });
+      }
+    }
+  }).on('error', (err) => {
+    console.error('PDF fetch error:', err.message);
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Erreur: ' + err.message });
+    }
+  });
+}
+
 // Upload ou mise à jour d'un plan
 exports.uploadPlan = async (req, res) => {
   try {
-    const { type, url, originalName, size, cloudinaryId } = req.body;
+    const { type, url, originalName, size, cloudinaryId, pdfBase64 } = req.body;
 
     if (!type || !url || !originalName) {
       return res.status(400).json({ error: 'Type, URL et nom original requis' });
@@ -224,6 +267,7 @@ exports.uploadPlan = async (req, res) => {
       existingPlan.originalName = originalName;
       existingPlan.size = size || 0;
       existingPlan.cloudinaryId = cloudinaryId || null;
+      existingPlan.pdfBase64 = pdfBase64 || null;  // Stocker le base64 pour contourner Cloudinary
       existingPlan.filename = originalName;
       existingPlan.uploadedAt = new Date();
 
@@ -244,6 +288,7 @@ exports.uploadPlan = async (req, res) => {
       originalName,
       url,
       cloudinaryId: cloudinaryId || null,
+      pdfBase64: pdfBase64 || null,  // Stocker le base64 pour contourner Cloudinary
       size: size || 0
     });
 

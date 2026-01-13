@@ -26,6 +26,9 @@ const planArchitecturalSchema = new mongoose.Schema({
   cloudinaryId: {
     type: String
   },
+  pdfBase64: {
+    type: String  // Stockage du PDF en base64 pour contourner les restrictions Cloudinary
+  },
   size: {
     type: Number,
     required: true
