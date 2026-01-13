@@ -52,6 +52,48 @@ router.post('/signature', async (req, res) => {
 });
 
 /**
+ * Route pour générer une signature d'upload PDF Cloudinary
+ * Les PDFs utilisent resource_type='raw' et access_mode='public'
+ */
+router.post('/signature-pdf', async (req, res) => {
+  try {
+    const timestamp = Math.round(new Date().getTime() / 1000);
+    const folder = 'sondage-immo/plans';
+    const accessMode = 'public';
+
+    // Créer la chaîne à signer (ordre alphabétique des paramètres)
+    const stringToSign = `access_mode=${accessMode}&folder=${folder}&timestamp=${timestamp}`;
+
+    // Générer la signature SHA1
+    const signature = crypto
+      .createHash('sha1')
+      .update(stringToSign + process.env.CLOUDINARY_API_SECRET)
+      .digest('hex');
+
+    console.log('String to sign (PDF):', stringToSign);
+    console.log('Signature générée (PDF):', signature);
+
+    res.json({
+      success: true,
+      signature: signature,
+      timestamp: timestamp,
+      cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+      apiKey: process.env.CLOUDINARY_API_KEY,
+      folder: folder,
+      access_mode: accessMode,
+      resource_type: 'raw'
+    });
+  } catch (error) {
+    console.error('Erreur lors de la génération de la signature PDF:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors de la génération de la signature',
+      error: error.message
+    });
+  }
+});
+
+/**
  * Route pour générer une signature d'upload d'image Cloudinary
  */
 router.post('/signature-image', async (req, res) => {

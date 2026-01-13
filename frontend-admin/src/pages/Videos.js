@@ -913,26 +913,22 @@ const Videos = () => {
       if (plan.file) {
         const uploadPlanPromise = (async () => {
           try {
-            // Obtenir la signature Cloudinary
-            const signatureResponse = await fetch(`${API_URL}/api/upload/signature`, {
+            // Obtenir la signature Cloudinary spécifique pour les PDFs
+            const signatureResponse = await fetch(`${API_URL}/api/upload/signature-pdf`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' }
             });
             const signatureData = await signatureResponse.json();
-            const { signature, timestamp, cloudName, apiKey, folder, source, access_mode } = signatureData;
+            const { signature, timestamp, cloudName, apiKey, folder, access_mode } = signatureData;
 
-            // Upload vers Cloudinary (raw pour les PDF)
-            // IMPORTANT: Le folder doit correspondre exactement à celui utilisé dans la signature
+            // Upload vers Cloudinary (raw pour les PDF avec access_mode public)
             const formData = new FormData();
             formData.append('file', plan.file);
             formData.append('api_key', apiKey);
             formData.append('timestamp', timestamp);
             formData.append('signature', signature);
             formData.append('folder', folder);
-            formData.append('source', source);
-            if (access_mode) {
-              formData.append('access_mode', access_mode);
-            }
+            formData.append('access_mode', access_mode);
 
             const cloudinaryResponse = await fetch(
               `https://api.cloudinary.com/v1_1/${cloudName}/raw/upload`,

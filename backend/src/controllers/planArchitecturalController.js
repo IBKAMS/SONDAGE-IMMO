@@ -120,9 +120,21 @@ exports.viewPlan = async (req, res) => {
       return res.status(404).json({ error: 'Plan non trouvé' });
     }
 
-    // Utiliser directement l'URL stockée dans la base de données
-    const originalUrl = plan.url;
-    console.log('URL originale:', originalUrl);
+    // Générer une URL signée avec le SDK Cloudinary
+    let pdfUrl;
+    if (plan.cloudinaryId) {
+      // Utiliser le SDK pour générer une URL signée valide
+      pdfUrl = cloudinary.url(plan.cloudinaryId, {
+        resource_type: 'raw',
+        type: 'upload',
+        sign_url: true,
+        secure: true
+      });
+      console.log('URL signée générée:', pdfUrl);
+    } else {
+      pdfUrl = plan.url;
+      console.log('URL originale:', pdfUrl);
+    }
 
     // Headers pour permettre l'affichage dans iframe
     res.setHeader('Content-Type', 'application/pdf');
@@ -133,8 +145,8 @@ exports.viewPlan = async (req, res) => {
     res.setHeader('Content-Security-Policy', "frame-ancestors *");
     res.removeHeader('X-Content-Type-Options');
 
-    // Fetch le PDF depuis l'URL originale
-    https.get(originalUrl, (pdfResponse) => {
+    // Fetch le PDF
+    https.get(pdfUrl, (pdfResponse) => {
       console.log('Réponse Cloudinary:', pdfResponse.statusCode);
 
       if (pdfResponse.statusCode === 200) {
@@ -147,12 +159,24 @@ exports.viewPlan = async (req, res) => {
           if (redirectResponse.statusCode === 200) {
             redirectResponse.pipe(res);
           } else {
+            console.error('Erreur après redirection:', redirectResponse.statusCode);
             res.status(redirectResponse.statusCode).json({ error: 'Erreur lors du téléchargement du PDF' });
           }
         });
       } else {
         console.error('Erreur Cloudinary:', pdfResponse.statusCode);
-        res.status(pdfResponse.statusCode).json({ error: 'Erreur lors du téléchargement du PDF' });
+        // Essayer l'URL originale en fallback
+        console.log('Tentative avec URL originale:', plan.url);
+        https.get(plan.url, (fallbackResponse) => {
+          console.log('Réponse fallback:', fallbackResponse.statusCode);
+          if (fallbackResponse.statusCode === 200) {
+            fallbackResponse.pipe(res);
+          } else {
+            res.status(fallbackResponse.statusCode).json({ error: 'PDF inaccessible' });
+          }
+        }).on('error', (err) => {
+          res.status(500).json({ error: 'Erreur: ' + err.message });
+        });
       }
     }).on('error', (err) => {
       console.error('Erreur fetch PDF:', err.message);
