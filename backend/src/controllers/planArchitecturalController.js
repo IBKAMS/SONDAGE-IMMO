@@ -120,17 +120,15 @@ exports.viewPlan = async (req, res) => {
       return res.status(404).json({ error: 'Plan non trouvé' });
     }
 
-    // Générer une URL signée avec le SDK Cloudinary
+    // Générer une URL authentifiée avec private_download_url
     let pdfUrl;
     if (plan.cloudinaryId) {
-      // Utiliser le SDK pour générer une URL signée valide
-      pdfUrl = cloudinary.url(plan.cloudinaryId, {
+      // Utiliser private_download_url pour un accès authentifié
+      pdfUrl = cloudinary.utils.private_download_url(plan.cloudinaryId, 'pdf', {
         resource_type: 'raw',
-        type: 'upload',
-        sign_url: true,
-        secure: true
+        expires_at: Math.floor(Date.now() / 1000) + 3600 // Expire dans 1 heure
       });
-      console.log('URL signée générée:', pdfUrl);
+      console.log('URL authentifiée générée:', pdfUrl);
     } else {
       pdfUrl = plan.url;
       console.log('URL originale:', pdfUrl);
@@ -145,45 +143,37 @@ exports.viewPlan = async (req, res) => {
     res.setHeader('Content-Security-Policy', "frame-ancestors *");
     res.removeHeader('X-Content-Type-Options');
 
-    // Fetch le PDF
-    https.get(pdfUrl, (pdfResponse) => {
-      console.log('Réponse Cloudinary:', pdfResponse.statusCode);
+    // Fetch le PDF avec l'URL authentifiée
+    const fetchPdf = (url, isRetry = false) => {
+      https.get(url, (pdfResponse) => {
+        console.log(`Réponse Cloudinary${isRetry ? ' (retry)' : ''}:`, pdfResponse.statusCode);
 
-      if (pdfResponse.statusCode === 200) {
-        console.log('Succès! Streaming du PDF...');
-        pdfResponse.pipe(res);
-      } else if (pdfResponse.statusCode >= 300 && pdfResponse.statusCode < 400 && pdfResponse.headers.location) {
-        // Suivre la redirection
-        console.log('Redirection vers:', pdfResponse.headers.location);
-        https.get(pdfResponse.headers.location, (redirectResponse) => {
-          if (redirectResponse.statusCode === 200) {
-            redirectResponse.pipe(res);
-          } else {
-            console.error('Erreur après redirection:', redirectResponse.statusCode);
-            res.status(redirectResponse.statusCode).json({ error: 'Erreur lors du téléchargement du PDF' });
+        if (pdfResponse.statusCode === 200) {
+          console.log('Succès! Streaming du PDF...');
+          pdfResponse.pipe(res);
+        } else if (pdfResponse.statusCode >= 300 && pdfResponse.statusCode < 400 && pdfResponse.headers.location) {
+          // Suivre la redirection
+          console.log('Redirection vers:', pdfResponse.headers.location);
+          fetchPdf(pdfResponse.headers.location, true);
+        } else if (!isRetry && plan.url) {
+          // Essayer l'URL originale en fallback
+          console.log('Tentative avec URL originale:', plan.url);
+          fetchPdf(plan.url, true);
+        } else {
+          console.error('Erreur Cloudinary:', pdfResponse.statusCode);
+          if (!res.headersSent) {
+            res.status(pdfResponse.statusCode).json({ error: 'PDF inaccessible' });
           }
-        });
-      } else {
-        console.error('Erreur Cloudinary:', pdfResponse.statusCode);
-        // Essayer l'URL originale en fallback
-        console.log('Tentative avec URL originale:', plan.url);
-        https.get(plan.url, (fallbackResponse) => {
-          console.log('Réponse fallback:', fallbackResponse.statusCode);
-          if (fallbackResponse.statusCode === 200) {
-            fallbackResponse.pipe(res);
-          } else {
-            res.status(fallbackResponse.statusCode).json({ error: 'PDF inaccessible' });
-          }
-        }).on('error', (err) => {
+        }
+      }).on('error', (err) => {
+        console.error('Erreur fetch PDF:', err.message);
+        if (!res.headersSent) {
           res.status(500).json({ error: 'Erreur: ' + err.message });
-        });
-      }
-    }).on('error', (err) => {
-      console.error('Erreur fetch PDF:', err.message);
-      if (!res.headersSent) {
-        res.status(500).json({ error: 'Erreur lors du téléchargement du PDF: ' + err.message });
-      }
-    });
+        }
+      });
+    };
+
+    fetchPdf(pdfUrl);
 
   } catch (error) {
     console.error('Erreur viewPlan:', error);
