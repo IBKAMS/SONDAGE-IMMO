@@ -120,15 +120,25 @@ exports.viewPlan = async (req, res) => {
       return res.status(404).json({ error: 'Plan non trouvé' });
     }
 
-    // Générer une URL authentifiée avec private_download_url
+    // Utiliser l'API Admin Cloudinary pour télécharger le fichier
+    // Format: https://api_key:api_secret@api.cloudinary.com/v1_1/cloud_name/resources/raw/upload/public_id
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+    const apiKey = process.env.CLOUDINARY_API_KEY;
+    const apiSecret = process.env.CLOUDINARY_API_SECRET;
+
+    // Générer URL avec Basic Auth pour l'API Admin
     let pdfUrl;
     if (plan.cloudinaryId) {
-      // Utiliser private_download_url pour un accès authentifié
-      pdfUrl = cloudinary.utils.private_download_url(plan.cloudinaryId, 'pdf', {
-        resource_type: 'raw',
-        expires_at: Math.floor(Date.now() / 1000) + 3600 // Expire dans 1 heure
-      });
-      console.log('URL authentifiée générée:', pdfUrl);
+      // Construire l'URL de téléchargement via l'API
+      // Méthode 1: URL signée avec timestamp et signature
+      const timestamp = Math.floor(Date.now() / 1000);
+      const signature = require('crypto')
+        .createHash('sha1')
+        .update(`public_id=${plan.cloudinaryId}&timestamp=${timestamp}${apiSecret}`)
+        .digest('hex');
+
+      pdfUrl = `https://api.cloudinary.com/v1_1/${cloudName}/raw/download?public_id=${encodeURIComponent(plan.cloudinaryId)}&timestamp=${timestamp}&api_key=${apiKey}&signature=${signature}`;
+      console.log('URL API download générée');
     } else {
       pdfUrl = plan.url;
       console.log('URL originale:', pdfUrl);
@@ -143,30 +153,30 @@ exports.viewPlan = async (req, res) => {
     res.setHeader('Content-Security-Policy', "frame-ancestors *");
     res.removeHeader('X-Content-Type-Options');
 
-    // Fetch le PDF avec l'URL authentifiée
+    // Fetch le PDF
     const fetchPdf = (url, isRetry = false) => {
+      console.log(`Tentative fetch${isRetry ? ' (retry)' : ''}:`, url.substring(0, 100) + '...');
+
       https.get(url, (pdfResponse) => {
-        console.log(`Réponse Cloudinary${isRetry ? ' (retry)' : ''}:`, pdfResponse.statusCode);
+        console.log(`Réponse${isRetry ? ' (retry)' : ''}:`, pdfResponse.statusCode);
 
         if (pdfResponse.statusCode === 200) {
           console.log('Succès! Streaming du PDF...');
           pdfResponse.pipe(res);
         } else if (pdfResponse.statusCode >= 300 && pdfResponse.statusCode < 400 && pdfResponse.headers.location) {
-          // Suivre la redirection
           console.log('Redirection vers:', pdfResponse.headers.location);
           fetchPdf(pdfResponse.headers.location, true);
         } else if (!isRetry && plan.url) {
-          // Essayer l'URL originale en fallback
-          console.log('Tentative avec URL originale:', plan.url);
+          console.log('Échec, tentative URL originale');
           fetchPdf(plan.url, true);
         } else {
-          console.error('Erreur Cloudinary:', pdfResponse.statusCode);
+          console.error('Erreur finale:', pdfResponse.statusCode);
           if (!res.headersSent) {
             res.status(pdfResponse.statusCode).json({ error: 'PDF inaccessible' });
           }
         }
       }).on('error', (err) => {
-        console.error('Erreur fetch PDF:', err.message);
+        console.error('Erreur fetch:', err.message);
         if (!res.headersSent) {
           res.status(500).json({ error: 'Erreur: ' + err.message });
         }
