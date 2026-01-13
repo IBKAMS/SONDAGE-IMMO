@@ -919,7 +919,7 @@ const Videos = () => {
               headers: { 'Content-Type': 'application/json' }
             });
             const signatureData = await signatureResponse.json();
-            const { signature, timestamp, cloudName, apiKey, folder, source } = signatureData;
+            const { signature, timestamp, cloudName, apiKey, folder, source, access_mode } = signatureData;
 
             // Upload vers Cloudinary (raw pour les PDF)
             // IMPORTANT: Le folder doit correspondre exactement à celui utilisé dans la signature
@@ -930,6 +930,9 @@ const Videos = () => {
             formData.append('signature', signature);
             formData.append('folder', folder);
             formData.append('source', source);
+            if (access_mode) {
+              formData.append('access_mode', access_mode);
+            }
 
             const cloudinaryResponse = await fetch(
               `https://api.cloudinary.com/v1_1/${cloudName}/raw/upload`,

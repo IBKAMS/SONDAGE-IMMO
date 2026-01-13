@@ -16,9 +16,10 @@ router.post('/signature', async (req, res) => {
     // Paramètres pour l'upload - DOIVENT correspondre exactement à ce qui est envoyé
     const folder = 'sondage-immo/videos';
     const source = 'uw'; // Upload Widget
+    const accessMode = 'public'; // Rendre les fichiers publiquement accessibles
 
     // Créer la chaîne à signer (ordre alphabétique des paramètres)
-    const stringToSign = `folder=${folder}&source=${source}&timestamp=${timestamp}`;
+    const stringToSign = `access_mode=${accessMode}&folder=${folder}&source=${source}&timestamp=${timestamp}`;
 
     // Générer la signature SHA1
     const signature = crypto
@@ -37,7 +38,8 @@ router.post('/signature', async (req, res) => {
       cloudName: process.env.CLOUDINARY_CLOUD_NAME,
       apiKey: process.env.CLOUDINARY_API_KEY,
       folder: 'sondage-immo/videos',
-      source: 'uw'
+      source: 'uw',
+      access_mode: 'public'
     });
   } catch (error) {
     console.error('Erreur lors de la génération de la signature Cloudinary:', error);
