@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FaSave, FaPlus, FaTrash, FaEdit, FaHome, FaTimes, FaCheck, FaUpload, FaLink, FaImage } from 'react-icons/fa';
+import { FaSave, FaPlus, FaTrash, FaEdit, FaHome, FaTimes, FaCheck, FaUpload, FaLink, FaImage, FaMap } from 'react-icons/fa';
 import API_URL from '../config';
 import './PromoteurAdmin.css';
+import PlanMasseEditor from '../components/PlanMasseEditor';
 
 const LogementsGestion = () => {
   const [logements, setLogements] = useState([]);
@@ -736,6 +737,22 @@ const LogementsGestion = () => {
           </div>
         </div>
       )}
+
+      {/* Section Plan de Masse Interactif */}
+      <div className="promoteur-content">
+        <div className="section">
+          <div className="section-header">
+            <h2><FaMap /> Plan de Masse Interactif</h2>
+          </div>
+          <div className="section-body">
+            <p style={{ marginBottom: '1rem', color: '#6b7280' }}>
+              Configurez le plan de masse interactif en plaçant les 115 villas (75 F4 + 30 F5 + 10 F6).
+              Ce plan sera affiché aux clients dans la rubrique "Option d'Achat" pour leur permettre de choisir leur maison.
+            </p>
+            <PlanMasseEditor />
+          </div>
+        </div>
+      </div>
 
       <div className="promoteur-content">
         <div className="section">

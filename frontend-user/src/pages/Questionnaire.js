@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaCheckCircle, FaFileAlt, FaCopy, FaHome } from 'react-icons/fa';
+import { FaCheckCircle, FaFileAlt, FaCopy, FaHome, FaMapMarkedAlt } from 'react-icons/fa';
 import API_URL from '../config';
+import PlanInteractif from '../components/PlanInteractif';
 import './Questionnaire.css';
 
 const Questionnaire = () => {
@@ -14,6 +15,7 @@ const Questionnaire = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [submissionResult, setSubmissionResult] = useState(null);
   const [copiedDossier, setCopiedDossier] = useState(false);
+  const [selectedLot, setSelectedLot] = useState(null);
   const [formData, setFormData] = useState({
     logementId: logementId || '',
     // Étape 1: Informations personnelles
@@ -52,6 +54,9 @@ const Questionnaire = () => {
     nombreChambres: 3,
     nombreSallesBain: 2,
     etagePreference: '',
+    lotSelectionne: '',
+    lotId: '',
+    lotType: '',
 
     // Étape 5: Équipements et commodités
     equipementsEssentiels: [],
@@ -862,6 +867,11 @@ const Questionnaire = () => {
         priorityFeatures: Array.isArray(data.equipementsEssentiels) ? data.equipementsEssentiels : []
       },
 
+      // LOT SÉLECTIONNÉ SUR LE PLAN DE MASSE
+      lotSelectionne: data.lotSelectionne || '',
+      lotId: data.lotId || null,
+      lotType: data.lotType || '',
+
       // BUDGET
       budget: {
         globalBudget: parseInt(data.budgetTotal) || 0,
@@ -1288,6 +1298,38 @@ const Questionnaire = () => {
                   </div>
                 ))}
               </div>
+
+              {/* Plan de Masse Interactif - Affiché uniquement sur l'étape Préférences de Logement */}
+              {currentStepData.title === "Préférences de Logement" && (
+                <div className="plan-masse-section">
+                  <div className="plan-masse-header">
+                    <FaMapMarkedAlt className="plan-icon" />
+                    <h3>Choisissez votre emplacement sur le plan</h3>
+                    <p>Cliquez sur une maison disponible pour la sélectionner</p>
+                  </div>
+                  <PlanInteractif
+                    onSelectLot={(lot) => {
+                      setSelectedLot(lot);
+                      if (lot) {
+                        handleChange('lotSelectionne', lot.numero);
+                        handleChange('lotId', lot._id);
+                        handleChange('lotType', lot.type);
+                      } else {
+                        handleChange('lotSelectionne', '');
+                        handleChange('lotId', '');
+                        handleChange('lotType', '');
+                      }
+                    }}
+                    selectedLotId={selectedLot?._id}
+                  />
+                  {selectedLot && (
+                    <div className="lot-selection-confirmation">
+                      <FaCheckCircle className="check-icon" />
+                      <span>Vous avez sélectionné le lot <strong>{selectedLot.numero}</strong></span>
+                    </div>
+                  )}
+                </div>
+              )}
             </motion.div>
           </AnimatePresence>
 

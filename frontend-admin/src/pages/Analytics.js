@@ -1918,7 +1918,7 @@ const Analytics = () => {
                 </div>
 
                 <div className="scoring-criteria">
-                  <h3>🎯 Critères de Notation (Total: 100 points)</h3>
+                  <h3>🎯 Critères de Notation (Score max: 100 points)</h3>
                   <div className="criteria-grid">
                     <div className="criterion-card">
                       <div className="criterion-header">
@@ -2043,6 +2043,21 @@ const Analytics = () => {
                           <li>Peu stable: <strong>1 pt</strong></li>
                           <li>Instable: <strong>0 pts</strong></li>
                         </ul>
+                      </div>
+                    </div>
+
+                    <div className="criterion-card">
+                      <div className="criterion-header">
+                        <span className="criterion-icon">🏘️</span>
+                        <h4>Lot Sélectionné sur le Plan</h4>
+                        <span className="criterion-points">10 points</span>
+                      </div>
+                      <div className="criterion-details">
+                        <ul>
+                          <li>Villa sélectionnée: <strong>10 pts</strong></li>
+                          <li>Aucune sélection: <strong>0 pts</strong></li>
+                        </ul>
+                        <p className="criterion-note">Démontre un engagement fort et une intention d'achat précise</p>
                       </div>
                     </div>
                   </div>

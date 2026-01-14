@@ -34,6 +34,16 @@ exports.submitQuestionnaire = async (req, res) => {
     // Préparer les données du questionnaire
     const questionnaireData = { ...req.body };
 
+    // Traiter le lot sélectionné sur le plan de masse
+    if (req.body.lotSelectionne || req.body.lotId) {
+      questionnaireData.lotSelectionne = {
+        numero: req.body.lotSelectionne || '',
+        lotId: req.body.lotId || null,
+        type: req.body.lotType || '',
+        dateSelection: new Date()
+      };
+    }
+
     // Si un code apporteur est fourni, valider et lier à l'apporteur
     if (codeApporteur) {
       const apporteur = await ApporteurAffaires.findOne({

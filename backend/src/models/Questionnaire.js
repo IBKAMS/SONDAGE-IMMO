@@ -107,6 +107,20 @@ const questionnaireSchema = new mongoose.Schema({
     priorityFeatures: [String]
   },
 
+  // Lot sélectionné sur le plan de masse
+  lotSelectionne: {
+    numero: String,         // Ex: A01, B15, C03
+    lotId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Lot'
+    },
+    type: String,           // F4, F5, F6
+    dateSelection: {
+      type: Date,
+      default: Date.now
+    }
+  },
+
   // BUDGET (Q22-Q25)
   budget: {
     globalBudget: Number,
@@ -308,6 +322,12 @@ questionnaireSchema.pre('save', async function(next) {
     if (this.demographics.jobStability === 'CDI' ||
         this.demographics.jobStability === 'fonctionnaire') {
       score += 5;
+    }
+
+    // Lot sélectionné sur le plan de masse (+10 points)
+    // Démontre un engagement fort et une intention d'achat précise
+    if (this.lotSelectionne && this.lotSelectionne.numero) {
+      score += 10;
     }
 
     this.score_interet = Math.min(score, 100);

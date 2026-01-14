@@ -120,6 +120,9 @@ app.use('/api/footer-content', require('./routes/footerContent'));
 app.use('/api/dashboard-stats', require('./routes/dashboardStats'));
 app.use('/api/plans-architecturaux', require('./routes/planArchitecturalRoutes'));
 
+// Routes Lots et Plan de Masse Interactif
+app.use('/api/lots', require('./routes/lotRoutes'));
+
 // Routes Apporteurs d'Affaires
 app.use('/api/apporteur', require('./routes/apporteurAuth'));
 app.use('/api/apporteurs', require('./routes/apporteurs'));
