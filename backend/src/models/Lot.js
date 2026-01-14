@@ -49,6 +49,5 @@ const LotSchema = new mongoose.Schema({
 
 // Index pour recherche rapide
 LotSchema.index({ type: 1, statut: 1 });
-LotSchema.index({ numero: 1 });
 
 module.exports = mongoose.model('Lot', LotSchema);
