@@ -117,11 +117,12 @@ exports.viewPlan = async (req, res) => {
       url: plan.url
     } : 'null');
 
-    if (!plan || !plan.url) {
+    // Le plan doit exister et avoir soit une URL soit un contenu base64
+    if (!plan || (!plan.url && !plan.pdfBase64)) {
       return res.status(404).json({ error: 'Plan non trouvé' });
     }
 
-    // Si on a le PDF en base64, le servir directement
+    // Si on a le PDF en base64, le servir directement (priorité au base64)
     if (plan.pdfBase64) {
       console.log('Serving PDF from base64 storage');
       res.setHeader('Content-Type', 'application/pdf');
@@ -237,17 +238,35 @@ function fetchAndStreamPdf(url, plan, res) {
 }
 
 // Upload ou mise à jour d'un plan
+// Pour plan-de-masse: supporte stockage direct base64 sans Cloudinary
+// Pour les autres plans: nécessite URL Cloudinary
 exports.uploadPlan = async (req, res) => {
   try {
     const { type, url, originalName, size, cloudinaryId, pdfBase64 } = req.body;
 
-    if (!type || !url || !originalName) {
-      return res.status(400).json({ error: 'Type, URL et nom original requis' });
+    // Vérifier les paramètres requis
+    if (!type || !originalName) {
+      return res.status(400).json({ error: 'Type et nom original requis' });
     }
 
     if (!planTitres[type]) {
       return res.status(400).json({ error: 'Type de plan invalide' });
     }
+
+    // Pour plan-de-masse: on accepte soit url soit pdfBase64
+    // Pour les autres plans: url est obligatoire
+    if (type === 'plan-de-masse') {
+      if (!url && !pdfBase64) {
+        return res.status(400).json({ error: 'URL ou contenu PDF base64 requis pour plan de masse' });
+      }
+    } else {
+      if (!url) {
+        return res.status(400).json({ error: 'URL Cloudinary requise pour ce type de plan' });
+      }
+    }
+
+    // URL fictive si stockage direct base64 pour plan-de-masse
+    const finalUrl = url || `base64://${type}`;
 
     // Vérifier si un plan existe déjà pour ce type
     const existingPlan = await PlanArchitectural.findOne({ type });
@@ -263,15 +282,17 @@ exports.uploadPlan = async (req, res) => {
       }
 
       // Mettre à jour le plan existant
-      existingPlan.url = url;
+      existingPlan.url = finalUrl;
       existingPlan.originalName = originalName;
       existingPlan.size = size || 0;
       existingPlan.cloudinaryId = cloudinaryId || null;
-      existingPlan.pdfBase64 = pdfBase64 || null;  // Stocker le base64 pour contourner Cloudinary
+      existingPlan.pdfBase64 = pdfBase64 || null;
       existingPlan.filename = originalName;
       existingPlan.uploadedAt = new Date();
 
       await existingPlan.save();
+
+      console.log(`Plan ${type} mis à jour (${pdfBase64 ? 'stockage base64 direct' : 'via Cloudinary'})`);
 
       return res.json({
         success: true,
@@ -286,13 +307,15 @@ exports.uploadPlan = async (req, res) => {
       titre: planTitres[type],
       filename: originalName,
       originalName,
-      url,
+      url: finalUrl,
       cloudinaryId: cloudinaryId || null,
-      pdfBase64: pdfBase64 || null,  // Stocker le base64 pour contourner Cloudinary
+      pdfBase64: pdfBase64 || null,
       size: size || 0
     });
 
     await newPlan.save();
+
+    console.log(`Nouveau plan ${type} créé (${pdfBase64 ? 'stockage base64 direct' : 'via Cloudinary'})`);
 
     res.status(201).json({
       success: true,
@@ -301,7 +324,7 @@ exports.uploadPlan = async (req, res) => {
     });
   } catch (error) {
     console.error('Erreur uploadPlan:', error);
-    res.status(500).json({ error: 'Erreur lors de l\'upload du plan' });
+    res.status(500).json({ error: 'Erreur lors de l\'upload du plan: ' + error.message });
   }
 };
 

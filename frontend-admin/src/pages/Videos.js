@@ -908,12 +908,14 @@ const Videos = () => {
       }
     }
 
-    // Upload des plans architecturaux PDF via Cloudinary + stockage base64 dans MongoDB
+    // Upload des plans architecturaux PDF
+    // - Plan de masse: stockage direct base64 dans MongoDB (sans Cloudinary)
+    // - Autres plans: via Cloudinary + stockage base64 dans MongoDB
     for (const [type, plan] of Object.entries(plansArchitecturaux)) {
       if (plan.file) {
         const uploadPlanPromise = (async () => {
           try {
-            // Lire le fichier comme base64 pour stockage MongoDB (contourne restrictions Cloudinary)
+            // Lire le fichier comme base64
             const fileBase64 = await new Promise((resolve, reject) => {
               const reader = new FileReader();
               reader.onload = () => {
@@ -924,65 +926,100 @@ const Videos = () => {
               reader.readAsDataURL(plan.file);
             });
 
-            // Obtenir la signature Cloudinary spécifique pour les PDFs
-            const signatureResponse = await fetch(`${API_URL}/api/upload/signature-pdf`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' }
-            });
-            const signatureData = await signatureResponse.json();
-            const { signature, timestamp, cloudName, apiKey, folder, access_mode } = signatureData;
+            // Pour plan-de-masse: stockage direct base64 sans Cloudinary
+            if (type === 'plan-de-masse') {
+              console.log('Plan de masse: stockage direct en base64 sans Cloudinary');
 
-            // Upload vers Cloudinary (raw pour les PDF avec access_mode public)
-            const formData = new FormData();
-            formData.append('file', plan.file);
-            formData.append('api_key', apiKey);
-            formData.append('timestamp', timestamp);
-            formData.append('signature', signature);
-            formData.append('folder', folder);
-            formData.append('access_mode', access_mode);
-
-            const cloudinaryResponse = await fetch(
-              `https://api.cloudinary.com/v1_1/${cloudName}/raw/upload`,
-              { method: 'POST', body: formData }
-            );
-            const cloudinaryData = await cloudinaryResponse.json();
-
-            console.log('Cloudinary response for plan:', cloudinaryData);
-
-            if (cloudinaryData.secure_url) {
-              // Sauvegarder dans MongoDB avec le base64
               const saveResponse = await fetch(`${API_URL}/api/plans-architecturaux`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   type: type,
-                  url: cloudinaryData.secure_url,
                   originalName: plan.file.name,
                   size: plan.file.size,
-                  cloudinaryId: cloudinaryData.public_id,
-                  pdfBase64: fileBase64  // Stockage base64 pour contourner restrictions Cloudinary
+                  pdfBase64: fileBase64  // Stockage base64 direct sans URL Cloudinary
                 })
               });
 
               const saveData = await saveResponse.json();
-              console.log('MongoDB save response:', saveData);
+              console.log('MongoDB save response (plan-de-masse):', saveData);
 
               if (saveResponse.ok) {
-                console.log(`Plan ${type} uploadé avec succès (avec base64)`);
+                console.log('Plan de masse enregistré avec succès (base64 direct)');
                 setPlansArchitecturaux(prev => ({
                   ...prev,
                   [type]: {
                     file: null,
                     name: plan.file.name,
-                    url: cloudinaryData.secure_url
+                    url: `base64://${type}`
                   }
                 }));
               } else {
-                console.error('Erreur sauvegarde MongoDB:', saveData);
+                console.error('Erreur sauvegarde MongoDB (plan-de-masse):', saveData);
+                throw new Error(saveData.error || 'Erreur sauvegarde plan de masse');
               }
             } else {
-              console.error('Erreur Cloudinary:', cloudinaryData);
-              throw new Error(cloudinaryData.error?.message || 'Erreur upload Cloudinary');
+              // Pour les autres plans: via Cloudinary
+              const signatureResponse = await fetch(`${API_URL}/api/upload/signature-pdf`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+              });
+              const signatureData = await signatureResponse.json();
+              const { signature, timestamp, cloudName, apiKey, folder, access_mode } = signatureData;
+
+              // Upload vers Cloudinary (raw pour les PDF avec access_mode public)
+              const formData = new FormData();
+              formData.append('file', plan.file);
+              formData.append('api_key', apiKey);
+              formData.append('timestamp', timestamp);
+              formData.append('signature', signature);
+              formData.append('folder', folder);
+              formData.append('access_mode', access_mode);
+
+              const cloudinaryResponse = await fetch(
+                `https://api.cloudinary.com/v1_1/${cloudName}/raw/upload`,
+                { method: 'POST', body: formData }
+              );
+              const cloudinaryData = await cloudinaryResponse.json();
+
+              console.log('Cloudinary response for plan:', cloudinaryData);
+
+              if (cloudinaryData.secure_url) {
+                // Sauvegarder dans MongoDB avec le base64
+                const saveResponse = await fetch(`${API_URL}/api/plans-architecturaux`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    type: type,
+                    url: cloudinaryData.secure_url,
+                    originalName: plan.file.name,
+                    size: plan.file.size,
+                    cloudinaryId: cloudinaryData.public_id,
+                    pdfBase64: fileBase64
+                  })
+                });
+
+                const saveData = await saveResponse.json();
+                console.log('MongoDB save response:', saveData);
+
+                if (saveResponse.ok) {
+                  console.log(`Plan ${type} uploadé avec succès (via Cloudinary)`);
+                  setPlansArchitecturaux(prev => ({
+                    ...prev,
+                    [type]: {
+                      file: null,
+                      name: plan.file.name,
+                      url: cloudinaryData.secure_url
+                    }
+                  }));
+                } else {
+                  console.error('Erreur sauvegarde MongoDB:', saveData);
+                  throw new Error(saveData.error || 'Erreur sauvegarde');
+                }
+              } else {
+                console.error('Erreur Cloudinary:', cloudinaryData);
+                throw new Error(cloudinaryData.error?.message || 'Erreur upload Cloudinary');
+              }
             }
           } catch (error) {
             console.error(`Erreur upload plan ${type}:`, error);

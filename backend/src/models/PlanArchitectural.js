@@ -21,7 +21,7 @@ const planArchitecturalSchema = new mongoose.Schema({
   },
   url: {
     type: String,
-    required: true
+    required: false  // Optionnel car on peut stocker directement en base64 sans Cloudinary
   },
   cloudinaryId: {
     type: String
